@@ -14,6 +14,7 @@ module mesh_module
      procedure :: Init
      procedure :: Free
      procedure :: CacheDerivatives
+     procedure :: Pack => MeshPack
   end type mesh
 
 contains
@@ -21,10 +22,10 @@ contains
     class(mesh), intent(inout) :: m
     integer :: nx,nf,maxrk
 
-    m%dim = 1
-    m%nx = nx
-    m%nf = nf
-    m%maxrk = maxrk
+    m % dim = 1
+    m % nx = nx
+    m % nf = nf
+    m % maxrk = maxrk
 
     allocate( m % x( nx ) )
     allocate( m % f( nf, nx ) )
@@ -33,6 +34,7 @@ contains
 
   subroutine Free( m )
     class(mesh), intent(inout) :: m
+    
     deallocate( m % x )
     deallocate( m % f )
     deallocate( m % df )
@@ -40,6 +42,7 @@ contains
 
   subroutine CacheDerivatives( m )
     class(mesh), intent(in) :: m
+    
     print *, "module_mesh: CacheDerivatives not overloaded!"
       
   end subroutine CacheDerivatives
@@ -47,7 +50,17 @@ contains
   
   subroutine Print( m )
     class(mesh), intent(in) :: m
-    print *, "dim,nx,nf,maxrk = ", m%dim, m%nx, m%nf, m%maxrk
+    
+    print *, "dim,nx,nf,maxrk = ",&
+         & m % dim, m % nx, m % nf, m % maxrk
   end subroutine Print
+
+  subroutine MeshPack( m, v )
+    class(mesh), intent(in) :: m
+    real :: v(:)
+
+    call pack(m, 1, v)
+
+  end subroutine MeshPack
   
 end module mesh_module
