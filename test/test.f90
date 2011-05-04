@@ -1,21 +1,20 @@
-program hello
-  use rhs_mod
+program mesh_example_test
+  ! first use the module with a desired mesh type
+  use module_mesh_example
 
-  integer, parameter :: n = 60000
-  integer            :: i
-  real               :: x(n) = (/((i-1.)/(n-1.),i=1,n)/)
-  real               :: f(n), df(n)
+  ! declare a mesh of a given type
+  type(mesh_example) :: m
 
-  f=sin(x)
+  ! you can than call the methods (type-bound procedures) with a
+  ! uniform manner
 
-  ! print *, f
-  ! print *, x
-  ! print *, df
-
-  ! call rhs(f,df,1.)
-  ! call swap(f,df)
-  call d1(f,x,df)
-
-  print *, sum(df-cos(x))/(n-1.)
-
-end program hello
+  ! initialize mesh
+  call m%Init(200,2,2)
+  ! print a mesh
+  call m%Print
+  ! cache derivatives
+  call m%CacheDerivatives
+  ! free when done with the mesh
+  call m%Free
+    
+end program mesh_example_test

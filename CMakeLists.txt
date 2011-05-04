@@ -16,8 +16,8 @@ file(MAKE_DIRECTORY "bin/test")
 
 ####################
 
-# compiler flags
-set(flags "-ggdb -Wall -pedantic -fimplicit-none")
+# gfort flags
+# set(flags "-ggdb -Wall -pedantic -fimplicit-none -std=f2003")
 # ifort flags
 set(flags "-ggdb -u -ftrapuv -fast -warn interfaces -gen-interfaces -traceback -sox -stand f03")
 
