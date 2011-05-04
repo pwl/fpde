@@ -18,9 +18,11 @@ file(MAKE_DIRECTORY "bin/test")
 
 # compiler flags
 set(flags "-ggdb -Wall -pedantic -fimplicit-none")
+# ifort flags
+set(flags "-ggdb -u -ftrapuv -fast -warn interfaces -gen-interfaces -traceback -sox -stand f03")
 
 # source files suffix
-set(SUFFIX "f95")
+set(SUFFIX "f90")
 
 # add a subdirectory with a test library
 add_subdirectory( src )
