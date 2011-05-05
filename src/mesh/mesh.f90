@@ -1,7 +1,7 @@
 module mesh_module
-  
+
   private
-  
+
   ! general mesh class to be inherited by user-defined meshes
   type, public :: mesh
      private
@@ -14,7 +14,8 @@ module mesh_module
      procedure :: Init
      procedure :: Free
      procedure :: CacheDerivatives
-     procedure :: Pack => MeshPack
+     procedure :: ToVector
+     procedure :: FillForDebug
   end type mesh
 
 contains
@@ -34,7 +35,7 @@ contains
 
   subroutine Free( m )
     class(mesh), intent(inout) :: m
-    
+
     deallocate( m % x )
     deallocate( m % f )
     deallocate( m % df )
@@ -42,25 +43,42 @@ contains
 
   subroutine CacheDerivatives( m )
     class(mesh), intent(in) :: m
-    
     print *, "module_mesh: CacheDerivatives not overloaded!"
-      
+
   end subroutine CacheDerivatives
-  
-  
+
+  ! this is not the best way to convert to a vector velue because it
+  ! copies data
+  subroutine ToVector( m, v )
+    class(mesh), intent(in) :: m
+    real, intent(inout) :: v(:)
+
+    v = reshape( m%f, shape(v) )
+
+  end subroutine ToVector
+
   subroutine Print( m )
     class(mesh), intent(in) :: m
-    
+    integer :: offset = 5
+
+    ! print
     print *, "dim,nx,nf,maxrk = ",&
-         & m % dim, m % nx, m % nf, m % maxrk
+         m % dim, m % nx, m % nf, m % maxrk
+
+    ! print mesh points
+    print *, "x = ", m % x(1:offset), " (...) ", m % x(m%nx - offset : m%nx : 1)
+
   end subroutine Print
 
-  subroutine MeshPack( m, v )
-    class(mesh), intent(in) :: m
-    real :: v(:)
+  subroutine FillForDebug( m )
+    class(mesh), intent(inout) :: m
+    integer :: nx = 4, nf = 3, maxrk = 2
+    integer :: i,j
 
-    call pack(m, 1, v)
+    call m%init(nx, nf, maxrk)
+    forall(i = 1:m%nx) m%x(i) = i
+    forall(i = 1:m%nx, j = 1:m%nf) m%f(i,j) = i*100+j
 
-  end subroutine MeshPack
-  
+  end subroutine FillForDebug
+
 end module mesh_module
