@@ -5,7 +5,6 @@ program mesh_example_test
   ! declare a mesh of a given type
   type(mesh_example) :: m
   real, allocatable :: v(:)
-  allocate(v(3*2))
 
   ! you can than call the methods (type-bound procedures) with a
   ! uniform manner
@@ -14,9 +13,9 @@ program mesh_example_test
   call m%FillForDebug
   ! print a mesh
   call m%Print
-  ! fill vector v with values of the functions
+  ! write and read data to and from vector v
   call m%ToVector(v)
-  print *, v
+  call m%FromVector(v)
   ! free when done with the mesh
   call m%Free
 

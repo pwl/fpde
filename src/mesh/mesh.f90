@@ -4,7 +4,7 @@ module mesh_module
 
   ! general mesh class to be inherited by user-defined meshes
   type, public :: mesh
-     private
+     ! private
      integer           :: dim, nx, nf, maxrk
      real, allocatable :: x(:)
      real, allocatable :: f(:,:)
@@ -15,6 +15,7 @@ module mesh_module
      procedure :: Free
      procedure :: CacheDerivatives
      procedure :: ToVector
+     procedure :: FromVector
      procedure :: FillForDebug
   end type mesh
 
@@ -51,12 +52,24 @@ contains
   ! copies data
   subroutine ToVector( m, v )
     class(mesh), intent(in) :: m
-    real, intent(inout) :: v(:)
+    real, allocatable, intent(inout) :: v(:)
 
-    v = reshape( m%f, shape(v) )
+    if( .not. allocated( v ) ) then
+       allocate( v ( m % nx * m % nf ) )
+    end if
+    
+    v = reshape( m % f, shape( v ) )
 
   end subroutine ToVector
 
+  subroutine FromVector( m, v )
+    class(mesh), intent(inout) :: m
+    real, intent(in) :: v(:)
+
+    m % f = reshape( v, shape( m % f ) )
+    
+  end subroutine FromVector
+  
   subroutine Print( m )
     class(mesh), intent(in) :: m
     integer :: offset = 5
@@ -66,13 +79,13 @@ contains
          m % dim, m % nx, m % nf, m % maxrk
 
     ! print mesh points
-    print *, "x = ", m % x(1:offset), " (...) ", m % x(m%nx - offset : m%nx : 1)
+    print *, "x = ", m % x(1:offset), " (...) ", m % x(m%nx - offset : m%nx)
 
   end subroutine Print
 
   subroutine FillForDebug( m )
     class(mesh), intent(inout) :: m
-    integer :: nx = 4, nf = 3, maxrk = 2
+    integer :: nx = 10, nf = 3, maxrk = 2
     integer :: i,j
 
     call m%init(nx, nf, maxrk)
