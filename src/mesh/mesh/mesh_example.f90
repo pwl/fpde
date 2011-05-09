@@ -18,12 +18,13 @@ module module_mesh_example
 contains
 
   ! overloaded Init
-  subroutine Init( m, nx, nf, maxrk )
+  subroutine Init( m, nx, nf, maxrk, xmin, xmax )
     class(mesh_example), intent(inout) :: m
     integer :: nx,nf,maxrk
+    real, intent(in) :: xmin, xmax
 
     ! first init the parent class, this is necessary
-    call m % mesh % Init( nx, nf, maxrk )
+    call m % mesh % Init( nx, nf, maxrk, xmin, xmax )
 
     ! then init user data
     allocate( m % test( nx ) )
@@ -43,12 +44,13 @@ contains
   end subroutine Free
 
   ! overloaded CacheDerivatives
-  subroutine CacheDerivatives( m )
-    class(mesh_example), intent(in) :: m
+  subroutine CacheDerivatives( m, i )
+    class(mesh_example), intent(inout) :: m
+    integer :: i
 
     ! overloading is simple!
     print *, "Overloaded CacheDerivatives!"
       
   end subroutine CacheDerivatives
-        
+  
 end module module_mesh_example
