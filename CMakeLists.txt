@@ -20,16 +20,16 @@ file(MAKE_DIRECTORY "bin/test")
 find_program(ifort "ifort")
 find_program(gfortran "gfortran-4.6")
 
-# default to intel
-if( NOT CMAKE_Fortran_COMPILER)
-  set(CMAKE_Fortran_COMPILER ${intel})
-endif()
+# # default to intel
+# if( NOT CMAKE_Fortran_COMPILER)
+#   set(CMAKE_Fortran_COMPILER ${intel})
+# endif()
 
 set(comp ${CMAKE_Fortran_COMPILER})
 
 # intel flags
 if( ${comp} STREQUAL ${ifort})
-  set(flags "-ggdb -u -ftrapuv -warn all -gen-interfaces -traceback -stand f03")
+  set(flags "-ggdb -u -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -stand f03")
 endif()
 
 # gfort flags
