@@ -10,13 +10,13 @@ program mesh_example_test
   ! uniform manner
 
   ! initialize mesh
-  call m%FillForDebug
+  call m % fill_for_debug
   ! print a mesh
-  call m%PrintPreview
+  call m % print_preview
   ! write and read data to and from vector v
-  call m%ToVector(v)
-  call m%FromVector(v)
+  call m % to_vector(v)
+  call m % from_vector(v)
   ! free when done with the mesh
-  call m%Free
+  call m % free
 
 end program mesh_example_test

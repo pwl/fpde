@@ -4,7 +4,5 @@ module module_marcher
      real, allocatable :: df
      real, allocatable :: t
      real, allocatable :: dt
-   contains
-
   end type marcher
 end module module_marcher

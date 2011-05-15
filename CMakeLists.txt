@@ -19,7 +19,8 @@ file(MAKE_DIRECTORY "bin/test")
 # gfort flags
 # set(flags "-ggdb -Wall -pedantic -fimplicit-none -std=f2003")
 # ifort flags
-set(flags "-ggdb -u -ftrapuv -fast -warn interfaces -gen-interfaces -traceback -sox -stand f03")
+# set(flags "-ggdb -u -ftrapuv -fast -warn interfaces -gen-interfaces -traceback -sox -stand f03")
+set(flags "-ggdb -u -ftrapuv -warn all -gen-interfaces -traceback -stand f03")
 
 # source files suffix
 set(SUFFIX "f90")
