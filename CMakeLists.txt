@@ -16,11 +16,26 @@ file(MAKE_DIRECTORY "bin/test")
 
 ####################
 
+# available compilers
+find_program(ifort "ifort")
+find_program(gfortran "gfortran-4.6")
+
+# default to intel
+if( NOT CMAKE_Fortran_COMPILER)
+  set(CMAKE_Fortran_COMPILER ${intel})
+endif()
+
+set(comp ${CMAKE_Fortran_COMPILER})
+
+# intel flags
+if( ${comp} STREQUAL ${ifort})
+  set(flags "-ggdb -u -ftrapuv -warn all -gen-interfaces -traceback -stand f03")
+endif()
+
 # gfort flags
-# set(flags "-ggdb -Wall -pedantic -fimplicit-none -std=f2003")
-# ifort flags
-# set(flags "-ggdb -u -ftrapuv -fast -warn interfaces -gen-interfaces -traceback -sox -stand f03")
-set(flags "-ggdb -u -ftrapuv -warn all -gen-interfaces -traceback -stand f03")
+if( ${comp} STREQUAL ${gfortran})
+  set(flags "-ggdb -Wall -pedantic -fimplicit-none -std=f2003 -Wno-unused -Wno-unused-dummy-argument")
+endif()
 
 # source files suffix
 set(SUFFIX "f90")
