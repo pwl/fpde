@@ -29,7 +29,13 @@ set(comp ${CMAKE_Fortran_COMPILER})
 
 # intel flags
 if( ${comp} STREQUAL ${ifort})
-  set(flags "-ggdb -u -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -stand f03")
+  # set(flags "-ggdb -u -fpe1 -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -parallel -no-opt-matmul -stand f03 -openmp")
+  set(flags "-ggdb -u -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -stand f03")
+  # MKL LINKING FLAGS
+  # set(lflags "-L$(MKLROOT)/lib/ia32  -Wl,--start-group -lmatmul -lmkl_intel -lmkl_intel_thread -lmkl_core -Wl,--end-group -openmp -lpthread")
+  # set(CMAKE_SHARED_LINKER_FLAGS ${lflags})
+  # set(CMAKE_EXE_LINKER_FLAGS ${lflags})
+  # END OF MKL LINKING FLAGS
 endif()
 
 # gfort flags
@@ -65,5 +71,5 @@ foreach(bin ${bin_list})
     ${flags})
 
   # link to the helper libraries
-  target_link_libraries(${bin} fpde)
+  target_link_libraries(${bin} fpde ${libs})
 endforeach(bin)

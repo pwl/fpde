@@ -1,5 +1,7 @@
 module mesh_module
 
+  use omp_lib
+
   private
 
   ! general mesh class to be inherited by user-defined meshes
@@ -21,6 +23,8 @@ module mesh_module
      procedure :: to_vector
      procedure :: from_vector
      procedure :: fill_for_debug
+     procedure :: check_derivatives
+     procedure :: clear_derivatives
   end type mesh
 
 contains
@@ -30,6 +34,7 @@ contains
     integer, intent(in) :: nx,nf,maxrk
     real, intent(in) :: xmin, xmax
     integer :: i
+
 
     m % nx = nx
     m % nf = nf
@@ -76,6 +81,33 @@ contains
 
   end subroutine calculate_derivatives
 
+  logical function check_derivatives( m, i )
+    class(mesh), target, intent(inout) :: m
+    integer :: i
+
+    check_derivatives = .false.
+
+    if( m % df_calculated( i ) ) then
+       return
+    else if( i > m % maxrk ) then
+       stop "maxrk exceeded!"
+       return
+    else
+       check_derivatives = .true.
+       m % df_calculated( i ) = .true.
+       return
+    end if
+  end function check_derivatives
+
+
+  ! to be run after changes to m % f
+  subroutine clear_derivatives( m )
+    class(mesh), target, intent(inout) :: m
+
+    m % df_calculated = .false.
+
+  end subroutine clear_derivatives
+
 
   ! this is not the best way to convert to a vector velue because it
   ! copies data
@@ -97,7 +129,7 @@ contains
     real, intent(in) :: v(:)
 
     m % f = reshape( v, shape( m % f ) )
-    m % df_calculated = .false.
+    call m % clear_derivatives()
 
   end subroutine from_vector
 

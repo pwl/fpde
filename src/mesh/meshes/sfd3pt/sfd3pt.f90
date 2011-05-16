@@ -47,20 +47,18 @@ contains
     integer :: i,j,k
     real, pointer :: f(:,:)
 
-    if( m % df_calculated( i ) ) then
+
+    if( .not. m%check_derivatives(i) ) then
        return
-    else
-       m % df_calculated( i ) = .true.
     end if
 
 
     if( i > 1) then
        call m % calculate_derivatives(i-1)
-       f => m % df( :, : , i)
+       f => m % df( :, : , i-1)
     else
        f => m % f
     end if
-
 
     forall( j = 1 : m % nf, &
             k = 2 : m % nx - 1 )
