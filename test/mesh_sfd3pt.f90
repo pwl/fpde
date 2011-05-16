@@ -11,13 +11,6 @@ program mesh_sfd3pt_test
   ! integer :: t
   pi = 2.*acos(0.)
 
-  ! !$omp parallel private(t)
-  ! t = OMP_GET_THREAD_NUM()
-  ! print *, t
-  ! !$omp end parallel
-
-
-
   ! initialize mesh
   call m % init(1000,1,rk,0.,1.)
   ! print a mesh

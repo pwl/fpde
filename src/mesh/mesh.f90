@@ -81,6 +81,8 @@ contains
 
   end subroutine calculate_derivatives
 
+
+  ! used to check weather a derivative should be calculated
   logical function check_derivatives( m, i )
     class(mesh), target, intent(inout) :: m
     integer :: i
@@ -100,7 +102,8 @@ contains
   end function check_derivatives
 
 
-  ! to be run after changes to m % f
+  ! to be run after changes to m % f, after this df is considered to
+  ! be not calculated
   subroutine clear_derivatives( m )
     class(mesh), target, intent(inout) :: m
 

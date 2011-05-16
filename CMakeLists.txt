@@ -20,14 +20,9 @@ file(MAKE_DIRECTORY "bin/test")
 find_program(ifort "ifort")
 find_program(gfortran "gfortran-4.6")
 
-# # default to intel
-# if( NOT CMAKE_Fortran_COMPILER)
-#   set(CMAKE_Fortran_COMPILER ${intel})
-# endif()
-
 set(comp ${CMAKE_Fortran_COMPILER})
 
-# intel flags
+# INTEL COMPILER
 if( ${comp} STREQUAL ${ifort})
   # set(flags "-ggdb -u -fpe1 -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -parallel -no-opt-matmul -stand f03 -openmp")
   set(flags "-ggdb -u -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -stand f03")
@@ -38,7 +33,7 @@ if( ${comp} STREQUAL ${ifort})
   # END OF MKL LINKING FLAGS
 endif()
 
-# gfort flags
+# GFORTRAN COMPILER
 if( ${comp} STREQUAL ${gfortran})
   set(flags "-ggdb -Wall -pedantic -fimplicit-none -std=f2003 -Wno-unused -Wno-unused-dummy-argument")
 endif()
