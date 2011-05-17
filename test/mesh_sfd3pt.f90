@@ -6,13 +6,13 @@ program mesh_sfd3pt_test
   ! declare a mesh of a given type
   type(mesh_sfd3pt) :: m
   integer :: rk = 10
-  real, allocatable :: v(:)
+  real, pointer :: v(:)
   real :: pi
   ! integer :: t
   pi = 2.*acos(0.)
 
   ! initialize mesh
-  call m % init(1000,1,rk,0.,1.)
+  call m % init(100,2,rk,0.,1.)
   ! print a mesh
   ! call m % print_preview
   ! write and read data to and from vector v

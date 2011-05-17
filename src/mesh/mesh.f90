@@ -115,18 +115,21 @@ contains
   ! this is not the best way to convert to a vector velue because it
   ! copies data
   subroutine to_vector( m, v )
-    class(mesh), intent(in) :: m
-    real, allocatable, intent(inout) :: v(:)
+    class(mesh), target, intent(in) :: m
+    ! real, allocatable, intent(inout) :: v(:)
+    real, pointer, intent(inout) :: v(:)
 
-    if( .not. allocated( v ) ) then
-       allocate( v ( m % nx * m % nf ) )
-    end if
+    ! if( .not. allocated( v ) ) then
+    !    allocate( v ( m % nx * m % nf ) )
+    ! end if
 
-    v = reshape( m % f, shape( v ) )
+    ! v = reshape( m % f, shape( v ) )
+
+    v(1 : m%nf * m%nx) => m % f
 
   end subroutine to_vector
 
-  ! analogue of to_vector
+  ! not needed anymore!
   subroutine from_vector( m, v )
     class(mesh), intent(inout) :: m
     real, intent(in) :: v(:)
@@ -135,6 +138,11 @@ contains
     call m % clear_derivatives()
 
   end subroutine from_vector
+
+
+  ! to be implemented:
+  ! from_function(m, fns)
+  ! from_vector(m, v)
 
   ! used to print a readable output of a mesh, to be improved
   subroutine print_preview( m )

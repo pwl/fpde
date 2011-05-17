@@ -4,7 +4,7 @@ program mesh_example_test
 
   ! declare a mesh of a given type
   type(mesh_example) :: m
-  real, allocatable :: v(:)
+  real, pointer :: v(:)
 
   ! you can than call the methods (type-bound procedures) with a
   ! uniform manner
