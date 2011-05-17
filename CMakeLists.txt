@@ -25,7 +25,8 @@ set(comp ${CMAKE_Fortran_COMPILER})
 # INTEL COMPILER
 if( ${comp} STREQUAL ${ifort})
   # set(flags "-ggdb -u -fpe1 -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -parallel -no-opt-matmul -stand f03 -openmp")
-  set(flags "-ggdb -u -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -stand f03")
+  set(flags "-ggdb -u -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -r16")
+
   # MKL LINKING FLAGS
   # set(lflags "-L$(MKLROOT)/lib/ia32  -Wl,--start-group -lmatmul -lmkl_intel -lmkl_intel_thread -lmkl_core -Wl,--end-group -openmp -lpthread")
   # set(CMAKE_SHARED_LINKER_FLAGS ${lflags})
@@ -35,7 +36,7 @@ endif()
 
 # GFORTRAN COMPILER
 if( ${comp} STREQUAL ${gfortran})
-  set(flags "-ggdb -Wall -pedantic -fimplicit-none -std=f2003 -Wno-unused -Wno-unused-dummy-argument")
+  set(flags "-ggdb -Wall -pedantic -fimplicit-none -Wno-unused -Wno-unused-dummy-argument")
 endif()
 
 # source files suffix
