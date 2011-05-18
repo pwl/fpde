@@ -18,7 +18,7 @@ file(MAKE_DIRECTORY "bin/test")
 
 # available compilers
 find_program(ifort "ifort")
-find_program(gfortran "gfortran-4.6")
+find_program(gfortran "gfortran")
 
 set(comp ${CMAKE_Fortran_COMPILER})
 
@@ -36,7 +36,7 @@ endif()
 
 # GFORTRAN COMPILER
 if( ${comp} STREQUAL ${gfortran})
-  set(flags "-ggdb -Wall -pedantic -fimplicit-none -Wno-unused -Wno-unused-dummy-argument")
+  set(flags "-ggdb -Wall -pedantic -fimplicit-none -Wno-unused -Wno-unused-dummy-argument -fbounds-check -fdefault-real-8")
 endif()
 
 # source files suffix

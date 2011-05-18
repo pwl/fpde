@@ -22,6 +22,7 @@ module mesh_module
      ! optional
      procedure :: init
      procedure :: free
+     procedure :: info
 
      ! use only, not overloadable
      procedure :: print_preview
@@ -55,6 +56,14 @@ contains
     allocate( m % f( nx, nf ) )
     allocate( m % df( nx, nf, maxrk ) )
   end subroutine init
+
+  subroutine info(m)
+  class(mesh), intent(inout) :: m
+  print*,' *** General info ***'
+  print*,'Mesh type: ',m % name
+  print*,'Mesh size: ',m % nx
+  print*,'Number of functions: ', m%nf
+  end subroutine info
 
 
   subroutine free( m )
