@@ -199,7 +199,7 @@ contains
     integer :: i,j
 
     call m%init(nx, nf, maxrk, 0., 1.)
-    forall(i = 1:m%nx, j = 1:m%nf) m%f(j,i) = i*100+j
+    forall(i = 1:m%nx, j = 1:m%nf) m%f(i,j) = i*100+j
 
   end subroutine fill_for_debug
 

@@ -70,79 +70,81 @@ TYPE, public, extends( mesh ) :: mesh_spectral
   
 END TYPE mesh_spectral
 
- SUBROUTINE info(s)
- class(mesh_spectral), intent(inout) :: s
- if(s%stat.eq.0) stop 'mesh_spectral: Initialize/tweak the mesh first!'
+CONTAINS 
+
+ SUBROUTINE info(m)
+ class(mesh_spectral), intent(inout) :: m
+ if(m%stat.eq.0) stop 'mesh_spectral: Initialize/tweak the mesh first!'
  
- call s % mesh % info
+ call m % mesh % info
  
- print *,'Left boundary at point x(nx) with value: ',s % x (s%nx)
- print *,'Right boundary at point x(1) with value: ',s % x (1)
- print *,'Smallest distance on grid (near boundaries): ', s % dx
+ print *,'Left boundary at point x(nx) with value: ',m % x (m%nx)
+ print *,'Right boundary at point x(1) with value: ',m % x (1)
+ print *,'Smallest distance on grid (near boundaries): ', m % dx
  print *,'Capable of computing only first derivative. '
- if(s%stat .eq. 1.or.s%stat.eq.2) print*,'Derivatives being computed using FFT O(n ln n)'
- if(s%stat .eq. 3) print *,'Derivatives being computed using MATRIX MULTIPLICATION O(n*n) '
- if(s%stat .gt. 1) print*,'Capable of applying Von Neumann boundary conditions'
- if(s%coeff_cmpt) print*,'Coefficients of Czebyshev expansion are being stored in coeffs(nx,nf)'
+ if(m%stat .eq. 1.or.m%stat.eq.2) print*,'Derivatives being computed using FFT O(n ln n)'
+ if(m%stat .eq. 3) print *,'Derivatives being computed using MATRIX MULTIPLICATION O(n*n) '
+ if(m%stat .gt. 1) print*,'Capable of applying Von Neumann boundary conditions'
+ if(m%coeff_cmpt) print*,'Coefficients of Czebyshev expansion are being stored in coeffs(nx,nf)'
  
  END SUBROUTINE info
 
- SUBROUTINE tweak(s, stat, coeff)
-    class(mesh_spectral), intent(inout) :: s
+ SUBROUTINE tweak(m, stat, coeff)
+    class(mesh_spectral), intent(inout) :: m
     integer, intent(in) :: stat
     logical, intent(in) :: coeff
-    if(s%stat.eq.0) stop 'mesh_spectral: Initialize the mesh first'
+    if(m%stat.eq.0) stop 'mesh_spectral: Initialize the mesh first'
     
-    s % stat = stat
-    s % coeff_cmpt = coeff
+    m % stat = stat
+    m % coeff_cmpt = coeff
     
     
-    if(allocated(s%work_FFT)) deallocate(s%work_FFT)
+    if(allocated(m%work_FFT)) deallocate(m%work_FFT)
     
     if(stat.gt.1) then ! we need work matrix
-            allocate(s%work_matrix(s%nx,s%nx))
-            call d1spectral_matrix_init(s%nx,s%xlob,s%work_matrix)
+            allocate(m%work_matrix(m%nx,m%nx))
+            call d1spectral_matrix_init(m%nx,m%xlob,m%work_matrix)
     end if
-    if(stat.lt.2) then 
-              allocate(s%work_FFT(8*s%nx+12))
-              call d1spectral_fft_init(s%nx,s%work_FFT)
+    if(stat.lt.3) then 
+              allocate(m%work_FFT(8*m%nx+12))
+              call d1spectral_fft_init(m%nx,m%work_FFT)
     end if
-    if (coeff) allocate(coeffs(s%nx,s%nf))
+    if (coeff) allocate(m%coeffs(2*m%nx-1,m%nf))
     
  END SUBROUTINE tweak
 
  
- SUBROUTINE init(s, nx, nf, maxrk, xmin, xmax)
-    class(mesh_spectral), intent(inout) :: s
+ SUBROUTINE init(m, nx, nf, maxrk, xmin, xmax)
+    class(mesh_spectral), intent(inout) :: m
     integer, intent(in) :: nx,nf,maxrk
     real, intent(in) :: xmin, xmax
     integer :: i,j
     
     
-    call s % mesh % init( nx, nf, maxrk, xmin, xmax)
-    s % stat = 1
-    s % coeff_cmpt = .false.
-    s % name = 'Gauss-Lobatto'     
-    allocate(s%xlob(nx))
-    call generuj_GL(nx,s%xlob)
-    call generuj_GL_przesuniete(nx,s%x,xmin,xmax)
-    allocate(s%work_FFT(8*s%nx+12))
-    call d1spectral_fft_init(s%nx,s%work_FFT)
+    call m % mesh % init( nx, nf, maxrk, xmin, xmax)
+    m % stat = 1
+    m % coeff_cmpt = .false.
+    m % name = 'Gauss-Lobatto'     
+    allocate(m%xlob(nx))
+    call generuj_GL(nx,m%xlob)
+    call generuj_GL_przesuniete(nx,m%x,xmin,xmax)
+    allocate(m%work_FFT(8*m%nx+12))
+    call d1spectral_fft_init(m%nx,m%work_FFT)
     
-    s%dx = s%x(1)-s%x(2) ! metoda 1
-    s%factor = 2.0d0/(s%x(1)-s%x(n))
+    m%dx = m%x(1)-m%x(2) ! metoda 1
+    m%factor = 2.0/(m%x(1)-m%x(m%nx))
   END SUBROUTINE init
   
-  SUBROUTINE free(s)
-    class(mesh_spectral), intent(inout) :: s
+  SUBROUTINE free(m)
+    class(mesh_spectral), intent(inout) :: m
     
-    if(allocated(s%xlob)) deallocate(s%xlob)
-    if(allocated(s%work_FFT)) deallocate(s%work_FFT)
+    if(allocated(m%xlob)) deallocate(m%xlob)
+    if(allocated(m%work_FFT)) deallocate(m%work_FFT)
 
-    if(allocated(s%coeffs)) deallocate(s%coeffs)
-    if(allocated(s%work_matrix)) deallocate(s%work_matrix)
+    if(allocated(m%coeffs)) deallocate(m%coeffs)
+    if(allocated(m%work_matrix)) deallocate(m%work_matrix)
     
-    call s % mesh % free
+    call m % mesh % free
     
   END SUBROUTINE free     
      
@@ -161,46 +163,50 @@ END TYPE mesh_spectral
   END FUNCTION derivative
 
   ! calculates i-th derivative of all functions at all points
-  SUBROUTINE calculate_derivatives( s, i )
-    class(mesh_spectral), target, intent(inout) :: s
-    double complex :: cff(s%nx)
-    integer :: i
-   if (s % stat .eq. 0) stop 'mesh_spectral: Initialize the mesh first'    
+  SUBROUTINE calculate_derivatives( m, i )
+    class(mesh_spectral), target, intent(inout) :: m
+    double complex :: cff(2*m%nx-1)
+    integer,intent(in) :: i
+    integer :: j
+   if (m % stat .eq. 0) stop 'mesh_spectral: Initialize the mesh first'    
    if (i .gt. 1) stop 'mesh_spectral: Only first derivative availible so far...'
    
-   if (s%coeff_cmpt) then
-    if (s%stat .lt. 3) then
-     do i=1,s % nf
-      call d1spectral_fft(s % nx,s % xlob,s % f(:,i) , s % df(:,i),s % work_FFT, cff)
-      s%df(:,i) = s%df(:,i)*s % factor
+   if (.not. m%coeff_cmpt) then
+    if (m%stat .lt. 3) then
+     do j=1,m % nf
+      call d1spectral_fft(m % nx,m % xlob,m % f(:,j) , m % df(:,j,1),m % work_FFT, cff)
+      m%df(:,j,1) = m%df(:,j,1)*m % factor
      end do
     else
-     do i=1,s % nf
-      call d1spectral_matrix(s % nx,s % f(:,i) , s % df(:,i),s % work_matrix, cff)
-      s%df(:,i) = s%df(:,i)*s % factor
+     do j=1,m % nf
+      call d1spectral_matrix(m % nx,m % f(:,j) , m % df(:,j,1),m % work_matrix, cff)
+      m%df(:,j,1) = m%df(:,j,1)*m % factor
      end do
    end if
   else 
-    if (s%stat .lt. 3) then
-     do i=1,s % nf
-      call d1spectral_fft(s % nx,s % xlob,s % f(:,i) , s % df(:,i),s % work_FFT, s % coeffs(:,i))
-      s%df(:,i) = s%df(:,i)*s % factor
+    if (m%stat .lt. 3) then
+     do j=1,m % nf
+      call d1spectral_fft(m % nx,m % xlob,m % f(:,j) , m % df(:,j,1), m % work_FFT, m % coeffs(1,j))
+    
+      m%df(:,j,1) = m%df(:,j,1)*m % factor
      end do
     else
-     do i=1,s % nf
-      call d1spectral_matrix(s % nx,s % f(:,i) , s % df(:,i),s % work_matrix, s % coeffs(:,i))
-      s%df(:,i) = s%df(:,i)*s % factor
+     do j=1,m % nf
+      call d1spectral_matrix(m % nx,m % f(:,j) , m % df(:,j,1),m % work_matrix, m % coeffs(1,j))
+      m%df(:,j,1) = m%df(:,j,1)*m % factor
      end do
    end if
   end if 
+  if(m%coeff_cmpt) m%coeffs = m%coeffs/(2*m%nx-2) ! normalizacja
+  
   END SUBROUTINE calculate_derivatives
 
 
-  SUBROUTINE neumann(s,pos,val,fun)
-    class(mesh_spectral), target, intent(inout) :: s
+  SUBROUTINE neumann(m,pos,val,fun)
+    class(mesh_spectral), target, intent(inout) :: m
     integer,intent(in) :: pos,fun
     real, intent(in) :: val
-    call d1spectral_neuman(s%nx,pos,s%f(pos,fun),val,s%work_matrix)
+    call d1spectral_neuman(m%nx,pos,m%f(pos,fun),val,m%work_matrix)
   END SUBROUTINE neumann
 
 END MODULE module_mesh_spectral

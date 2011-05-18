@@ -36,11 +36,14 @@ endif()
 
 # GFORTRAN COMPILER
 if( ${comp} STREQUAL ${gfortran})
-  set(flags "-ggdb -Wall -pedantic -fimplicit-none -Wno-unused -Wno-unused-dummy-argument -fbounds-check -fdefault-real-8")
+  set(flags "-ggdb -Wall -pedantic -Wno-unused -Wno-unused-dummy-argument  -fdefault-real-8 -fdefault-double-8")
 endif()
 
 # source files suffix
 set(SUFFIX "f90")
+set(SUFFIKS "f")
+
+set(libs "-llapack -lblas")
 
 # add a subdirectory with a test library
 add_subdirectory( src )
@@ -51,7 +54,7 @@ file(GLOB bin_list RELATIVE ${PROJECT_SOURCE_DIR}/test ${PROJECT_SOURCE_DIR}/tes
 # create targets for each file from ./test
 foreach(bin ${bin_list})
   string(REPLACE ".${SUFFIX}" "" bin ${bin})
-
+ 
   add_executable(${bin} ${PROJECT_SOURCE_DIR}/test/${bin}.${SUFFIX})
 
   # set the target binary file location

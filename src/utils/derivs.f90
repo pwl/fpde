@@ -257,7 +257,10 @@ subroutine d1spectral_fft_init(N,work)
   integer, intent(in) :: N
   double complex, dimension(8*N+12), intent(out) :: work
    ! FFT init
+ ! print *,'koko'
+ ! print*, work(509)
   call zffti(2*N-2,work)
+ ! print*,'bobo'
 end subroutine d1spectral_fft_init
 
 
@@ -284,7 +287,7 @@ subroutine d1spectral_fft(N,x,y,yx,work,coeffs)
    integer  :: NFFT
    double precision,dimension(N),intent(in) ::   x,y
    double precision,dimension(N),intent(out) ::  yx
-   double complex, dimension(2*N-1),intent(out) :: coeffs  ! wspolczynniki fouriera
+   double complex, dimension(2*N-1),intent(inout) :: coeffs  ! wspolczynniki fouriera
    double complex, dimension(2*N-1) :: tempfft ! tymczasowy wektor complexow na wejsciu do fft
    double complex, dimension(4*(2*N-1)+16),intent(inout) :: work
    integer iret,i,j
@@ -293,18 +296,22 @@ subroutine d1spectral_fft(N,x,y,yx,work,coeffs)
    double precision ,parameter :: pi = 3.141592653589793238462643383279d0
    NFFT = 2*N-1
    ! FFT init
-  call zffti(NFFT-1,work)
-   
+ ! call zffti(NFFT-1,work)
+!   print*, 'w' 
    do i = 1,N
+!      print *,i
       coeffs(i) = dcmplx(y(i),0.0d0)
    end do
       ! wielomiany czebyszewa Tn = dcos(n t) maja t od 0 do pi, my potrzebujemy od 0 do 2 pi, musimy sobie rozmnozyc kozystajac z tego, ze cos (pi-x) = cos (pi+x)
-      
+!    print *,'dalej'  
    do i=N+1,NFFT
       coeffs(i) = dcmplx(y(2*N-i),0.0d0)
    end do
   ! transformata fouriera FFT
+  ! print *, 'przed'
    call zfftf(NFFT-1,coeffs,work)
+  ! print *, 'po'  
+
 ! NFFT musi byc nieparzyste i zawsze bedzie!!!!
 ! Najpierw trzeba obsluzyc niewygodny przypadek - na granicach przedzialu jest "0/0" i pochodne funkcji bazowych trzeba wyliczyc z de l'Hospitala
     yx(1)=0.0d0
@@ -333,71 +340,6 @@ subroutine d1spectral_fft(N,x,y,yx,work,coeffs)
    
 end subroutine d1spectral_fft
 
-! powolne, tylko do testow
-
-subroutine d1spectral_fft_fftw(N,x,y,yx,work,coeffsy)
-   implicit none
-   include 'fftw3.f'
-   integer, intent(in) :: N ! ilosc punktow siatki
-   integer  :: NFFT
-   real ,dimension(N),intent(in) ::   x,y
-   real ,dimension(N),intent(out) ::  yx
-   double complex, dimension(2*N-1),intent(out) :: coeffsy ! wspolczynniki fouriera
-   double complex, dimension(2*N-1) :: coeffs ! wspolczynniki fouriera
-   double complex, dimension(2*N-1) :: tempfft ! tymczasowy wektor complexow na wejsciu do fft
-   integer*8 :: plan,planback
-   integer iret,i,j
-   real  :: a,b,s
-   real ,parameter :: pi = 3.141592653589793238462643383279
-   double complex, dimension(4*(2*N-1)+16),intent(inout) :: work
-   NFFT = 2*N-1
-   
-   call dfftw_plan_dft_1d(plan,2*N-2,tempfft,coeffs,FFTW_FORWARD,FFTW_MEASURE)
-   call dfftw_plan_dft_1d(planback,2*N-2,coeffs,tempfft,FFTW_BACKWARD,FFTW_MEASURE)
-
-   do i = 1,N
-      tempfft(i) = dcmplx(y(i),0.0)
-   end do
-      ! wielomiany czebyszewa Tn = cos(n t) maja t od 0 do pi, my potrzebujemy od 0 do 2 pi, musimy sobie rozmnozyc kozystajac z tego, ze cos (pi-x) = cos (pi+x)
-   do i=N+1,NFFT
-      tempfft(i) = dcmplx(y(2*N-i),0.0)
-   end do
-
-
-   call dfftw_execute_dft(plan, tempfft, coeffs)
-   coeffsy = coeffs/(NFFT-1)
-! NFFT musi byc nieparzyste i zawsze bedzie!!!!
-! Najpierw trzeba obsluzyc niewygodny przypadek - na granicach przedzialu jest "0/0" i pochodne funkcji bazowych trzeba wyliczyc z de l'Hospitala
-    yx(1)=0.0
-    yx(N)=0.0
-    do i=1,N-1
-      yx(N)=yx(N)+i*i*(-1.0)**(i+1)*2.0*dble(coeffs(i+1))
-      yx(1)=yx(1)+i*i*2.0*dble(coeffs(i+1))
-    end do
-    yx(1) = yx(1)/dble(NFFT-1)
-    yx(n) = yx(n)/dble(NFFT-1)
-
-    
-! Koniec wyliczania na krancach dziedziny
-
-! Zmodyfikowanie wspolczynnikow aby wyliczyc pochodna
-
-   do j=1,(NFFT-1)/2   ! pochodna
-     coeffs(j) = coeffs(j)*(0.0,1.0)*(j-1)
-   end do
-   do j=NFFT-1,(NFFT-1)/2+2,-1 !  pochodna dla aliasow
-     coeffs(j) = coeffs(j)*(0.0,1.0)*(j - (NFFT-1) - 1)
-   end do
-   coeffs((NFFT-1)/2+1) = coeffs((NFFT-1)/2+1)*(0.0,1.0)*((NFFT-1)/2)
-   call dfftw_execute_dft(planback,coeffs,tempfft) ! powrot do starej bazy, pochodna wyliczona!
-   do i=2,N-1
-     s = -1.0/sin(acos(x(i)))
-     yx(i) = s*tempfft(i)/dble(NFFT-1) ! normalizacja + transformacja pochodnej
-   end do
-
-
-   ! teraz powtarzamy rozniczkowanie, aby uzyskac druga pochodna:
-end subroutine d1spectral_fft_fftw
 
 
 
