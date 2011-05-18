@@ -19,7 +19,7 @@ contains
     class(mesh_sfd3pt), intent(inout) :: m
     integer, intent(in) :: nx,nf,maxrk
     real, intent(in) :: xmin, xmax
-    integer :: i
+    integer :: i,j
 
     call m % mesh % init( nx, nf, maxrk, xmin, xmax)
 
