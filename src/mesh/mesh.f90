@@ -23,11 +23,12 @@ module mesh_module
      procedure :: init
      procedure :: free
 
-     ! use only, not overloadable
+     ! use only, not to be overloaded
+     procedure :: print_by_index
+     generic   :: print => print_by_index
      procedure :: print_preview
      procedure :: check_derivatives
      procedure :: clear_derivatives
-     ! generic   :: print => print_01, print_index
 
      ! questionable
      procedure :: to_vector
@@ -200,10 +201,14 @@ contains
   
   ! end subroutine print_01
 
-  ! subroutine print_index( m )
-  !   class(mesh), intent(inout) :: m
+  subroutine print_by_index( m, file_name, index )
+    class(mesh), intent(inout) :: m
+    character(len=*) :: file_name    
+    integer, intent(in) :: index(:)
+    
+    print *, m%f(:,index)
   
-  ! end subroutine print_index
+  end subroutine print_by_index
   
 
 end module mesh_module
