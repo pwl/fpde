@@ -3,11 +3,11 @@ module module_marcher
   type marcher
      integer :: fn
      real :: t, dt
-     real, allocatable :: f(:)
+     real, allocatable :: fout(:)
      real, allocatable :: df(:)
    contains
      procedure init
-     procedure free
+     ! procedure free
   end type marcher
 
 contains

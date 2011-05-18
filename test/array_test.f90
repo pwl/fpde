@@ -1,14 +1,16 @@
 program array_test
   integer, parameter :: n = 10
   real               :: array(n,n)
+  
 
-  ! call f(array)
+  call f(n,array)
 
 end program array_test
 
-! subroutine f(a)
-!   real :: a(:)
+subroutine f(n,a)
+  integer :: n
+  real :: a(n*n)
 
-!   print *, a
+  print *, a
 
-! end subroutine f
+end subroutine f

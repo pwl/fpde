@@ -8,27 +8,35 @@ module mesh_module
   type, public :: mesh
      ! private
      ! TODO: add something like
-     ! string :: name
+     character(len=30)    :: name
      integer              :: nx, nf, maxrk
      real, allocatable    :: x(:)
      real, allocatable    :: f(:,:)
      real, allocatable    :: df(:,:,:)
-     logical, allocatable :: df_calculated(:)
+     logical, private, allocatable :: df_calculated(:)
    contains
-     procedure :: print_preview
-     procedure :: init
-     procedure :: free
+     ! obligatory
      procedure :: derivative
      procedure :: calculate_derivatives
+
+     ! optional
+     procedure :: init
+     procedure :: free
+
+     ! use only, not overloadable
+     procedure :: print_preview
+     procedure :: check_derivatives
+     procedure :: clear_derivatives
+     ! generic   :: print => print_01, print_index
+
+     ! questionable
      procedure :: to_vector
      procedure :: from_vector
      procedure :: fill_for_debug
-     procedure :: check_derivatives
-     procedure :: clear_derivatives
   end type mesh
 
 contains
-
+  
   subroutine init(m, nx, nf, maxrk, xmin, xmax)
     class(mesh), intent(inout) :: m
     integer, intent(in) :: nx,nf,maxrk
@@ -115,18 +123,28 @@ contains
   ! copies data
   subroutine to_vector( m, v )
     class(mesh), target, intent(in) :: m
-    ! real, allocatable, intent(inout) :: v(:)
     real, pointer, intent(inout) :: v(:)
-
-    ! if( .not. allocated( v ) ) then
-    !    allocate( v ( m % nx * m % nf ) )
-    ! end if
-
-    ! v = reshape( m % f, shape( v ) )
 
     v(1 : m%nf * m%nx) => m % f
 
   end subroutine to_vector
+
+  ! subroutine to_vector_trick( m, v )
+  !   class(mesh), intent(in) :: m
+  !   real, intent(inout) :: v()
+    
+  ! end subroutine to_vector_trick
+
+
+  ! subroutine kuku( n, v, t )
+  !     integer :: n
+  !     real :: v(n*n)
+  !     real :: t(n*n)
+
+  !     t = v      
+
+  ! end subroutine kuku
+  
 
   ! not needed anymore!
   subroutine from_vector( m, v )
@@ -175,5 +193,17 @@ contains
 
   end subroutine fill_for_debug
 
+  
+  ! subroutine print_01( m, i )
+  !   class(mesh), intent(inout) :: m
+  !   integer :: i
+  
+  ! end subroutine print_01
+
+  ! subroutine print_index( m )
+  !   class(mesh), intent(inout) :: m
+  
+  ! end subroutine print_index
+  
 
 end module mesh_module
