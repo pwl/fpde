@@ -38,8 +38,7 @@ contains
 
     m % nx = nx
     m % nf = nf
-    m % maxrk = maxrk
-
+    m % maxrk = Maxrk
     allocate( m % df_calculated( maxrk ) )
     m % df_calculated = .false.
 

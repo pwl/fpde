@@ -4,8 +4,8 @@ fpde
 fpde is a set of structures (classes) to unify an exchange of pieces
 of numerical software in our group.
 
-1. Compilation
---------------
+Compilation
+-----------
 
 CMake is required to compile this library.
 
