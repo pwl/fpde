@@ -168,13 +168,13 @@ contains
 
     ! print parameters
     print *, ""
-    print *, "nx,nf,maxrk = ",&
+    print *, "nx,nf,maxrk = ",& 
          m % nx, m % nf, m % maxrk
 
     ! print mesh points
     print *, "x = ", m % x(1:offset), " (...) ", m % x(m%nx - offset : m%nx)
     do i = 1, m%nf
-       print *, "f_", i, " = ", m % f(1:offset,i),&
+       print *, "f_", i, " = ", m % f(1:offset,i),& 
             " (...) ", m % f(m%nx - offset : m%nx,i)
     end do
     print *, ""
