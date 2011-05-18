@@ -1,4 +1,4 @@
-include_directories( . )
+xinclude_directories( . )
 
 # Search for the source files recursively and add them to yapdes_src
 file( GLOB_RECURSE yapdes_src [^.]*.${SUFFIX} )
