@@ -22,6 +22,7 @@ module mesh_module
      ! optional
      procedure :: init
      procedure :: free
+     procedure :: info
 
      ! use only, not to be overloaded
      procedure :: print_by_index
@@ -56,6 +57,14 @@ contains
     allocate( m % f( nx, nf ) )
     allocate( m % df( nx, nf, maxrk ) )
   end subroutine init
+
+  subroutine info(m)
+  class(mesh), intent(inout) :: m
+  print*,' *** General info ***'
+  print*,'Mesh type: ',m % name
+  print*,'Mesh size: ',m % nx
+  print*,'Number of functions: ', m%nf
+  end subroutine info
 
 
   subroutine free( m )
@@ -190,7 +199,7 @@ contains
     integer :: i,j
 
     call m%init(nx, nf, maxrk, 0., 1.)
-    forall(i = 1:m%nx, j = 1:m%nf) m%f(j,i) = i*100+j
+    forall(i = 1:m%nx, j = 1:m%nf) m%f(i,j) = i*100+j
 
   end subroutine fill_for_debug
 
