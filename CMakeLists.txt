@@ -41,7 +41,7 @@ endif()
 
 # source files suffix
 set(SUFFIX "f90")
-set(SUFFIKS "f")
+# set(SUFFIKS "f")
 
 set(libs "-llapack -lblas")
 
@@ -54,7 +54,7 @@ file(GLOB bin_list RELATIVE ${PROJECT_SOURCE_DIR}/test ${PROJECT_SOURCE_DIR}/tes
 # create targets for each file from ./test
 foreach(bin ${bin_list})
   string(REPLACE ".${SUFFIX}" "" bin ${bin})
- 
+
   add_executable(${bin} ${PROJECT_SOURCE_DIR}/test/${bin}.${SUFFIX})
 
   # set the target binary file location
