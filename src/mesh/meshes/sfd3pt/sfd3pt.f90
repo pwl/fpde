@@ -14,7 +14,7 @@ module module_mesh_sfd3pt
   end type mesh_sfd3pt
 
 contains
-  
+
   subroutine init(m, nx, nf, maxrk, xmin, xmax)
     class(mesh_sfd3pt), intent(inout) :: m
     integer, intent(in) :: nx,nf,maxrk
@@ -24,7 +24,7 @@ contains
     call m % mesh % init( nx, nf, maxrk, xmin, xmax)
 
     m % name = "sfd3pt"
-     
+
     m % h = (xmax-xmin)/(nx-1)
 
     ! setup a uniform grid
@@ -32,7 +32,7 @@ contains
          m % x(i) = xmin + (i-1) * m % h
 
   end subroutine init
-  
+
   function derivative( m, i, j, k )
     class(mesh_sfd3pt), intent(inout) :: m
     integer, intent(in) :: i,j,k
@@ -49,7 +49,8 @@ contains
 
   recursive subroutine calculate_derivatives( m, i )
     class(mesh_sfd3pt), target, intent(inout) :: m
-    integer :: i,j,k
+    integer, intent(in) :: i
+    integer :: j,k
     real, pointer :: f(:,:)
 
 

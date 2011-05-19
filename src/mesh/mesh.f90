@@ -38,7 +38,7 @@ module mesh_module
   end type mesh
 
 contains
-  
+
   subroutine init(m, nx, nf, maxrk, xmin, xmax)
     class(mesh), intent(inout) :: m
     integer, intent(in) :: nx,nf,maxrk
@@ -92,7 +92,7 @@ contains
   ! calculates i-th derivative of all functions at all points
   subroutine calculate_derivatives( m, i )
     class(mesh), target, intent(inout) :: m
-    integer :: i
+    integer, intent(in) :: i
 
     stop 'method "calculate_derivatives" not overloaded'
 
@@ -142,7 +142,7 @@ contains
   ! subroutine to_vector_trick( m, v )
   !   class(mesh), intent(in) :: m
   !   real, intent(inout) :: v()
-    
+
   ! end subroutine to_vector_trick
 
 
@@ -151,10 +151,10 @@ contains
   !     real :: v(n*n)
   !     real :: t(n*n)
 
-  !     t = v      
+  !     t = v
 
   ! end subroutine kuku
-  
+
 
   ! not needed anymore!
   subroutine from_vector( m, v )
@@ -178,13 +178,13 @@ contains
 
     ! print parameters
     print *, ""
-    print *, "nx,nf,maxrk = ",& 
+    print *, "nx,nf,maxrk = ",&
          m % nx, m % nf, m % maxrk
 
     ! print mesh points
     print *, "x = ", m % x(1:offset), " (...) ", m % x(m%nx - offset : m%nx)
     do i = 1, m%nf
-       print *, "f_", i, " = ", m % f(1:offset,i),& 
+       print *, "f_", i, " = ", m % f(1:offset,i),&
             " (...) ", m % f(m%nx - offset : m%nx,i)
     end do
     print *, ""
@@ -203,21 +203,21 @@ contains
 
   end subroutine fill_for_debug
 
-  
+
   ! subroutine print_01( m, i )
   !   class(mesh), intent(inout) :: m
   !   integer :: i
-  
+
   ! end subroutine print_01
 
   subroutine print_by_index( m, file_name, index )
     class(mesh), intent(inout) :: m
-    character(len=*) :: file_name    
+    character(len=*) :: file_name
     integer, intent(in) :: index(:)
-    
+
     print *, m%f(:,index)
-  
+
   end subroutine print_by_index
-  
+
 
 end module mesh_module
