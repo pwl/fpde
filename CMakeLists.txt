@@ -25,7 +25,8 @@ set(comp ${CMAKE_Fortran_COMPILER})
 # INTEL COMPILER
 if( ${comp} STREQUAL ${ifort})
   # set(flags "-ggdb -u -fpe1 -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -parallel -no-opt-matmul -stand f03 -openmp")
-  set(flags "-ggdb -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -r8 -i8")
+  # set(flags "-ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -r8 -i8")
+  set(flags "@${CMAKE_CURRENT_SOURCE_DIR}/ifort.cfg")
 
   # MKL LINKING FLAGS
   # set(lflags "-L$(MKLROOT)/lib/ia32  -Wl,--start-group -lmatmul -lmkl_intel -lmkl_intel_thread -lmkl_core -Wl,--end-group -openmp -lpthread")
