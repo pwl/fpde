@@ -4,7 +4,7 @@ program mesh_example_test
 
   ! declare a mesh of a given type
   type(mesh_example) :: m
-  real, pointer :: v(:)
+  ! real, pointer :: v(:)
 
   ! you can than call the methods (type-bound procedures) with a
   ! uniform manner
@@ -14,8 +14,8 @@ program mesh_example_test
   ! print a mesh
   call m % print_preview
   ! write and read data to and from vector v
-  call m % to_vector(v)
-  call m % from_vector(v)
+  ! call m % to_vector(v)
+  ! call m % from_vector(v)
   ! free when done with the mesh
   call m % free
 

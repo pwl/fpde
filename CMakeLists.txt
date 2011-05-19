@@ -18,14 +18,14 @@ file(MAKE_DIRECTORY "bin/test")
 
 # available compilers
 find_program(ifort "ifort")
-find_program(gfortran "gfortran")
+find_program(gfortran "gfortran-4.6")
 
 set(comp ${CMAKE_Fortran_COMPILER})
 
 # INTEL COMPILER
 if( ${comp} STREQUAL ${ifort})
   # set(flags "-ggdb -u -fpe1 -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -parallel -no-opt-matmul -stand f03 -openmp")
-  set(flags "-ggdb -u -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -r16")
+  set(flags "-ggdb -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -r8 -i8")
 
   # MKL LINKING FLAGS
   # set(lflags "-L$(MKLROOT)/lib/ia32  -Wl,--start-group -lmatmul -lmkl_intel -lmkl_intel_thread -lmkl_core -Wl,--end-group -openmp -lpthread")

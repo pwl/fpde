@@ -3,8 +3,7 @@ include_directories( . )
 # Search for the source files recursively and add them to fpde_src
 file( GLOB_RECURSE fpde_src "[^.]*.${SUFFIX}" )
 file( GLOB_RECURSE fpde_src_f "[^.]*.f" )
-
-message(${fpde_src_f})
+set(flags "${flags} -stand f77")
 
 # set the additional compile flags
 set_source_files_properties("${fpde_src}"

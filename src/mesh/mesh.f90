@@ -8,7 +8,7 @@ module mesh_module
   type, public :: mesh
      ! private
      ! TODO: add something like
-     character(len=30)    :: name
+     character(len=300)    :: name
      integer              :: nx, nf, maxrk
      real, allocatable    :: x(:)
      real, allocatable    :: f(:,:)
@@ -138,23 +138,6 @@ contains
     v(1 : m%nf * m%nx) => m % f
 
   end subroutine to_vector
-
-  ! subroutine to_vector_trick( m, v )
-  !   class(mesh), intent(in) :: m
-  !   real, intent(inout) :: v()
-
-  ! end subroutine to_vector_trick
-
-
-  ! subroutine kuku( n, v, t )
-  !     integer :: n
-  !     real :: v(n*n)
-  !     real :: t(n*n)
-
-  !     t = v
-
-  ! end subroutine kuku
-
 
   ! not needed anymore!
   subroutine from_vector( m, v )
