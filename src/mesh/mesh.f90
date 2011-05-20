@@ -1,5 +1,6 @@
 module mesh_module
 
+  use pretty_print
   use omp_lib
 
   private
@@ -193,12 +194,17 @@ contains
 
   ! end subroutine print_01
 
-  subroutine print_by_index( m, file_name, index )
+  subroutine print_by_index( m, file_name, f_select )
     class(mesh), intent(inout) :: m
     character(len=*) :: file_name
-    integer, intent(in) :: index(:)
+    integer, intent(in) :: f_select(:)
+    integer :: i
 
-    print *, m%f(:,index)
+    ! call pretty_print_matrix( m%f, f_select )
+    do i = 1, size(m % x) 
+       print real_format, m % x(i), m % f(i,f_select)
+    end do
+
 
   end subroutine print_by_index
 

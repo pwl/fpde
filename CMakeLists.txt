@@ -27,8 +27,8 @@ set(comp ${CMAKE_Fortran_COMPILER})
 
 # INTEL COMPILER
 if( ${comp} STREQUAL ${ifort})
-  set(flags "@${confdir}/ifort.cfg")
-  set(flags_f77 "@${confdir}/ifort_f77.cfg")
+  set(flags "@${confdir}/ifort.cfg @${confdir}/ifort_precision.cfg")
+  set(flags_f77 "@${confdir}/ifort_f77.cfg @${confdir}/ifort_precision.cfg")
 
   # MKL LINKING FLAGS
   # set(lflags "-L$(MKLROOT)/lib/ia32  -Wl,--start-group -lmatmul -lmkl_intel -lmkl_intel_thread -lmkl_core -Wl,--end-group -openmp -lpthread")
@@ -44,22 +44,22 @@ if( ${comp} STREQUAL ${gfortran})
 endif()
 
 # source files suffix
-set(SUFFIX "f90")
-# set(SUFFIKS "f")
+set(suffix "f90")
+set(suffix_f77 "f")
 
-set(libs "-llapack -lblas")
+# set(libs "-llapack -lblas")
 
 # add a subdirectory with a test library
 add_subdirectory( src )
 
 # search for source files in ./test
-file(GLOB bin_list RELATIVE ${PROJECT_SOURCE_DIR}/test ${PROJECT_SOURCE_DIR}/test/*.${SUFFIX})
+file(GLOB bin_list RELATIVE ${PROJECT_SOURCE_DIR}/test ${PROJECT_SOURCE_DIR}/test/*.${suffix})
 
 # create targets for each file from ./test
 foreach(bin ${bin_list})
-  string(REPLACE ".${SUFFIX}" "" bin ${bin})
+  string(REPLACE ".${suffix}" "" bin ${bin})
 
-  add_executable(${bin} ${PROJECT_SOURCE_DIR}/test/${bin}.${SUFFIX})
+  add_executable(${bin} ${PROJECT_SOURCE_DIR}/test/${bin}.${suffix})
 
   # set the target binary file location
   set_target_properties(${bin}

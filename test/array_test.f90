@@ -1,7 +1,6 @@
 program array_test
   integer, parameter :: n = 10
   real               :: array(n,n)
-  
 
   call f(n,array)
 
