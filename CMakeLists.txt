@@ -27,8 +27,8 @@ set(comp ${CMAKE_Fortran_COMPILER})
 
 # INTEL COMPILER
 if( ${comp} STREQUAL ${ifort})
-  set(flags "@${config}/ifort.cfg")
-  set(flags_f77 "@${config}/ifort_f77.cfg")
+  set(flags "@${confdir}/ifort.cfg")
+  set(flags_f77 "@${confdir}/ifort_f77.cfg")
 
   # MKL LINKING FLAGS
   # set(lflags "-L$(MKLROOT)/lib/ia32  -Wl,--start-group -lmatmul -lmkl_intel -lmkl_intel_thread -lmkl_core -Wl,--end-group -openmp -lpthread")
