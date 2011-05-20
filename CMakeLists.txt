@@ -11,6 +11,9 @@ set( CMAKE_Fortran_MODULE_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 # add the above path to include path
 include_directories( ${LIBRARY_OUTPUT_PATH} )
 
+# configuration dir
+set( confdir "${CMAKE_CURRENT_SOURCE_DIR}/config")
+
 # create directory for test files
 file(MAKE_DIRECTORY "bin/test")
 
@@ -24,9 +27,8 @@ set(comp ${CMAKE_Fortran_COMPILER})
 
 # INTEL COMPILER
 if( ${comp} STREQUAL ${ifort})
-  # set(flags "-ggdb -u -fpe1 -ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -parallel -no-opt-matmul -stand f03 -openmp")
-  # set(flags "-ftrapuv -warn all -warn nounused -gen-interfaces -traceback -fast -fp-model strict -r8 -i8")
-  set(flags "@${CMAKE_CURRENT_SOURCE_DIR}/ifort.cfg")
+  set(flags "@${config}/ifort.cfg")
+  set(flags_f77 "@${config}/ifort_f77.cfg")
 
   # MKL LINKING FLAGS
   # set(lflags "-L$(MKLROOT)/lib/ia32  -Wl,--start-group -lmatmul -lmkl_intel -lmkl_intel_thread -lmkl_core -Wl,--end-group -openmp -lpthread")
@@ -38,6 +40,7 @@ endif()
 # GFORTRAN COMPILER
 if( ${comp} STREQUAL ${gfortran})
   set(flags "-ggdb -Wall -pedantic -Wno-unused -Wno-unused-dummy-argument  -fdefault-real-8 -fdefault-double-8")
+  set(flags_f77 "${flags}")
 endif()
 
 # source files suffix
