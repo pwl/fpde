@@ -1,21 +1,16 @@
 module pretty_print
 
-  character(len=*), parameter :: real_format = "3(f10.3)"
+  character(len=*), parameter :: real_format = "f"
 
 contains
 
-  subroutine  pretty_print_matrix(matrix, rows)
-    real :: matrix(:,:)
-    integer :: rows(:)
-    integer :: i
-    
-    
-    do i = 1, size(matrix,1) 
-       print *, matrix(i,rows)
-    end do
-    
-  end subroutine pretty_print_matrix
+  character(len=30) function format_for_n_reals(n)
+    integer :: n,i
+    format_for_n_reals = ' '
 
-  character function format_for_n_reals(n)
+    write (format_for_n_reals, '(a,i0,a,a)'), '(', n, real_format, ')'
+
+  end function format_for_n_reals
+  
 
 end module pretty_print

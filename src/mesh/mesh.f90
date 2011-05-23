@@ -4,7 +4,7 @@ module mesh_module
   use omp_lib
 
   private
-
+  
   ! general mesh class to be inherited by user-defined meshes
   type, public :: mesh
      ! private
@@ -27,7 +27,7 @@ module mesh_module
 
      ! use only, not to be overloaded
      procedure :: print_by_index
-     generic   :: print => print_by_index
+     ! generic   :: print => print_by_index
      procedure :: print_preview
      procedure :: check_derivatives
      procedure :: clear_derivatives
@@ -194,17 +194,26 @@ contains
 
   ! end subroutine print_01
 
-  subroutine print_by_index( m, file_name, f_select )
+  subroutine print_by_index( m, file_desc, f_select )
     class(mesh), intent(inout) :: m
-    character(len=*) :: file_name
     integer, intent(in) :: f_select(:)
-    integer :: i
+    integer, intent(in) :: file_desc
+    integer :: i,j
 
-    ! call pretty_print_matrix( m%f, f_select )
-    do i = 1, size(m % x) 
-       print real_format, m % x(i), m % f(i,f_select)
+    ! strange write juggling
+    do i = 1, size(m % x)
+       ! write mesh point first
+       write( *, format_for_n_reals(1), advance='no') m % x(i)
+
+       ! write all selected functions
+       do j = 1, size(f_select)
+          write (*, format_for_n_reals(1), advance='no'), &
+               m % f(i,f_select(j))
+       end do
+       
+       ! end with a newline
+       write (*,*)
     end do
-
 
   end subroutine print_by_index
 

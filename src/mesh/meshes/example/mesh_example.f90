@@ -10,7 +10,7 @@ module module_mesh_example
      real, allocatable :: test(:)
    contains
      ! overloaded procedures go here (if needed)
-     procedure :: cache_derivatives
+     procedure :: calculate_derivatives
      procedure :: init
      procedure :: free
   end type mesh_example
@@ -43,14 +43,14 @@ contains
 
   end subroutine free
 
-  ! overloaded CacheDerivatives
-  subroutine cache_derivatives( m, i )
-    class(mesh_example), intent(inout) :: m
-    integer :: i
+  ! overloaded CalculateDerivatives
+  subroutine calculate_derivatives( m, i )
+    class(mesh_example), target,  intent(inout) :: m
+    integer, intent(in) :: i
 
     ! overloading is simple!
-    print *, "Overloaded cache_derivatives!"
+    print *, "Overloaded calculate_derivatives!"
 
-  end subroutine cache_derivatives
+  end subroutine calculate_derivatives
 
 end module module_mesh_example

@@ -25,10 +25,10 @@ program mesh_sfd3pt_test
   ! call m % from_vector( v )
   ! call m % print_preview
   call m % calculate_derivatives( rk )
-  print *, m % df(1:5,1,2)
+  ! print *, m % df(1:5,1,2)
   ! free when done with the mesh
 
-  call m % print_by_index( "aa", (/ 1 /)  )
+  call m % print_by_index( 1, (/ 1, 2 /)  )
   call m % free
 
 end program mesh_sfd3pt_test
