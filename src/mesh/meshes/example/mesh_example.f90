@@ -1,5 +1,5 @@
-module module_mesh_example
-  use mesh_module
+module class_mesh_example
+  use class_mesh
 
   ! everything except the type should be private
   private
@@ -53,4 +53,4 @@ contains
 
   end subroutine calculate_derivatives
 
-end module module_mesh_example
+end module class_mesh_example

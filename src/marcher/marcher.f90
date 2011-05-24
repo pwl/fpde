@@ -1,6 +1,8 @@
-module module_marcher
+module class_marcher
 
-  type marcher
+  private
+
+  type, public ::  marcher
      integer :: fn
      real :: t, dt
      real, allocatable :: fout(:)
@@ -12,11 +14,14 @@ module module_marcher
 
 contains
   subroutine init( m, n )
-    class(marcher) :: m
+    class(marcher), intent(inout) :: m
     integer :: n
-
-
-
   end subroutine init
 
-end module module_marcher
+  subroutine free( m )
+    class(marcher), intent(inout) :: m
+    
+  end subroutine free
+  
+
+end module class_marcher

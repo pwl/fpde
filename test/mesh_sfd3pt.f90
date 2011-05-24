@@ -1,7 +1,7 @@
 program mesh_sfd3pt_test
   ! first use the module with a desired mesh type
   ! use omp_lib
-  use module_mesh_sfd3pt
+  use class_mesh_sfd3pt
 
   ! declare a mesh of a given type
   type(mesh_sfd3pt) :: m

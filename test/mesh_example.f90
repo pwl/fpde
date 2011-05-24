@@ -1,6 +1,6 @@
 program mesh_example_test
   ! first use the module with a desired mesh type
-  use module_mesh_example
+  use class_mesh_example
 
   ! declare a mesh of a given type
   type(mesh_example) :: m

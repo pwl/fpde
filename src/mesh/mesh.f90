@@ -1,7 +1,7 @@
-module mesh_module
+module class_mesh
 
   use pretty_print
-  use omp_lib
+  ! use omp_lib
 
   private
   
@@ -17,8 +17,8 @@ module mesh_module
      logical, private, allocatable :: df_calculated(:)
    contains
      ! obligatory
-     procedure :: derivative
-     procedure :: calculate_derivatives
+     procedure, private :: derivative
+     procedure, private :: calculate_derivatives
 
      ! optional
      procedure :: init
@@ -194,20 +194,21 @@ contains
 
   ! end subroutine print_01
 
-  subroutine print_by_index( m, file_desc, f_select )
+  subroutine print_by_index( m, file_desc, f_select, form )
     class(mesh), intent(inout) :: m
     integer, intent(in) :: f_select(:)
     integer, intent(in) :: file_desc
+    character(len=*), optional :: form
     integer :: i,j
 
     ! strange write juggling
     do i = 1, size(m % x)
        ! write mesh point first
-       write( *, format_for_n_reals(1), advance='no') m % x(i)
+       write( *, n_format(1,form), advance='no') m % x(i)
 
        ! write all selected functions
        do j = 1, size(f_select)
-          write (*, format_for_n_reals(1), advance='no'), &
+          write (*, n_format(1,form), advance='no'), &
                m % f(i,f_select(j))
        end do
        
@@ -218,4 +219,5 @@ contains
   end subroutine print_by_index
 
 
-end module mesh_module
+end module class_mesh
+
