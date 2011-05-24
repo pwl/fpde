@@ -6,7 +6,7 @@ module class_solver_simple
   
   use pretty_print
 
-  private
+  ! private
 
   type, public, extends(solver) :: solver_simple
      class(mesh), pointer    :: mesh
@@ -33,10 +33,16 @@ contains
     class(solver_simple)  , intent(inout)      :: s
     class(mesh)    , intent(in), target :: msh
     class(marcher) , intent(in), target :: march
+    class(mesh), pointer :: msh_rhs
     
     s % mesh    => msh
-    ! s % 
     s % marcher => march
+    ! msh_rhs = msh
+
+    ! call msh_rhs % init(10,2,2,0.,1.)
+    
+    ! allocate(s % mesh_rhs)
+    ! s % mesh_rhs = s % mesh
     
   end subroutine init
 
@@ -47,5 +53,6 @@ contains
   ! subroutine attack(s)
     
   ! end subroutine attack
+
   
 end module class_solver_simple

@@ -4,7 +4,7 @@ module class_mesh
   ! use omp_lib
 
   private
-  
+
   ! general mesh class to be inherited by user-defined meshes
   type, public :: mesh
      ! private
@@ -26,17 +26,25 @@ module class_mesh
      procedure :: info
 
      ! use only, not to be overloaded
-     procedure :: print_by_index
+     procedure, non_overridable :: print_by_index
      ! generic   :: print => print_by_index
-     procedure :: print_preview
-     procedure :: check_derivatives
-     procedure :: clear_derivatives
+     procedure, non_overridable :: print_preview
+     procedure, non_overridable :: check_derivatives
+     procedure, non_overridable :: clear_derivatives
 
      ! questionable
      procedure :: to_vector
      procedure :: from_vector
      procedure :: fill_for_debug
   end type mesh
+
+  ! interface
+  !    subroutine free( m )
+  !      import :: mesh
+  !      class(mesh), intent(inout) :: m
+  !    end subroutine free
+  ! end interface
+
 
 contains
 
@@ -194,7 +202,8 @@ contains
 
   ! end subroutine print_01
 
-  subroutine print_by_index( m, file_desc, f_select, form )
+  ! form is an optional argument
+  subroutine print_by_index( m, f_select, file_desc, form )
     class(mesh), intent(inout) :: m
     integer, intent(in) :: f_select(:)
     integer, intent(in) :: file_desc
@@ -204,19 +213,28 @@ contains
     ! strange write juggling
     do i = 1, size(m % x)
        ! write mesh point first
-       write( *, n_format(1,form), advance='no') m % x(i)
+       write( file_desc, n_format(1,form), advance='no') m % x(i)
 
        ! write all selected functions
        do j = 1, size(f_select)
-          write (*, n_format(1,form), advance='no'), &
+          write (file_desc, n_format(1,form), advance='no'), &
                m % f(i,f_select(j))
        end do
-       
+
        ! end with a newline
-       write (*,*)
+       write (file_desc,*)
     end do
 
   end subroutine print_by_index
+
+  ! function copy(m,mcp)
+  !   class(mesh), intent(in) :: m
+  !   class(mesh), pointer, intent(out) :: mcp
+
+  !   allocate(m)
+
+  ! end function copy
+
 
 
 end module class_mesh

@@ -23,7 +23,7 @@ contains
        form = real_format
     end if
 
-    write (n_format, '(a,i0,a,a)'), '(', n, form, ')'
+    write (n_format, '(a,i0,a,a)') '(', n, form, ')'
 
   end function n_format
 
