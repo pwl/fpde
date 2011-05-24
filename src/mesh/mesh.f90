@@ -217,7 +217,7 @@ contains
 
        ! write all selected functions
        do j = 1, size(f_select)
-          write (file_desc, n_format(1,form), advance='no'), &
+          write (file_desc, n_format(1,form), advance='no') &
                m % f(i,f_select(j))
        end do
 
@@ -226,16 +226,6 @@ contains
     end do
 
   end subroutine print_by_index
-
-  ! function copy(m,mcp)
-  !   class(mesh), intent(in) :: m
-  !   class(mesh), pointer, intent(out) :: mcp
-
-  !   allocate(m)
-
-  ! end function copy
-
-
 
 end module class_mesh
 
