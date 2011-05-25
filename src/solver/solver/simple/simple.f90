@@ -9,6 +9,7 @@ module class_solver_simple
   private
 
   type, public, extends(solver) :: solver_simple
+     real :: max_t
      class(mesh), pointer    :: mesh
      class(mesh), pointer    :: mesh_rhs
      class(marcher), pointer :: marcher
@@ -17,15 +18,6 @@ module class_solver_simple
      procedure    :: init
      procedure    :: free
   end type solver_simple
-
-  ! abstract interface
-
-  !    subroutine rhs_interface( s )
-  !      import :: solver
-  !      class(solver) :: s
-  !    end subroutine rhs_interface
-
-  ! end interface
 
 contains
 
@@ -40,6 +32,17 @@ contains
     s % mesh_rhs => msh_rhs
 
   end subroutine init
+
+  subroutine solve(s)
+    class(solver_simple), intent(inout) :: s
+
+    do while ( s % marcher % t < s % max_t )
+       ! s % marcher % march
+    end do
+
+
+  end subroutine solve
+
 
   subroutine free(s)
     class(solver_simple), intent(inout) :: s

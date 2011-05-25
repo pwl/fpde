@@ -29,5 +29,4 @@ program solver_simple_program
   call m_dydt % free
   call march % free
 
-
 end program solver_simple_program

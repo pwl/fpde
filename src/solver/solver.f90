@@ -25,7 +25,6 @@ module class_solver
        class(solver) :: s
      end subroutine rhs
 
-
   end interface
 
 contains
@@ -43,6 +42,5 @@ contains
     stop "solve not overriden"
 
   end subroutine solve
-
 
 end module class_solver
