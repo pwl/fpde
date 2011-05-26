@@ -1,88 +1,163 @@
-module unlimited_polymorphic_module
+!! nie kompilujacy sie modul z parametrem class(*)
+! module ode_system_module_params
+!    implicit none 
+   
+!    !! interfejs
+!    abstract interface
+!       subroutine fun_interface( t, y, dydt, params )
+!          real, intent(in) :: t
+!          real, intent(in) :: y(:)
+!          real, intent(out) :: dydt(:)
+!          class(*) :: params
+!       end subroutine fun_interface
 
-  ! interfejs dla funkcji przyjmujacej class(*) czyli odpowiednik void *
-  abstract interface
-     subroutine test_up_interface( a )
-       class(*) :: a
-     end subroutine test_up_interface
-  end interface
+!       subroutine jac_interface( t, y, dfdy, dfdt, params )
+!          real, intent(in) :: t
+!          real, intent(in) :: y(:)
+!          real, intent(out) :: dfdy(:)
+!          real, intent(out) :: dfdt(:)
+!          class(*) :: params
+!       end subroutine jac_interface
+!    end interface
+
+
+!    type :: ode_system
+!       procedure(fun_interface), pointer, nopass :: fun
+!       procedure(jac_interface), pointer, nopass :: jac
+!       integer :: dim
+!       class(*) :: params
+!    end type ode_system
+   
+
+! contains
+
+!    !! konstruktor
+!    subroutine ode_system_construct( sys, fun, jac, dim, params )
+!       interface
+!          subroutine fun( t, y, dydt, params )
+!             real, intent(in) :: t
+!             real, intent(in) :: y(:)
+!             real, intent(out) :: dydt(:)
+!             class(*) :: params
+!          end subroutine fun
+
+!          subroutine jac( t, y, dfdy, dfdt, params )
+!             real, intent(in) :: t
+!             real, intent(in) :: y(:)
+!             real, intent(out) :: dfdy(:)
+!             real, intent(out) :: dfdt(:)
+!             class(*) :: params
+!          end subroutine jac
+!       end interface
+!       integer :: dim
+
+!       type(ode_system) :: sys
+!       sys % fun => fun
+!       sys % jac => jac
+!       sys % dim = dim
+!       sys % params = params
+!    end subroutine ode_system_construct
+
+! end module ode_system_module_params
+
+  
+
+module ode_system_module
+   implicit none
+   
+   !! interfejs
+   abstract interface
+      subroutine fun_interface( t, y, dydt )
+         real, intent(in) :: t
+         real, intent(in) :: y(:)
+         real, intent(out) :: dydt(:)
+      end subroutine fun_interface
+
+      subroutine jac_interface( t, y, dfdy, dfdt )
+         real, intent(in) :: t
+         real, intent(in) :: y(:)
+         real, intent(out) :: dfdy(:)
+         real, intent(out) :: dfdt(:)
+      end subroutine jac_interface
+   end interface
+
+
+   type :: ode_system
+      procedure(fun_interface), pointer, nopass :: fun
+      procedure(jac_interface), pointer, nopass :: jac
+      integer :: dim
+      !class(*) :: params
+   end type ode_system
+   
 
 contains
 
-  ! funkcja, ktora przyjmuje jako argumenty funkcje typu
-  ! test_up_interface i wywoluje ja od argumentu typu class(*)
-  ! (analogicznie trzeba zaimplementowac marcher
-  subroutine test_up_sub( f, a )
-    procedure( test_up_interface ) :: f
-    class(*) :: a
+   !! konstruktor
+   subroutine ode_system_construct( sys, fun, jac, dim )
+      interface
+         subroutine fun( t, y, dydt )
+            real, intent(in) :: t
+            real, intent(in) :: y(:)
+            real, intent(out) :: dydt(:)
+         end subroutine fun
 
-    call f(a)
+         subroutine jac( t, y, dfdy, dfdt )
+            real, intent(in) :: t
+            real, intent(in) :: y(:)
+            real, intent(out) :: dfdy(:)
+            real, intent(out) :: dfdt(:)
+         end subroutine jac
+      end interface
+      integer :: dim
 
-  end subroutine test_up_sub
+      type(ode_system) :: sys
+      sys % fun => fun
+      sys % jac => jac
+      sys % dim = dim
+   end subroutine ode_system_construct
 
-end module unlimited_polymorphic_module
+end module ode_system_module
 
-! czesc napisana przez uzytkownika
-program unlimited_polymorphic
+
+
+
+program ode_system_test
 
   ! uzywamy modulu zdefiniowanego wyzej
-  use unlimited_polymorphic_module
+  use ode_system_module
 
-  ! jakis typ - odpowiednik naszych parametrow
-  type :: point
-     real :: x,y
-  end type point
+  integer :: dim = 1
+  real :: t=0.0
+  real :: y(1)=(/2.0/)
+  real :: dydt(1)=(/3.0/)
+  real :: dfdy(1), dfdt(1)
 
-  ! deklarujemy zmienna typu point
-  type(point) :: p
-  ! inicjalizujemy ja
-  p % x = 0.
-  p % y = 1.
+  type(ode_system) :: myode
 
-  ! wywolujemy test_up_sub od zdefiniowanej przez nas funkcji rhs i
-  ! konkretnego juz typu point. z definicji ponizej p bedzie
-  ! interpretowane wewnatrz rhs jako point a wewnatrz test_up_sub jako
-  ! class(*)
-  call test_up_sub( rhs, p )
+  call ode_system_construct (myode, myfun, myjac, dim)
 
-  ! podajemy inna funkcje definiujaca prawa strone, tym razem
-  ! ignorujaca p
-  call test_up_sub( rhs2, p )
+  print *, 'przed wywolaniem prawych stron dydt=', dydt
 
-  ! w tym przypadku cos nie dziala
-  call test_up_sub( rhs3, 1.)
+  call myode % fun(t,y,dydt)
+
+  print *, 'po wywolaniu prawych stron dydt=', dydt
 
 contains
+   ! deklaruje prawa strone rownan oraz jakobian
+   subroutine myfun( t, y, dydt )
+      real, intent(in) :: t
+      real, intent(in) :: y(:)
+      real, intent(out) :: dydt(:)
+      dydt(1)=2.0*y(1)
+   end subroutine myfun
 
-  ! definicja rhs - zamiast class(*) podajemy interesujacy nas
-  ! typ class(point)
-  subroutine rhs( p )
-    class(point) :: p
+   subroutine myjac( t, y, dfdy, dfdt )
+      real, intent(in) :: t
+      real, intent(in) :: y(:)
+      real, intent(out) :: dfdy(:)
+      real, intent(out) :: dfdt(:)
+      dfdy(1)=t
+      dfdt(1)=t
+   end subroutine myjac
 
-    ! robimy cos, juz z tym konkretnym typem
-    print *, "wewnatrz rhs"
-    print *, "p to class(point), jego skladowe to: ",  p%x, p%y
-
-  end subroutine rhs
-
-  subroutine rhs2( p )
-    class(*) :: p
-
-    ! z ogolnym typem nie mozna nic zrobic
-    print *, "wewnatrz rhs2"
-    print *,"typ to class(*), nie mozna z nim nic zrobic"
-
-  end subroutine rhs2
-
-  ! ta funkcja reinterpretuje p jako wskaznik do zmiennej typu real
-  subroutine rhs3( p )
-    real, pointer :: p
-
-    print *, "wewnatrz rhs3"
-    print *, "teraz p jest rzeczywiste: ", p
-
-  end subroutine rhs3
-
-
-
-end program unlimited_polymorphic
+end program ode_system_test
