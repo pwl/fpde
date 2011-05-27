@@ -43,7 +43,7 @@ program unlimited_polymorphic
   ! konkretnego juz typu point. z definicji ponizej p bedzie
   ! interpretowane wewnatrz rhs jako point a wewnatrz test_up_sub jako
   ! class(*)
-  call test_up_sub( rhs, p )
+  call test_up_sub( rhs1, p )
 
   ! podajemy inna funkcje definiujaca prawa strone, tym razem
   ! ignorujaca p
@@ -56,14 +56,14 @@ contains
 
   ! definicja rhs - zamiast class(*) podajemy interesujacy nas
   ! typ class(point)
-  subroutine rhs( p )
+  subroutine rhs1( p )
     class(point) :: p
 
     ! robimy cos, juz z tym konkretnym typem
     print *, "wewnatrz rhs"
     print *, "p to class(point), jego skladowe to: ",  p%x, p%y
 
-  end subroutine rhs
+  end subroutine rhs1
 
   subroutine rhs2( p )
     class(*) :: p
