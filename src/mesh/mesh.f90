@@ -17,8 +17,8 @@ module class_mesh
      logical, private, allocatable :: df_calculated(:)
    contains
      ! obligatory
-     procedure, private :: derivative
-     procedure, private :: calculate_derivatives
+     procedure :: derivative
+     procedure :: calculate_derivatives
 
      ! optional
      procedure :: init
