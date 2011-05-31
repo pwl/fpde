@@ -15,10 +15,15 @@ program solver_simple_program
   type(marcher_dummy) :: march
   ! select a solver
   type(solver_simple) :: s
+  integer, parameter :: nx = 1000
   ! give a maximal time
   real :: max_t, pi
   real, pointer :: param
+  real, pointer :: f(:), dfdt(:)
   ! real, pointer :: dfdy
+
+  allocate(f(nx))
+  allocate(dfdt(nx))
 
   pi = acos(-1.)
 
@@ -27,10 +32,10 @@ program solver_simple_program
   param = 4.
 
   ! initialize mesh
-  call m % init( 10, 1, 2, 0., 1. )
+  call m % init( nx, 1, 2, 0., 1. )
 
   ! initialize marcher
-  call march % init( 10 )
+  call march % init( 100 )
 
   ! initialize solver
   call s % init( m, march, max_t, my_rhs, param )
@@ -39,34 +44,30 @@ program solver_simple_program
   s % f(:,1) = sin( s % x * pi)
 
   ! call rhs
-  call s % rhs_for_marcher(0., )
+  call s % rhs_for_marcher(0., f, dfdt, s )
 
   ! compare dfdf with analytic formula
-  print *, - pi**2 * sin( s % x * pi )
-  print *, s % dfdt(:,1)
+  print *, "total error squared is: "
+  print *, sqrt(sum((abs(s % dfdt(:,1) - (- pi**2 * sin( s % x * pi ))))**2)/nx)
 
-  call s %
+  ! call s % solve
 
   call s % free
 
 contains
 
   subroutine my_rhs( s, params )
-    class(solver), target :: s
+    class(solver) :: s
     class(*) :: params
-    real, pointer :: dfdt(:,:), dfd2x(:,:)
 
     call s % calculate_dfdx( 2 )
 
-    dfdt => s % dfdt
-    dfd2x => s % dfdx(:,:,2)
+    print *, "solver_simple with my_rhs (diffusion equation test)"
 
-    print *, "solver_simple with my_rhs (diffusion test)"
+    s % dfdt(:,:) = s % dfdx(:,:,2)
 
-    dfdt = dfd2x
-
-    dfdt(1,:) = 0.
-    dfdt(s%nx,:) = 0.
+    s % dfdt(1,:) = 0.
+    s % dfdt(s%nx,:) = 0.
 
   end subroutine my_rhs
 

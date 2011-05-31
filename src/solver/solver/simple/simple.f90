@@ -11,25 +11,18 @@ module class_solver_simple
   private
 
   type, public, extends(solver) :: solver_simple
+     ! internal variables of the solver_simple
      real :: max_t
      class(mesh), pointer    :: mesh
      class(marcher), pointer :: marcher
    contains
-     procedure    :: init
-     procedure    :: free
-     procedure    :: solve
+     ! overloaded functions
+     procedure :: init
+     procedure :: free
+     procedure :: solve
      procedure :: calculate_dfdx
      procedure :: pointwise_dfdx
   end type solver_simple
-
-  ! @todo how to use interface from class_solver?
-  abstract interface
-     subroutine interface_rhs( s, params )
-       import :: solver
-       class(solver) :: s
-       class(*) :: params
-     end subroutine interface_rhs
-  end interface
 
 contains
 
