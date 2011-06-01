@@ -25,38 +25,11 @@ program ode_system_test
   myline % y = 1.
   myline % direction = -1
 
-<<<<<<< HEAD
-  ! wywolujemy test_up_sub od zdefiniowanej przez nas funkcji rhs i
-  ! konkretnego juz typu point. z definicji ponizej p bedzie
-  ! interpretowane wewnatrz rhs jako point a wewnatrz test_up_sub jako
-  ! class(*)
-  call test_up_sub( rhs1, p )
-
-  ! podajemy inna funkcje definiujaca prawa strone, tym razem
-  ! ignorujaca p
-  call test_up_sub( rhs2, p )
-
-  ! w tym przypadku cos nie dziala
-  call test_up_sub( rhs3, 1.)
-
-contains
-
-  ! definicja rhs - zamiast class(*) podajemy interesujacy nas
-  ! typ class(point)
-  subroutine rhs1( p )
-    class(point) :: p
-=======
-
   call ode_system_construct (myode, myfun, myjac, dim, myline)
->>>>>>> e7891d70c1d08f4d49503459fc4d1106daf93cd6
 
   print *, 'przed wywolaniem prawych stron dydt=', dydt
 
-<<<<<<< HEAD
-  end subroutine rhs1
-=======
   call myode % fun(t,y,dydt,myline)
->>>>>>> e7891d70c1d08f4d49503459fc4d1106daf93cd6
 
   print *, 'po wywolaniu prawych stron dydt=', dydt
 
@@ -71,7 +44,7 @@ contains
       print *, 'skladowe', params%x, params%y
       print *, 'kierunek', params%direction
    end subroutine myfun
-   
+
    subroutine myjac( t, y, dfdy, dfdt, params )
       real, intent(in) :: t
       real, intent(in) :: y(:)
