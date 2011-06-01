@@ -7,11 +7,14 @@ program mesh_sfd3pt_test
 
   ! declare a mesh of a given type
   type(mesh_sfd3pt) :: m
-  integer :: rk = 10
+  ! class(mesh), pointer :: mcp
+  ! class(mesh), pointer :: mpt
+  integer, parameter :: rk = 10
   ! real, pointer :: v(:)
   real :: pi
   real :: xmin, xmax
   integer :: u
+
   ! integer :: t
   pi = 2.*acos(0.)
 
@@ -37,8 +40,16 @@ program mesh_sfd3pt_test
   ! free when done with the mesh
 
   call m % print_by_index( (/ 1, 2 /), u )
+
+  ! the following should work according to Fortran 2003 standard, but is not
+  ! yet implemented in ifort 12
+
+  ! mpt => m
+  ! allocate( mcp, source = mpt )
+
   call m % free
 
   close(u)
 
 end program mesh_sfd3pt_test
+
