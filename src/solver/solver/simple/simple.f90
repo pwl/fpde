@@ -40,7 +40,7 @@ contains
     s % name = "Simple solver"
 
     ! bind pointers to appropriate targets
-    s % t     => march % t
+    s % t     = 0.
     s % x     => msh % x
     s % f     => msh % f
     s % dfdx  => msh % df
