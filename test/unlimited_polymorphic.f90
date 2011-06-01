@@ -1,44 +1,31 @@
-module unlimited_polymorphic_module
 
-  ! interfejs dla funkcji przyjmujacej class(*) czyli odpowiednik void *
-  abstract interface
-     subroutine test_up_interface( a )
-       class(*) :: a
-     end subroutine test_up_interface
-  end interface
+program ode_system_test
 
-contains
+  ! uzywamy modulu
+  use ode_system_module
 
-  ! funkcja, ktora przyjmuje jako argumenty funkcje typu
-  ! test_up_interface i wywoluje ja od argumentu typu class(*)
-  ! (analogicznie trzeba zaimplementowac marcher
-  subroutine test_up_sub( f, a )
-    procedure( test_up_interface ) :: f
-    class(*) :: a
+  integer :: dim = 1
+  real :: t=0.0
+  real :: y(1)=(/2.0/)
+  real :: dydt(1)=(/3.0/)
+  real :: dfdy(1), dfdt(1)
 
-    call f(a)
-
-  end subroutine test_up_sub
-
-end module unlimited_polymorphic_module
-
-! czesc napisana przez uzytkownika
-program unlimited_polymorphic
-
-  ! uzywamy modulu zdefiniowanego wyzej
-  use unlimited_polymorphic_module
+  type(ode_system) :: myode
 
   ! jakis typ - odpowiednik naszych parametrow
-  type :: point
+  type :: line
      real :: x,y
-  end type point
+     integer :: direction
+  end type line
 
   ! deklarujemy zmienna typu point
-  type(point) :: p
+  type(line) :: myline
   ! inicjalizujemy ja
-  p % x = 0.
-  p % y = 1.
+  myline % x = 0.
+  myline % y = 1.
+  myline % direction = -1
 
+<<<<<<< HEAD
   ! wywolujemy test_up_sub od zdefiniowanej przez nas funkcji rhs i
   ! konkretnego juz typu point. z definicji ponizej p bedzie
   ! interpretowane wewnatrz rhs jako point a wewnatrz test_up_sub jako
@@ -58,31 +45,41 @@ contains
   ! typ class(point)
   subroutine rhs1( p )
     class(point) :: p
+=======
 
-    ! robimy cos, juz z tym konkretnym typem
-    print *, "wewnatrz rhs"
-    print *, "p to class(point), jego skladowe to: ",  p%x, p%y
+  call ode_system_construct (myode, myfun, myjac, dim, myline)
+>>>>>>> e7891d70c1d08f4d49503459fc4d1106daf93cd6
 
+  print *, 'przed wywolaniem prawych stron dydt=', dydt
+
+<<<<<<< HEAD
   end subroutine rhs1
+=======
+  call myode % fun(t,y,dydt,myline)
+>>>>>>> e7891d70c1d08f4d49503459fc4d1106daf93cd6
 
-  subroutine rhs2( p )
-    class(*) :: p
+  print *, 'po wywolaniu prawych stron dydt=', dydt
 
-    ! z ogolnym typem nie mozna nic zrobic
-    print *, "wewnatrz rhs2"
-    print *,"typ to class(*), nie mozna z nim nic zrobic"
+contains
+   ! deklaruje prawa strone rownan oraz jakobian
+   subroutine myfun( t, y, dydt, params )
+      real, intent(in) :: t
+      real, intent(in) :: y(:)
+      real, intent(out) :: dydt(:)
+      class(line) :: params
+      dydt(1)=2.0*y(1)
+      print *, 'skladowe', params%x, params%y
+      print *, 'kierunek', params%direction
+   end subroutine myfun
+   
+   subroutine myjac( t, y, dfdy, dfdt, params )
+      real, intent(in) :: t
+      real, intent(in) :: y(:)
+      real, intent(out) :: dfdy(:)
+      real, intent(out) :: dfdt(:)
+      class(line) :: params
+      dfdy(1)=t
+      dfdt(1)=t
+   end subroutine myjac
 
-  end subroutine rhs2
-
-  ! ta funkcja reinterpretuje p jako wskaznik do zmiennej typu real
-  subroutine rhs3( p )
-    real, pointer :: p
-
-    print *, "wewnatrz rhs3"
-    print *, "teraz p jest rzeczywiste: ", p
-
-  end subroutine rhs3
-
-
-
-end program unlimited_polymorphic
+end program ode_system_test
