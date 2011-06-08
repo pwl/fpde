@@ -41,7 +41,6 @@ program solver_simple_program
 
   ! initialize solver
   call s % init( m, max_t, my_rhs, step, param )
-  call s % init( m, max_t, my_rhs, step, param )
 
   ! prepare initial data
   s % f(:,1) = s % x * (1. - s % x)
