@@ -4,7 +4,7 @@ program solver_simple_program
   use class_mesh_sfd3pt
 
   use class_marcher
-  use class_marcher_dummy
+  ! use class_marcher_dummy
 
   use class_solver
   use class_solver_simple
@@ -12,7 +12,7 @@ program solver_simple_program
   ! select a mesh
   type(mesh_sfd3pt) :: m
   ! select a marcher
-  type(marcher_dummy) :: march
+  type(marcher) :: march
   ! select a solver
   type(solver_simple) :: s
   integer, parameter :: nx = 1000
@@ -35,7 +35,7 @@ program solver_simple_program
   call m % init( nx, 1, 2, 0., 1. )
 
   ! initialize marcher
-  call march % init( 100 )
+  call march % init( nx )
 
   ! initialize solver
   call s % init( m, march, max_t, my_rhs, param )
