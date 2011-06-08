@@ -13,8 +13,10 @@ contains
     case( "sfd3pt" )
        allocate(mesh_sfd3pt :: m)
     case default
-       allocate(mesh :: m)
+       print *, "mesh_new: invalid id"
+       nullify( m )
     end select
+
   end function mesh_new
 
 end module mesh_factory
