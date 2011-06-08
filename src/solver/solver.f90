@@ -8,6 +8,7 @@ module class_solver
      real, pointer :: f    (:,:)
      real, allocatable :: dfdt (:,:)
      real, pointer :: dfdx (:,:,:)
+     integer :: rhs_status
      integer :: nx,nf,maxrk
      procedure(interface_rhs), pointer :: rhs
      class(*), pointer :: params
@@ -52,19 +53,44 @@ contains
   end function pointwise_dfdx
 
 
-  subroutine rhs_for_marcher( t, f, dfdt, s )
-    real, target :: t
-    real, pointer :: f(:), dfdt(:)
+  subroutine rhs_for_marcher( t, y, dydt, s, status )
+    real, intent(in) :: t
+    real, intent(in) :: y(:)
+    real, intent(out) :: dydt(:)
     real, pointer :: tmp(:,:)
-    class(solver), target :: s
+    class(solver) :: s
+    integer, optional :: status
+    integer :: nx, nf, i, j
+
+    nx = s % nx
+    nf = s % nf
+    dydt = 0.
+
+    forall( i = 1:nx, j = 1:nf )
+       s % f( i, j ) = y( i*j )
+    end forall
+
+    s % t = t
+
+    ! calculate rhs
+    call s % rhs( s % params )
+
+    if( present(status) ) then
+       status = s % rhs_status
+    end if
+
+    forall( i = 1:nx, j = 1:nf )
+       dydt( i*j ) = s % dfdt( i, j )
+    end forall
+
 
     ! a little bit of magic is involved below
-    dfdt(1 : s%nx * s%nf) => s % dfdt
-    tmp => s % f
-    s % t => t
-    s % f(1:s%nx, 1:s%nf) => f
-    call s % rhs( s % params )
-    s % f => tmp
+    ! dfdt(1 : s%nx * s%nf) => s % dfdt
+    ! tmp => s % f
+    ! s % t = t
+    ! s % f(1:s%nx, 1:s%nf) => f
+    ! call s % rhs( s % params )
+    ! s % f => tmp
 
   end subroutine rhs_for_marcher
 

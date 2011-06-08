@@ -3,9 +3,8 @@ program solver_simple_program
   use class_mesh
   use class_mesh_sfd3pt
 
-  use class_marcher
   ! use class_marcher_dummy
-  use class
+  use class_stepper_rk4cs
 
   use class_solver
   use class_solver_simple
@@ -13,11 +12,10 @@ program solver_simple_program
   ! select a mesh
   type(mesh_sfd3pt) :: m
   ! select a marcher
-  type(marcher) :: march
   type(ode_stepper_rk4cs) :: step
   ! select a solver
   type(solver_simple) :: s
-  integer, parameter :: nx = 1000
+  integer, parameter :: nx = 10
   ! give a maximal time
   real :: max_t, pi
   real, pointer :: param
@@ -33,27 +31,29 @@ program solver_simple_program
   allocate(param)
   param = 4.
 
+  max_t = 10.
+
   ! initialize mesh
   call m % init( nx, 1, 2, 0., 1. )
-
-  ! initialize marcher
-  call march % init( nx )
 
   ! initialize stepper
   call step % init( nx )
 
   ! initialize solver
-  call s % init( m, march, max_t, my_rhs, step, param )
+  call s % init( m, max_t, my_rhs, step, param )
+  call s % init( m, max_t, my_rhs, step, param )
 
   ! prepare initial data
-  s % f(:,1) = sin( s % x * pi)
+  s % f(:,1) = s % x * (1. - s % x)
 
-  ! call rhs
-  call s % rhs_for_marcher(0., f, dfdt, s )
+  call s % solve
+
+  ! ! call rhs
+  ! call s % rhs_for_marcher(0., f, dfdt, s )
 
   ! compare dfdf with analytic formula
-  print *, "total error squared is: "
-  print *, sqrt(sum((abs(s % dfdt(:,1) - (- pi**2 * sin( s % x * pi ))))**2)/nx)
+  ! print *, "total error squared is: "
+  ! print *, sqrt(sum((abs(s % dfdt(:,1) - (- pi**2 * sin( s % x * pi ))))**2)/nx)
 
   ! call s % solve
 
@@ -64,10 +64,18 @@ contains
   subroutine my_rhs( s, params )
     class(solver) :: s
     class(*) :: params
+    integer :: i
 
     call s % calculate_dfdx( 2 )
 
-    print *, "solver_simple with my_rhs (diffusion equation test)"
+    ! print *, "solver_simple with my_rhs (diffusion equation test)"
+    do i = 1, s % nx
+       write(*, "(E14.5,E14.5)") s%x(i), s % f(i,1)
+    end do
+
+    print *, ""
+    print *, ""
+    print *, ""
 
     s % dfdt(:,:) = s % dfdx(:,:,2)
 

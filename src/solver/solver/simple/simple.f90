@@ -31,10 +31,9 @@ module class_solver_simple
 
 contains
 
-  subroutine init(s, msh, march, max_t, rhs, step, params)
+  subroutine init(s, msh, max_t, rhs, step, params)
     class(solver_simple), intent(inout) :: s
     class(mesh), target                 :: msh
-    class(marcher), intent(in), target  :: march
     real, intent(in)                    :: max_t
     procedure(interface_rhs)            :: rhs
     class(*), target                    :: params
@@ -44,8 +43,11 @@ contains
     s % params => params
     s % name   = "Simple solver"
 
+    allocate( s % t )
+
     ! bind pointers to appropriate targets
     s % t     = 0.              ! initial time
+    s % max_t = max_t
     s % x     => msh % x
     s % f     => msh % f
     s % dfdx  => msh % df
@@ -53,20 +55,22 @@ contains
     s % nf    = msh % nf
     s % maxrk = msh % maxrk
     s % y( 1 : msh%nx * msh%nf ) => msh % f
+    s % rhs_status = 1          ! @todo: kind of enumerate?
 
     ! ode_system
-    ! call ode_system_construct( &
-    !      sys = s % ode_system,         &
-    !      fun = rhs_for_marcher,    &
-    !      jac = null(),                 &
-    !      dim = s % nx * s % nf,        &
-    !      params = s % params )
+    allocate( s % ode_system )
+    call ode_system_construct(     &
+         sys    = s % ode_system,  &
+         fun    = rhs_for_marcher, &
+         dim    = s % nx * s % nf, &
+         params = s )
 
     ! stepper
     s % step => step
 
-    ! marcher
-    s % marcher  => march
+    ! initialize marcher
+    allocate( s % marcher )
+    call s % marcher % init( msh % nf * msh % nx )
 
     ! allocate space for a pointer to calculated rhs
     allocate( s % dfdt(msh % nx, msh % nf ) )
@@ -78,18 +82,20 @@ contains
 
   subroutine solve(s)
     class(solver_simple), intent(inout) :: s
+    real :: h =.01
 
-    call s % rhs( s % params )
+    ! call s % rhs( s % params )
+   ! print *, s % t, s % max_t
 
-    ! do while ( s % t < s % max_t )
-       ! call s % marcher % apply(           &
-       !      s   = s % step,                &
-       !      sys = s % ode_system,          &
-       !      t   = s % t,                   &
-       !      t1  = s % max_t,               &
-       !      h   = s % marcher % last_step, &
-       !      y   = s % y )
-    ! end do
+    do while ( s % t < s % max_t )
+       call s % marcher % apply(           &
+            s   = s % step,                &
+            sys = s % ode_system,          &
+            t   = s % t,                   &
+            t1  = s % max_t,               &
+            h   = h, &
+            y   = s % y )
+    end do
 
   end subroutine solve
 
