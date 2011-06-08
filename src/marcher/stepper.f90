@@ -12,6 +12,7 @@ module class_stepper
       logical :: gives_estimated_yerr
       integer :: method_order
       character(len=20) :: name ! @todo length of this variable
+      integer :: status
    contains
    !! procedures
       procedure :: init
