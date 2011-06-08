@@ -83,15 +83,6 @@ contains
        dydt( i*j ) = s % dfdt( i, j )
     end forall
 
-
-    ! a little bit of magic is involved below
-    ! dfdt(1 : s%nx * s%nf) => s % dfdt
-    ! tmp => s % f
-    ! s % t = t
-    ! s % f(1:s%nx, 1:s%nf) => f
-    ! call s % rhs( s % params )
-    ! s % f => tmp
-
   end subroutine rhs_for_marcher
 
 end module class_solver
