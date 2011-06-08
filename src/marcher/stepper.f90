@@ -27,7 +27,7 @@ contains
       integer :: dim
    end subroutine init
    
-   subroutine apply( s, dim, t, h, y, yerr, dydt_in, dydt_out, sys )
+   subroutine apply( s, dim, t, h, y, yerr, dydt_in, dydt_out, sys, status )
       class(ode_stepper_type), intent(inout) :: s
       integer, intent(in) :: dim
       real, intent(in)  :: t, h
@@ -35,9 +35,12 @@ contains
       real, intent(in)  :: dydt_in(:)
       real, intent(inout) :: dydt_out(:)
       class(ode_system) :: sys
+      integer, optional :: status
    end subroutine apply
 
-   subroutine reset( s )
+   subroutine reset( s ) 
+      ! @todo ustawia wartosc wyszystkich wektorow workspace
+      ! na 0.0 oraz ustawia status steppera na 1 (czyli status braku bledu)
       class(ode_stepper_type), intent(inout) :: s
    end subroutine reset
 
@@ -79,6 +82,7 @@ contains
       s % gives_estimated_yerr = .false.
       s % method_order = 4
       s % name = "rk4cs"
+      s % status = 1
       
       ! allocate workspace vectors
       allocate( s % k( dim ) )
@@ -87,7 +91,7 @@ contains
       allocate( s % ytmp( dim ) )
    end subroutine init
 
-   subroutine apply( s, dim, t, h, y, yerr, dydt_in, dydt_out, sys )
+   subroutine apply( s, dim, t, h, y, yerr, dydt_in, dydt_out, sys, status )
       class(ode_stepper_rk4cs), intent(inout) :: s
       integer, intent(in) :: dim
       real, intent(in)  :: t, h
@@ -96,7 +100,7 @@ contains
       real, intent(inout) :: dydt_out(:)
       class(ode_system)  :: sys
       
-      integer :: i
+      integer, optional :: status
 
       ! Wykonujemy kopie wektora y na wypadek wystapiena bledow
       ! zwracanych przez funkcje sys % fun (prawej strony rownan).
@@ -124,35 +128,41 @@ contains
          s % k = dydt_in
       else
          ! wyliczamy pochodne
-         call sys % fun( t, s % y0, s % k, sys % params )
+         call sys % fun( t, s % y0, s % k, sys % params, sys % status )
+         if ( sys % status /= 1 ) then
+            s % status = sys % status
+            return
+         end if
       end if
-
-      
 
       ! krok k1
       y = y + h/6.0*(s % k)
       s % ytmp = s % y0 + 0.5*h*(s % k)
 
-      ! @todo petle tak jak powyzej czy tak jak ponizej?
-      ! optymalizacja, rownoleglizacja? (nie/potrzebny integer i )
-      !
-      ! do i=1,dim
-      !    y(i) = y(i) + h/6.0*(s % k(i))
-      !    s % ytmp(i) = s % y0(i) + 0.5*h*(s % k(i))
-      ! end do
-
       ! krok k2
-      call sys % fun( t+0.5*h, s % ytmp, s % k, sys % params )
+      call sys % fun( t+0.5*h, s % ytmp, s % k, sys % params, sys % status )
+      if ( sys % status /= 1 ) then
+         s % status = sys % status
+         return
+      end if
       y = y + h/3.0*(s % k)
       s % ytmp = s % y0 + 0.5*h*(s % k)
-
+      
       ! krok k3
-      call sys % fun( t+0.5*h, s % ytmp, s % k, sys % params )
+      call sys % fun( t+0.5*h, s % ytmp, s % k, sys % params, sys % status )
+      if ( sys % status /= 1 ) then
+         s % status = sys % status
+         return
+      end if
       y = y + h/3.0*(s % k)
       s % ytmp = s % y0 + h*(s % k)
 
       ! krok k4
-      call sys % fun( t+h, s % ytmp, s % k, sys % params )
+      call sys % fun( t+h, s % ytmp, s % k, sys % params, sys % status )
+      if ( sys % status /= 1 ) then
+         s % status = sys % status
+         return
+      end if
       y = y + h/6.0*(s % k)
 
       ! pochodne na wyjsciu
@@ -162,7 +172,11 @@ contains
       ! to pochodne musza zostac podane na wejsciu
       if ( s % gives_exact_dydt_out == .true. ) then
          ! wyliczamy pochodne
-         call sys % fun( t+h, y, dydt_out, sys % params )
+         call sys % fun( t+h, y, dydt_out, sys % params, sys % status )
+         if ( sys % status /= 1 ) then
+            s % status = sys % status
+            return
+         end if
       end if
 
    end subroutine apply
@@ -174,6 +188,7 @@ contains
       s % k1 = 0.0
       s % y0 = 0.0
       s % ytmp = 0.0
+      s % status = 1
    end subroutine reset
 
    subroutine free( s )

@@ -15,8 +15,7 @@ module class_marcher
       integer :: count
       integer :: failed_steps
       real :: last_step
-
-      integer :: status ! @todo status of stepper, marcher
+      integer :: status
 
    contains
       procedure :: init
@@ -34,6 +33,7 @@ contains
       m % count = 0
       m % failed_steps = 0
       m % last_step = 0.0
+      m % status = 1
 
       ! allocate marcher workspace vectors
       allocate( m % y0( dim ) )
@@ -63,12 +63,28 @@ contains
 
       ! Sprawdzanie poprawnosci wymiarow, kierunek calkowania,
       ! calkowania ze zmiennym krokiem ... @todo
+
+      ! Sprawdzamy zgodnosc wymiarow marchera oraz steppera
+      if ( m % dim /= s % dim ) then
+         m % status = 0 ! status bledu
+         return
+      end if
+
+      ! Sprawdzamy zgodnosc kierunku calkowania
+      if ( (dt<0.0 .and. h0>0.0) .or. (dt>0.0 .and. h0<0.0) ) then
+         m % status = 0 ! status bledu
+         return
+      end if
+
       
       ! Wyliczamy pochodne jezeli metoda moze z nich skorzystac
       if ( s % can_use_dydt_in == .true. ) then
-         call sys % fun( t, y, m % dydt_in, sys % params )
+         call sys % fun( t, y, m % dydt_in, sys % params, sys % status )
+         if ( sys % status /= 1 ) then
+            m % status = sys % status
+            return
+         end if
       end if
-      
       
       ! Wykonujemy probny krok
 
@@ -85,16 +101,18 @@ contains
       if ( s % can_use_dydt_in == .true. ) then
          ! Kopiujemy wektor y na wypadek wystapienia bledu
          m % y0 = y
-         call s % apply( s % dim, t0, h0, y, m % yerr, m % dydt_in, m % dydt_out, sys )
+         call s % apply( s % dim, t0, h0, y, m % yerr, m % dydt_in, m % dydt_out, sys, s % status )
       else
          ! lub bez uzycia dydt_in
-         call s % apply( s % dim, t0, h0, y, m % yerr, null(), m % dydt_out, sys )
+         call s % apply( s % dim, t0, h0, y, m % yerr, null(), m % dydt_out, sys, s % status )
       end if
 
-      ! Spradzamy czy stepper zwrocil blad @todo
-      ! jezeli tak to zwracamy status steppera
-      ! i resetujemy krok h
-
+      ! Sprawdzamy czy stepper zwrocil blad
+      if ( s % status /= 1 ) then
+         m % status = s % status ! przekazujemy taki sam status bledu do statusu marchera
+         h = h0; ! zwracamy krok przy jakim pojawil sie blad
+      end if
+      
       ! Jezeli stepper nie spowodowal zadnych bledow zwiekszamy 
       ! licznik m%count i zapisujemy krok w m%last_step
       m % count = m % count + 1
@@ -106,6 +124,8 @@ contains
       else
          t = t0 + h0
       end if
+
+      ! Fragment kodu odpowiadajacy za calkowanie ze zmiennym krokiem
 
       ! Jezeli metoda na to pozwala oraz zostal podany step control
       ! uzywamy metody z adaptywnym krokiem

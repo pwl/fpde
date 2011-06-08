@@ -51,7 +51,10 @@ contains
       end if
       sys % dim = dim
       sys % params => params
-      sys % status = 0 ! @todo domyslnie inicjalizowany status
+      sys % status = 1 ! @todo domyslnie inicjalizowany status 1
+      ! tymczasowa kolwencja
+      ! status = 1 brak bledu
+      ! status = 0 wystapily bledy
    end subroutine ode_system_construct
 
 end module ode_system_module
