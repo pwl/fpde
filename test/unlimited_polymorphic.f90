@@ -14,7 +14,7 @@ program ode_system_test
 
    ! Dolaczamy niezbedne moduly/klasy
    use ode_system_module
-   use class_stepper
+   ! use class_stepper
    use class_marcher
    use class_stepper_rk4cs
    
@@ -55,10 +55,11 @@ program ode_system_test
 
    ! inicjalizujemy marcher
    call mymarcher % init( dim )
-
+   
    ! konstruujemy/inicjalizujemy ode_system
-   call ode_system_construct( myode, myfun, myjac, dim, myparams )
-
+   ! call ode_system_construct( myode, myfun, dim, myparams )
+   call ode_system_construct( sys=myode, fun=myfun, dim=dim, params=myparams )
+   
    do while (t<t1)
       ! wolamy marcher % apply
       call mymarcher % apply( mystepper, myode, t, t1, h, y )
@@ -69,34 +70,30 @@ program ode_system_test
       print *, ""
    end do
    
-
    ! zwalniamy stepper
    call mystepper % free ()
 
    ! zwalniamy marcher
    call mymarcher % free ()
 
-
-   ! print *, 'przed wywolaniem prawych stron dydt=', dydt
-
-   ! call myode % fun(t,y,dydt,myline)
-
-   ! print *, 'po wywolaniu prawych stron dydt=', dydt
-
 contains
-   ! deklaruje prawa strone rownan oraz jakobian
-   subroutine myfun( t, y, dydt, params )
+   ! Deklaruje prawa strone rownan
+   subroutine myfun( t, y, dydt, params, status )
       real, intent(in) :: t
       real, intent(in) :: y(:)
       real, intent(inout) :: dydt(:)
       class(paramsab) :: params
+      integer, optional :: status
 
       dydt(1) = y(2)
       dydt(2) = -y(1)*params%a + params%b
 
-      ! print *, 'skladowe', params%a, params%b
+      if ( present( status ) ) then
+         status = 1
+      end if
    end subroutine myfun
-
+   
+   ! oraz jakobian
    subroutine myjac( t, y, dfdy, dfdt, params )
       real, intent(in) :: t
       real, intent(in) :: y(:)
