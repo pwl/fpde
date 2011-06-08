@@ -19,7 +19,7 @@ module class_solver
   end type solver
 
   ! interface to rhs should be publicly available to all child classes
-  public :: interface_rhs
+  public :: interface_rhs, rhs_for_marcher
 
   abstract interface
      subroutine interface_rhs( s, params )

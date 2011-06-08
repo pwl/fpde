@@ -4,6 +4,8 @@ module class_solver_simple
 
   use class_solver
   use class_marcher
+  use ode_system_module
+  use class_stepper
   use class_mesh
 
   use pretty_print
@@ -13,8 +15,11 @@ module class_solver_simple
   type, public, extends(solver) :: solver_simple
      ! internal variables of the solver_simple
      real :: max_t
+     real, pointer :: y(:)
      class(mesh), pointer    :: mesh
      class(marcher), pointer :: marcher
+     class(ode_stepper_type), pointer :: step
+     class(ode_system), pointer :: ode_system
    contains
      ! overloaded functions
      procedure :: init
@@ -26,27 +31,42 @@ module class_solver_simple
 
 contains
 
-  subroutine init(s, msh, march, max_t, rhs, params)
-    class(solver_simple)  , intent(inout)      :: s
-    class(mesh)    , target :: msh
-    class(marcher) , intent(in), target :: march
-    real, intent(in) :: max_t
-    procedure(interface_rhs) :: rhs
-    class(*), target :: params
+  subroutine init(s, msh, march, max_t, rhs, step, params)
+    class(solver_simple), intent(inout) :: s
+    class(mesh), target                 :: msh
+    class(marcher), intent(in), target  :: march
+    real, intent(in)                    :: max_t
+    procedure(interface_rhs)            :: rhs
+    class(*), target                    :: params
+    class(ode_stepper_type), target                :: step
 
-    s % mesh     => msh
-    s % marcher  => march
-    s % params   => params
-    s % name = "Simple solver"
+    s % mesh   => msh
+    s % params => params
+    s % name   = "Simple solver"
 
     ! bind pointers to appropriate targets
-    s % t     = 0.
+    s % t     = 0.              ! initial time
     s % x     => msh % x
     s % f     => msh % f
     s % dfdx  => msh % df
     s % nx    = msh % nx
     s % nf    = msh % nf
     s % maxrk = msh % maxrk
+    s % y( 1 : msh%nx * msh%nf ) => msh % f
+
+    ! ode_system
+    ! call ode_system_construct( &
+    !      sys = s % ode_system,         &
+    !      fun = rhs_for_marcher,    &
+    !      jac = null(),                 &
+    !      dim = s % nx * s % nf,        &
+    !      params = s % params )
+
+    ! stepper
+    s % step => step
+
+    ! marcher
+    s % marcher  => march
 
     ! allocate space for a pointer to calculated rhs
     allocate( s % dfdt(msh % nx, msh % nf ) )
@@ -61,8 +81,14 @@ contains
 
     call s % rhs( s % params )
 
-    ! do while ( s % marcher % t < s % max_t )
-    !    ! s % marcher % apply
+    ! do while ( s % t < s % max_t )
+       ! call s % marcher % apply(           &
+       !      s   = s % step,                &
+       !      sys = s % ode_system,          &
+       !      t   = s % t,                   &
+       !      t1  = s % max_t,               &
+       !      h   = s % marcher % last_step, &
+       !      y   = s % y )
     ! end do
 
   end subroutine solve
