@@ -3,30 +3,33 @@ module class_solver
   private
 
   type, public :: solver
-     real, pointer :: t
-     real, pointer :: x    (:)
-     real, pointer :: f    (:,:)
-     real, allocatable :: dfdt (:,:)
-     real, pointer :: dfdx (:,:,:)
-     integer :: rhs_status
-     integer :: nx,nf,maxrk
+     ! interface supported by any solver
+     real, pointer                     :: t
+     real, pointer                     :: x    (:)
+     real, pointer                     :: f    (:,:)
+     real, allocatable                 :: dfdt (:,:)
+     real, pointer                     :: dfdx (:,:,:)
+     integer                           :: rhs_status
+     integer                           :: nx,nf,rk
      procedure(interface_rhs), pointer :: rhs
-     class(*), pointer :: params
-     character(len=300) :: name
+     class(*), pointer                 :: params
+     ! solver name
+     character(len=30)                 :: name
    contains
-     procedure :: calculate_dfdx
-     procedure :: pointwise_dfdx
+     procedure         :: calculate_dfdx
+     procedure         :: pointwise_dfdx
      procedure, nopass :: rhs_for_marcher
+     procedure         :: info
+     procedure         :: free
   end type solver
 
   ! interface to rhs should be publicly available to all child classes
   public :: interface_rhs, rhs_for_marcher
 
   abstract interface
-     subroutine interface_rhs( s, params )
+     subroutine interface_rhs( s )
        import :: solver
        class(solver) :: s
-       class(*) :: params
      end subroutine interface_rhs
   end interface
 
@@ -57,32 +60,38 @@ contains
     real, intent(in) :: t
     real, intent(in) :: y(:)
     real, intent(out) :: dydt(:)
-    real, pointer :: tmp(:,:)
     class(solver) :: s
     integer, optional :: status
     integer :: nx, nf, i, j
 
     nx = s % nx
     nf = s % nf
-    dydt = 0.
 
     forall( i = 1:nx, j = 1:nf )
-       s % f( i, j ) = y( i*j )
+       s % f( i, j ) = y( i + (j-1) * nx )
     end forall
 
     s % t = t
 
     ! calculate rhs
-    call s % rhs( s % params )
+    call s % rhs
 
     if( present(status) ) then
        status = s % rhs_status
     end if
 
     forall( i = 1:nx, j = 1:nf )
-       dydt( i*j ) = s % dfdt( i, j )
+       dydt( i + (j-1) * nx ) = s % dfdt( i, j )
     end forall
 
   end subroutine rhs_for_marcher
+
+  subroutine info( s )
+    class(solver) :: s
+  end subroutine info
+
+  subroutine free (s)
+    class(solver) :: s
+  end subroutine free
 
 end module class_solver

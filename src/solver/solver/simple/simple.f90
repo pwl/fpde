@@ -2,6 +2,7 @@
 
 module class_solver_simple
 
+  use class_solver_simple_data
   use class_solver
   use class_marcher
   use ode_system_module
@@ -13,102 +14,67 @@ module class_solver_simple
   private
 
   type, public, extends(solver) :: solver_simple
-     ! internal variables of the solver_simple
-     real :: max_t
+     real :: t1
+     real :: h
+     ! y(:) holds data used in mesh in a format compatible with
+     ! rhs_for_marcher
      real, pointer :: y(:)
-     class(mesh), pointer    :: mesh
-     class(marcher), pointer :: marcher
+     class(mesh), pointer :: mesh
      class(ode_stepper_type), pointer :: step
-     class(ode_system), pointer :: ode_system
+     class(solver_simple_data), pointer :: data
+     class(ode_system), pointer :: system
+     class(marcher), pointer :: marcher
+     ! class(control), pointer :: control
    contains
-     ! overloaded functions
      procedure :: init
+     procedure :: info
      procedure :: free
      procedure :: solve
-     procedure :: calculate_dfdx
-     procedure :: pointwise_dfdx
   end type solver_simple
+
 
 contains
 
-  subroutine init(s, msh, max_t, rhs, step, params)
-    class(solver_simple), intent(inout) :: s
-    class(mesh), target                 :: msh
-    real, intent(in)                    :: max_t
-    procedure(interface_rhs)            :: rhs
-    class(*), target                    :: params
-    class(ode_stepper_type), target                :: step
+  subroutine init(s, data)
+    class(solver_simple) :: s
+    class(solver_simple_data), target :: data
+    integer :: j
 
-    s % mesh   => msh
-    s % params => params
-    s % name   = "Simple solver"
+    s % name = "simple"
 
-    allocate( s % t )
-
-    ! bind pointers to appropriate targets
-    s % t     = 0.              ! initial time
-    s % max_t = max_t
-    s % x     => msh % x
-    s % f     => msh % f
-    s % dfdx  => msh % df
-    s % nx    = msh % nx
-    s % nf    = msh % nf
-    s % maxrk = msh % maxrk
-    s % y( 1 : msh%nx * msh%nf ) => msh % f
-    s % rhs_status = 1          ! @todo: kind of enumerate?
-
-    ! ode_system
-    allocate( s % ode_system )
-    call ode_system_construct(     &
-         sys    = s % ode_system,  &
-         fun    = rhs_for_marcher, &
-         dim    = s % nx * s % nf, &
-         params = s )
-
-    ! stepper
-    s % step => step
-
+    ! initialize mesh
+    call data % initialize_mesh( s % mesh )
+    ! initialize step
+    call data % initialize_step( s % step )
+    ! initialize time
+    call data % initialize_t( s % t )
+    ! initialize ode_system
+    call data % initialize_ode_system( s % system, rhs_for_marcher , s)
     ! initialize marcher
-    allocate( s % marcher )
-    call s % marcher % init( msh % nf * msh % nx )
+    call data % initialize_marcher( s % marcher )
+    ! allocate memory for dfdt
+    call data % initialize_dfdt( s % dfdt )
 
-    ! allocate space for a pointer to calculated rhs
-    allocate( s % dfdt(msh % nx, msh % nf ) )
+    ! assign interface pointers
+    s % x      => s % mesh % x
+    s % f      => s % mesh % f
+    s % dfdx   => s % mesh % df
+    s % params => data % params
+    s % data   => data
 
-    ! set the rhs
-    s % rhs => rhs
+    s % nx     = data % nx
+    s % nf     = data % nf
+    s % rk     = data % rk
+    s % t1     = data % t1
+    s % h      = data % h0
+
+    ! aliasing of y
+    do j = 1, s % nf
+       s % y( (j-1) * s%nx : (j * s%nx) => s % mesh % f(:,j)
+    end do
 
   end subroutine init
 
-  subroutine solve(s)
-    class(solver_simple), intent(inout) :: s
-    real :: h =.01
-
-    ! call s % rhs( s % params )
-   ! print *, s % t, s % max_t
-
-    do while ( s % t < s % max_t )
-       call s % marcher % apply(           &
-            s   = s % step,                &
-            sys = s % ode_system,          &
-            t   = s % t,                   &
-            t1  = s % max_t,               &
-            h   = h, &
-            y   = s % y )
-    end do
-
-  end subroutine solve
-
-
-  subroutine free(s)
-    class(solver_simple), intent(inout) :: s
-
-    ! free components of the solver
-    call s % mesh % free
-    call s % marcher % free
-    deallocate( s % dfdt )
-
-  end subroutine free
 
   subroutine calculate_dfdx( s, i )
     class(solver_simple) :: s
@@ -118,6 +84,7 @@ contains
 
   end subroutine calculate_dfdx
 
+
   real function pointwise_dfdx( s, i, j, k )
     class(solver_simple) :: s
     integer :: i, j, k
@@ -126,4 +93,71 @@ contains
 
   end function pointwise_dfdx
 
+
+  subroutine info( s )
+    class(solver_simple) :: s
+
+
+    print *, "solver: ", s % name
+
+    if( associated(s % mesh) ) then
+       print *, "mesh: " , trim(s % mesh % name)
+    else
+       print *, "mesh: NONE"
+    end if
+
+    if( associated(s % step) ) then
+       print *, "step: ", trim(s % step % name )
+    else
+       print *, "step: NONE"
+    end if
+
+    if( associated(s % system) ) then
+       print *, "system: aye!"
+    else
+       print *, "system: nay!"
+    end if
+
+    if( associated(s % marcher) ) then
+       print *, "marcher: aye!"
+    else
+       print *, "marcher: nay!"
+    end if
+
+    if( associated(s % data) ) then
+       print *, "data:"
+       call s % data % info
+    else
+       print *, "data: nay!"
+    end if
+
+  end subroutine info
+
+
+  subroutine free( s )
+    class(solver_simple) :: s
+
+    call s % mesh % free
+    call s % step % free
+    call s % marcher % free
+
+    deallocate( s % system, s % t, s % dfdt )
+
+  end subroutine free
+
+  subroutine solve( s )
+    class(solver_simple) :: s
+
+    do while( s%t < s%t1)
+       call s % marcher % apply(           &
+            s   = s % step,                &
+            sys = s % system,          &
+            t   = s % t,                   &
+            t1  = s % t1,               &
+            h   = s % h, &
+            y   = s % y )
+    end do
+  end subroutine solve
+
 end module class_solver_simple
+

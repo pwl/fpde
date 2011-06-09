@@ -38,5 +38,4 @@ contains
   end subroutine free
 
 
-
 end module class_trigger
