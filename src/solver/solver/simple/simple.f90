@@ -30,6 +30,8 @@ module class_solver_simple
      procedure :: info
      procedure :: free
      procedure :: solve
+     procedure :: calculate_dfdx
+     procedure :: pointwise_dfdx
   end type solver_simple
 
 
@@ -38,7 +40,7 @@ contains
   subroutine init(s, data)
     class(solver_simple) :: s
     class(solver_simple_data), target :: data
-    integer :: j
+    integer :: i,j
 
     s % name = "simple"
 
@@ -49,11 +51,13 @@ contains
     ! initialize time
     call data % initialize_t( s % t )
     ! initialize ode_system
-    call data % initialize_ode_system( s % system, rhs_for_marcher , s)
+    call data % initialize_ode_system( s % system, s)
     ! initialize marcher
     call data % initialize_marcher( s % marcher )
     ! allocate memory for dfdt
     call data % initialize_dfdt( s % dfdt )
+    ! initialize right hand side of equations
+    call data % initialize_rhs( s % rhs )
 
     ! assign interface pointers
     s % x      => s % mesh % x
@@ -68,10 +72,15 @@ contains
     s % t1     = data % t1
     s % h      = data % h0
 
-    ! aliasing of y
-    do j = 1, s % nf
-       s % y( (j-1) * s%nx : (j * s%nx) => s % mesh % f(:,j)
-    end do
+    ! copy initial data from a mesh
+    allocate( s%y( s%nf * s%nx ) )
+    s % y = reshape( s % mesh % f, [ s%nf*s%nx ] )
+
+    ! @todo when pointer bounds(rank) remapping (test/array_test.f90)
+    ! is implemented the following should work instead, then no
+    ! copying will be required
+    !
+    ! s % y( 1 : s % nf * s % nx ) => s % mesh % f
 
   end subroutine init
 
@@ -118,6 +127,12 @@ contains
        print *, "system: nay!"
     end if
 
+    if( associated(s % rhs) ) then
+       print *, "rhs: aye!"
+    else
+       print *, "rhs: nay!"
+    end if
+
     if( associated(s % marcher) ) then
        print *, "marcher: aye!"
     else
@@ -141,7 +156,7 @@ contains
     call s % step % free
     call s % marcher % free
 
-    deallocate( s % system, s % t, s % dfdt )
+    deallocate( s % system, s % t, s % dfdt, s % y )
 
   end subroutine free
 

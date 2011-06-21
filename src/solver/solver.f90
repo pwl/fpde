@@ -40,7 +40,7 @@ contains
     class(solver) :: s
     integer :: i
 
-    print "(a,a)", "calculate_dfdx not defined for ", trim(s % name)
+    print *, "calculate_dfdx not defined for ", trim(s % name)
     stop
 
   end subroutine calculate_dfdx
@@ -50,7 +50,7 @@ contains
     integer :: i, j, k
     pointwise_dfdx = -1.
 
-    print "(a,a)", "pointwise_dfdx not defined for ", trim(s % name)
+    print *, "pointwise_dfdx not defined for ", trim(s % name)
     stop
 
   end function pointwise_dfdx
@@ -67,22 +67,20 @@ contains
     nx = s % nx
     nf = s % nf
 
-    forall( i = 1:nx, j = 1:nf )
-       s % f( i, j ) = y( i + (j-1) * nx )
-    end forall
-
+    s % f = reshape( y, [ nx,nf ] )
     s % t = t
 
+    ! print *, "aa"
     ! calculate rhs
     call s % rhs
+    ! print *, "aa"
 
     if( present(status) ) then
        status = s % rhs_status
     end if
 
-    forall( i = 1:nx, j = 1:nf )
-       dydt( i + (j-1) * nx ) = s % dfdt( i, j )
-    end forall
+    dydt = reshape( s%dfdt, [nx*nf] )
+    print *, dydt
 
   end subroutine rhs_for_marcher
 

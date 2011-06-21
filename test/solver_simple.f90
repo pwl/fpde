@@ -13,6 +13,7 @@ program solver_simple_program
   real, pointer :: y(:)
   real, target :: z(3) = (/ 1,2,3 /)
   real :: pi
+  integer :: nx = 10
 
   pi = acos(-1.)
 
@@ -21,23 +22,31 @@ program solver_simple_program
   data = solver_simple_data( &
        mesh_id = "sfd3pt",   &
        step_id = "rk4cs",    &
-       nx      = 10,        &
+       nx      = nx,        &
        nf      = 2,        &
        x0      = 0.,         &
        x1      = 1.,         &
        t1      = 1.,         &
        h0      = 1.e-3,      &
        rhs     = rhs)
+  data % rhs => my_rhs
+
 
   call s % init(data)
 
+  call data % rhs(s)
+
   call s % info
+
 
   ! prepare initial data
   s % f(:,1) = sin( s % x * pi )
-  print *, s % y
+  s % y(1:nx) = sin( s % x * pi )
+  s % y(nx+1:2*nx) = 0.
+  ! print *, s % y
+  call my_rhs(s)
 
-  ! call s % solve
+  call s % solve
 
   ! print *, sum(s % f(:,1)-exp(-s%t1*pi**2)*sin( s % x * pi))
 
@@ -53,14 +62,15 @@ contains
 
     ! print *, "solver_simple with my_rhs (diffusion equation test)"
     do i = 1, s % nx
-       write(*, "(E14.5,E14.5)") s%x(i), s % f(i,1)
+       write(*, "(E14.5,E14.5,E14.5)") s%x(i), s % f(i,1), s % f(i,2)
     end do
 
     print *, ""
     print *, ""
     print *, ""
 
-    s % dfdt(:,:) = s % dfdx(:,:,2)
+    s % dfdt(:,1) = s % f(:,2)
+    s % dfdt(:,2) = s % dfdx(:,1,2)
 
     s % dfdt(1,:) = 0.
     s % dfdt(s%nx,:) = 0.

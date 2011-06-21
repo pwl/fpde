@@ -27,6 +27,7 @@ module class_solver_simple_data
      procedure :: initialize_t
      procedure :: initialize_ode_system
      procedure :: initialize_dfdt
+     procedure :: initialize_rhs
      procedure :: info
   end type solver_simple_data
 
@@ -71,20 +72,27 @@ contains
 
   end subroutine initialize_t
 
-  subroutine initialize_ode_system( data, system, rhs, params )
+  subroutine initialize_ode_system( data, system, params )
     class(solver_simple_data), intent(in) :: data
     class(ode_system), pointer :: system
-    procedure(fun_interface) :: rhs
     class(*) :: params
 
     allocate( system )
     call ode_system_construct(&
          sys = system,&
-         fun = rhs,&
+         fun = rhs_for_marcher,&
          dim = data % nx * data % nf,&
          params = params )
 
   end subroutine initialize_ode_system
+
+  subroutine initialize_rhs( data, rhs )
+    class(solver_simple_data), intent(in) :: data
+    procedure(interface_rhs), pointer :: rhs
+
+    rhs => data % rhs
+
+  end subroutine initialize_rhs
 
   subroutine initialize_marcher( data, m)
     class(solver_simple_data), intent(in) :: data
