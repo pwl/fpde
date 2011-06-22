@@ -13,7 +13,7 @@ program solver_simple_program
   real, pointer :: y(:)
   real, target :: z(3) = (/ 1,2,3 /)
   real :: pi
-  integer :: nx = 10
+  integer :: nx = 5
 
   pi = acos(-1.)
 
@@ -34,19 +34,24 @@ program solver_simple_program
 
   call s % init(data)
 
-  call data % rhs(s)
+  ! call data % rhs(s)
 
-  call s % info
+  ! call s % info
 
 
   ! prepare initial data
   s % f(:,1) = sin( s % x * pi )
-  s % y(1:nx) = sin( s % x * pi )
-  s % y(nx+1:2*nx) = 0.
-  ! print *, s % y
-  call my_rhs(s)
+  ! s % y(1:nx) = sin( s % x * pi )
+  ! s % y(nx+1:2*nx) = 0.
+  print *, s % y
+  print *,""
 
-  call s % solve
+  ! call my_rhs(s)
+  call s%mesh%calculate_derivatives(2)
+  print *, s%mesh%df(:,:,1)
+  print *,""
+
+  ! call s % solve
 
   ! print *, sum(s % f(:,1)-exp(-s%t1*pi**2)*sin( s % x * pi))
 
@@ -60,20 +65,24 @@ contains
 
     call s % calculate_dfdx( 2 )
 
+    s % dfdt(:,1) = s % f(:,2)
+    s % dfdt(:,2) = s % dfdx(:,1,2)
+
+    s % dfdt(1,:) = 0.
+    s % dfdt(s%nx,:) = 0.
+
     ! print *, "solver_simple with my_rhs (diffusion equation test)"
     do i = 1, s % nx
-       write(*, "(E14.5,E14.5,E14.5)") s%x(i), s % f(i,1), s % f(i,2)
+       write(*, "(6E14.5)") &
+            s%x(i), s%f(i,1), s%f(i,2),&
+            s%dfdt(i,1), s%dfdt(i,2), s%dfdx(i,1,2)
     end do
 
     print *, ""
     print *, ""
     print *, ""
 
-    s % dfdt(:,1) = s % f(:,2)
-    s % dfdt(:,2) = s % dfdx(:,1,2)
 
-    s % dfdt(1,:) = 0.
-    s % dfdt(s%nx,:) = 0.
 
   end subroutine my_rhs
 

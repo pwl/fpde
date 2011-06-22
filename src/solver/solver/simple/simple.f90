@@ -34,7 +34,6 @@ module class_solver_simple
      procedure :: pointwise_dfdx
   end type solver_simple
 
-
 contains
 
   subroutine init(s, data)
@@ -162,7 +161,6 @@ contains
 
   subroutine solve( s )
     class(solver_simple) :: s
-
     do while( s%t < s%t1)
        call s % marcher % apply(           &
             s   = s % step,                &

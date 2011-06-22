@@ -7,7 +7,7 @@ program array_test
   real, pointer :: array_twod(:,:)
   real, pointer, contiguous :: array_oned(:)
   real, allocatable :: test(:)
-  real, allocatable :: test2(:,:)
+  real, allocatable, target :: test2(:,:)
 
   allocate(a(n*m))
 
@@ -22,6 +22,13 @@ program array_test
   print *, ""
   print *, b(:,1)
   print *, ""
+
+  allocate( test2(n,m) )
+  forall(i=1:n,j=1:m) test2(i,j)=i+10*j
+
+  array_twod => test2
+  print *, "array_twod"
+  print *, array_twod
 
   ! allocate ( array_twod (2,2) )
 

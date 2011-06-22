@@ -75,6 +75,7 @@ contains
     call s % rhs
     ! print *, "aa"
 
+
     if( present(status) ) then
        status = s % rhs_status
     end if
