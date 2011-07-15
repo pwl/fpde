@@ -1,9 +1,9 @@
-!modul ode_system z parametrem class(*)
-module ode_system_module
+! General ode_system class
+module class_ode_system
 
    public :: fun_interface, jac_interface
    
-   !! interfejs
+   !! interfaces
    abstract interface
       subroutine fun_interface( t, y, dydt, params, status )
          real, intent(in) :: t
@@ -36,7 +36,7 @@ module ode_system_module
 contains
 
    !! konstruktor
-   subroutine ode_system_construct( sys, fun, jac, dim, params )
+   subroutine ode_system_init( sys, fun, jac, dim, params )
       procedure(fun_interface) :: fun
       procedure(jac_interface), optional :: jac
       integer :: dim
@@ -55,6 +55,6 @@ contains
       ! tymczasowa kolwencja
       ! status = 1 brak bledu
       ! status = 0 wystapily bledy
-   end subroutine ode_system_construct
+   end subroutine ode_system_init
 
-end module ode_system_module
+end module class_ode_system
