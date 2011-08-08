@@ -10,7 +10,7 @@ module class_ode_stepper
       logical :: can_use_dydt_in
       logical :: gives_exact_dydt_out
       logical :: gives_estimated_yerr
-      integer :: method_order
+      integer :: method_order ! min(p,pb) for embedded RK
       character(len=20) :: name ! @todo length of this variable
       integer :: status
    contains

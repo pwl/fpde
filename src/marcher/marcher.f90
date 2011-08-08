@@ -151,7 +151,7 @@ contains
          call c % apply ( s, y, m % yerr, m % dydt_out, h0 )
          ! po wykonaniu apply step control ustawia swoj status
          ! czyli zmienna c % status w zaleznosci czy krok ma
-         ! zostac zmieniony badz nie. Przyjeta konwencja
+         ! zostac zmieniony badz nie. Przyjeta konwencja:
          ! c % status = 1   zostal zwiekszony
          ! c % status =-1   zostal zmniejszony
          ! c % status = 0   nie zostal zmieniony
@@ -159,7 +159,7 @@ contains
          if ( c % status == -1 ) then
             ! Sprawdzamy poprawnosc sugerowanego kroku:
             ! czy h0 zostalo 'naprawde' zmniejszone
-            ! oraz czy sugerowane h0 zmieni czas conajmniej
+            ! oraz czy sugerowane h0 zmieni czas t conajmniej
             ! o jedna ULP
 
             ! @todo double coerce?
@@ -170,6 +170,7 @@ contains
                ! Krok zostal zmniejszony, anulujemy wykonany krok
                ! i probujemy znow z nowym krokiem h0
                y = m % y0
+               m % failed_steps = m % failed_steps + 1
                go to 100
             else
                ! W przeciwnym wypadku trzymamy aktualny krok
