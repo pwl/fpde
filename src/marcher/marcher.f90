@@ -1,11 +1,13 @@
-! Marcher class
-module class_marcher
-   use ode_system_module
-   use class_stepper
-   
+! General ode_marcher class
+module class_ode_marcher
+
+   use class_ode_system
+   use class_ode_stepper
+   use class_ode_step_control
+
    private
 
-   type, public ::  marcher
+   type, public ::  ode_marcher
       integer :: dim
       real, allocatable :: y0(:)
       real, allocatable :: yerr(:)
@@ -22,11 +24,12 @@ module class_marcher
       procedure :: apply
       procedure :: reset
       procedure :: free
-   end type marcher
+   end type ode_marcher
 
 contains
+
    subroutine init( m, dim )
-      class(marcher), intent(inout) :: m
+      class(ode_marcher), intent(inout) :: m
       integer :: dim
 
       m % dim = dim
@@ -42,10 +45,10 @@ contains
       allocate( m % dydt_out( dim ) )
    end subroutine init
 
-   subroutine apply( m, s, sys, t, t1, h, y )
-      class(marcher), intent(inout) :: m
-      class(ode_stepper_type), intent(inout) :: s
-      ! class(*) :: c
+   subroutine apply( m, s, c, sys, t, t1, h, y )
+      class(ode_marcher), intent(inout) :: m
+      class(ode_stepper), intent(inout) :: s
+      class(ode_step_control), optional :: c
       class(ode_system) :: sys
       real, intent(inout) :: t
       real, intent(in) :: t1
@@ -54,12 +57,13 @@ contains
 
       logical :: final_step
       integer :: step_status
-      real :: h0, t0, dt
+      real :: h0, t0, dt, h_old, t_curr, t_next
       
-      h0=h
+      ! h0 zmienna na ktorej operujemy, ewentualna zmiane kroku
+      ! czyli zmiennej h dokonujemy na koncu subrutyny 
+      h0=h 
       t0=t
       dt=t1-t0
-
 
       ! Sprawdzanie poprawnosci wymiarow, kierunek calkowania,
       ! calkowania ze zmiennym krokiem ... @todo
@@ -76,6 +80,13 @@ contains
          return
       end if
 
+      ! Jezeli calkujemy ze zmiennym krokiem czyli stepper 
+      ! wylicza blad kroku oraz zostala podana metoda kontrolujaca
+      ! krok to wykonujemy kopie wejsciowego wektora y do struktury
+      ! matchera m % y0
+      if ( s % gives_estimated_yerr == .true. .and. present( c ) ) then
+         m % y0 = y
+      end if
       
       ! Wyliczamy pochodne jezeli metoda moze z nich skorzystac
       if ( s % can_use_dydt_in == .true. ) then
@@ -107,38 +118,65 @@ contains
          call s % apply( s % dim, t0, h0, y, m % yerr, null(), m % dydt_out, sys, s % status )
       end if
 
-      ! Sprawdzamy czy stepper zwrocil blad
+      ! Sprawdzamy czy stepper wykonal sie poprawnie
       if ( s % status /= 1 ) then
-         m % status = s % status ! przekazujemy taki sam status bledu do statusu marchera
-         h = h0; ! zwracamy krok przy jakim pojawil sie blad
+         ! jezeli wystapil blad przekazujemy taki sam 
+         ! status bledu do statusu marchera aby mozna go
+         ! bylo z zewnatrz odczytac
+         m % status = s % status 
+         h = h0 ! zwracamy krok przy jakim pojawil sie blad
+         t = t0 ! przywracamy wartosc t podana na wejsciu 
+         return
       end if
       
       ! Jezeli stepper nie spowodowal zadnych bledow zwiekszamy 
-      ! licznik m%count i zapisujemy krok w m%last_step
+      ! licznik m % count i zapisujemy krok w m % last_step
       m % count = m % count + 1
       m % last_step = h0
 
-      ! Zwiekszamy aktualny czas
+      ! Zapisujemy aktualny czas
       if ( final_step ) then
          t = t1
       else
          t = t0 + h0
       end if
 
-      ! Fragment kodu odpowiadajacy za calkowanie ze zmiennym krokiem
+      ! Ponizej kod odpowiadajacy za calkowanie ze zmiennym krokiem
 
       ! Jezeli metoda na to pozwala oraz zostal podany step control
       ! uzywamy metody z adaptywnym krokiem
-      if ( s % gives_estimated_yerr == .true. ) then
-         ! @todo jak sprawdzic czy zostal podany step control
-         ! c /= null() powoduje blad kompilacji:
-         ! This binary operation is invalid for this data type.
-         ! uruchamiamy step control ktory zwraca flage
-         ! nalezy ustalic konwencje, np: -1 nalezy zmniejszyc krok,
-         ! 1 nalezy zwiekszyc krok, 0 krok czasowy pozostaje taki sam
-         ! w przypadku kiedy krok czasowy nalezy zmniejszyc resetujemy
-         ! wektor y: y=m%y0, zwiekszamy licznik m%failed_steps
-         ! i idziemy do 100
+      if ( s % gives_estimated_yerr == .true. .and. present( c ) ) then
+         ! present( c ) zwraca .true. jesli zostal podany step control
+         h_old = h0 ! zapamietujemy wielkosc kroku
+         call c % apply ( s, y, m % yerr, m % dydt_out, h0 )
+         ! po wykonaniu apply step control ustawia swoj status
+         ! czyli zmienna c % status w zaleznosci czy krok ma
+         ! zostac zmieniony badz nie. Przyjeta konwencja:
+         ! c % status = 1   zostal zwiekszony
+         ! c % status =-1   zostal zmniejszony
+         ! c % status = 0   nie zostal zmieniony
+
+         if ( c % status == -1 ) then
+            ! Sprawdzamy poprawnosc sugerowanego kroku:
+            ! czy h0 zostalo 'naprawde' zmniejszone
+            ! oraz czy sugerowane h0 zmieni czas t conajmniej
+            ! o jedna ULP
+
+            ! @todo double coerce?
+            t_curr = t
+            t_next = t+h0
+
+            if ( abs(h0) < abs(h_old) .and. t_next /= t_curr ) then
+               ! Krok zostal zmniejszony, anulujemy wykonany krok
+               ! i probujemy znow z nowym krokiem h0
+               y = m % y0
+               m % failed_steps = m % failed_steps + 1
+               go to 100
+            else
+               ! W przeciwnym wypadku trzymamy aktualny krok
+               h0 = h_old
+            end if
+         end if
       end if
 
       ! Zapisujemy sugerowana wielkosc dla nastepnego
@@ -148,7 +186,7 @@ contains
    end subroutine apply
 
    subroutine reset( m )
-      class(marcher), intent(inout) :: m
+      class(ode_marcher), intent(inout) :: m
 
       m % count = 0
       m % failed_steps = 0
@@ -156,7 +194,7 @@ contains
    end subroutine reset
 
    subroutine free( m )
-      class(marcher), intent(inout) :: m
+      class(ode_marcher), intent(inout) :: m
 
       deallocate( m % y0 )
       deallocate( m % yerr )
@@ -164,4 +202,4 @@ contains
       deallocate( m % dydt_out )
    end subroutine free
 
-end module class_marcher
+end module class_ode_marcher

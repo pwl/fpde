@@ -1,12 +1,12 @@
 module stepper_factory
 
-  use class_stepper
-  use class_stepper_rk4cs
+  use class_ode_stepper
+  use class_ode_stepper_rk4cs
 
 contains
 
   function stepper_new(id) result(s)
-    class(ode_stepper_type), pointer :: s
+    class(ode_stepper), pointer :: s
     character(len=*) :: id
 
     select case(trim(id))

@@ -32,7 +32,7 @@ endif(DOXYGEN_FOUND)
 
 # available compilers
 find_program(ifort "ifort")
-find_program(gfortran "gfortran-4.6")
+find_program(gfortran "gfortran")
 
 set(comp ${CMAKE_Fortran_COMPILER})
 

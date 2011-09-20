@@ -1,11 +1,11 @@
 module class_solver_simple_data
 
   use class_mesh
-  use class_stepper
-  use class_marcher
+  use class_ode_stepper
+  use class_ode_marcher
   use mesh_factory
   use stepper_factory
-  use ode_system_module
+  use class_ode_system
   use class_solver
 
   private
@@ -51,7 +51,7 @@ contains
 
   subroutine initialize_step( data, s )
     class(solver_simple_data), intent(in) :: data
-    class(ode_stepper_type), pointer :: s
+    class(ode_stepper), pointer :: s
 
     s => stepper_new( data % step_id )
     if( .not. associated( s )) then
@@ -78,7 +78,7 @@ contains
     class(*) :: params
 
     allocate( system )
-    call ode_system_construct(&
+    call ode_system_init(&
          sys = system,&
          fun = rhs_for_marcher,&
          dim = data % nx * data % nf,&
@@ -96,7 +96,7 @@ contains
 
   subroutine initialize_marcher( data, m)
     class(solver_simple_data), intent(in) :: data
-    class(marcher), pointer :: m
+    class(ode_marcher), pointer :: m
 
     allocate( m )
     call m % init( data % nf * data % nx )

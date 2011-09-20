@@ -4,10 +4,10 @@ program mesh_factory_test
   use class_mesh
 
   use stepper_factory
-  use class_stepper
+  use class_ode_stepper
 
   class(mesh), pointer :: m
-  class(ode_stepper_type), pointer :: s
+  class(ode_stepper), pointer :: s
 
   m => mesh_new("sfd3pt")
   if( associated(m) ) then
