@@ -4,9 +4,9 @@ module class_solver_simple
 
   use class_solver_simple_data
   use class_solver
-  use class_marcher
-  use ode_system_module
-  use class_stepper
+  use class_ode_marcher
+  use class_ode_stepper
+  use class_ode_system
   use class_mesh
 
   use pretty_print
@@ -20,10 +20,10 @@ module class_solver_simple
      ! rhs_for_marcher
      real, pointer :: y(:)
      class(mesh), pointer :: mesh
-     class(ode_stepper_type), pointer :: step
+     class(ode_stepper), pointer :: step
      class(solver_simple_data), pointer :: data
      class(ode_system), pointer :: system
-     class(marcher), pointer :: marcher
+     class(ode_marcher), pointer :: marcher
      ! class(control), pointer :: control
    contains
      procedure :: init
@@ -56,7 +56,7 @@ contains
     ! allocate memory for dfdt
     call data % initialize_dfdt( s % dfdt )
     ! initialize right hand side of equations
-    call data % initialize_rhs( s % rhs )
+    call data % initialize_rhs( s % rhs, s % rhs_status )
 
     ! assign interface pointers
     s % x      => s % mesh % x
@@ -156,12 +156,15 @@ contains
     call s % marcher % free
 
     deallocate( s % system, s % t, s % dfdt, s % y )
+    ! deallocate( s % system, s % t, s % dfdt )
 
   end subroutine free
 
   subroutine solve( s )
     class(solver_simple) :: s
-    do while( s%t < s%t1)
+    integer :: i = 0
+    ! do while( s%t < s%t1)
+    do while( i < 3 )
        call s % marcher % apply(           &
             s   = s % step,                &
             sys = s % system,          &
@@ -169,6 +172,12 @@ contains
             t1  = s % t1,               &
             h   = s % h, &
             y   = s % y )
+       if ( s % marcher % status /= 1 ) then
+          print *, "marcher error, status=",  s % marcher % status
+          print *, s % marcher % dim, s % step % dim
+          exit
+       endif
+       i = i + 1
     end do
   end subroutine solve
 

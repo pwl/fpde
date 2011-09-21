@@ -55,7 +55,8 @@ contains
 
   end function pointwise_dfdx
 
-
+  ! this is a universal wrapper for solver%rhs to work with marcher
+  ! architecture
   subroutine rhs_for_marcher( t, y, dydt, s, status )
     real, intent(in) :: t
     real, intent(in) :: y(:)
@@ -70,18 +71,20 @@ contains
     s % f = reshape( y, [ nx,nf ] )
     s % t = t
 
-    ! print *, "aa"
+    ! print *, y
+    ! print *, s % f
+
     ! calculate rhs
     call s % rhs
-    ! print *, "aa"
 
+    ! print *, s % dfdt
 
     if( present(status) ) then
        status = s % rhs_status
     end if
 
     dydt = reshape( s%dfdt, [nx*nf] )
-    print *, dydt
+    ! print *, dydt
 
   end subroutine rhs_for_marcher
 

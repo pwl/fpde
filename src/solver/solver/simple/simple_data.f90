@@ -86,11 +86,19 @@ contains
 
   end subroutine initialize_ode_system
 
-  subroutine initialize_rhs( data, rhs )
+  subroutine initialize_rhs( data, rhs, rhs_status )
     class(solver_simple_data), intent(in) :: data
     procedure(interface_rhs), pointer :: rhs
+    integer :: rhs_status
 
-    rhs => data % rhs
+    if ( associated(data % rhs) ) then
+       rhs => data % rhs
+       rhs_status = 1
+    else
+       ! no rhs defined!
+       rhs_status = -1
+    end if
+
 
   end subroutine initialize_rhs
 
