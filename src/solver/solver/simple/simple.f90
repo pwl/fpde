@@ -162,9 +162,9 @@ contains
 
   subroutine solve( s )
     class(solver_simple) :: s
-    integer :: i = 0
-    ! do while( s%t < s%t1)
-    do while( i < 3 )
+    ! integer :: i = 0
+    do while( s%t < s%t1)
+    ! do while( i < 3 )
        call s % marcher % apply(           &
             s   = s % step,                &
             sys = s % system,          &
@@ -172,12 +172,13 @@ contains
             t1  = s % t1,               &
             h   = s % h, &
             y   = s % y )
+       ! @todo: neater error handling
        if ( s % marcher % status /= 1 ) then
           print *, "marcher error, status=",  s % marcher % status
-          print *, s % marcher % dim, s % step % dim
           exit
        endif
-       i = i + 1
+       ! i = i + 1
+       ! print *, s%t
     end do
   end subroutine solve
 
