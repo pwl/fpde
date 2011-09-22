@@ -4,39 +4,55 @@ program array_test
   integer :: n = 2, m = 3
   integer :: i, j
 
-  real, pointer :: array_twod(:,:)
-  real, pointer, contiguous :: array_oned(:)
-  real, allocatable :: test(:)
-  real, allocatable, target :: test2(:,:)
+  integer, allocatable, target :: array_2d(:,:)
+  integer, pointer :: array_1d(:)
+  integer, allocatable :: test(:)
+  ! real, allocatable :: test(:)
+  ! real, allocatable, target :: test2(:,:)
 
-  allocate(a(n*m))
+  ! allocate(a(n*m))
 
-  forall( i = 1:n*m ) a(i) = i
+  ! forall( i = 1:n*m ) a(i) = i
 
-  ! the following does not work in ifort 12 ang gfortran 4.6
-  b(1:m, 1:n) => a
+  ! ! the following does not work in ifort 12 ang gfortran 4.6
+  ! b(1:m, 1:n) => a
 
-  print *, b
-  print *, size(b,1)
-  print *, b(1,:)
-  print *, ""
-  print *, b(:,1)
-  print *, ""
+  ! print *, b
+  ! print *, "size(b,1)=", size(b,1), "but should be ", n
+  ! print *, b(1,:)
+  ! print *, ""
+  ! print *, b(:,1)
+  ! print *, ""
 
-  allocate( test2(n,m) )
-  forall(i=1:n,j=1:m) test2(i,j)=i+10*j
+  ! allocate( test2(n,m) )
+  ! forall(i=1:n,j=1:m) test2(i,j)=i+10*j
 
-  array_twod => test2
-  print *, "array_twod"
-  print *, array_twod
+  ! ! array_2d => test2
+  ! ! print *, "array_2d"
+  ! ! print *, array_2d
 
-  ! allocate ( array_twod (2,2) )
+  ! nullify(array_2d)
 
-  ! forall( i = 1:2, j=1:2 )&
-  !      array_twod (i,j) = i*j
+  allocate ( array_2d (2,2) )
 
-  ! array_oned (1:4) => array_twod
+  forall( i = 1:2, j=1:2 )&
+       array_2d (i,j) = i+10*j
 
-  ! write (*, *) array_oned
+  print *, array_2d
+
+  array_1d(1:size(array_2d)) => array_2d
+
+  ! error with '-check all' enabled
+  array_1d (3) = 0
+
+  print *, "array_2d is contiguous : ", is_contiguous(array_2d)
+  print *, "array_1d is contiguous : ", is_contiguous(array_1d)
+
+  print *, "array_1d: "
+  write (*, *) array_1d
+  ! size is not determined correctly?
+  print *, "size(array_1d): ", size(array_1d), ", should be 4"
+
+  test => array_1d
 
 end program array_test
