@@ -10,11 +10,11 @@ module class_mesh
      ! private
      ! TODO: add something like
      character(len=300)    :: name
-     integer              :: nx, nf, maxrk
-     real, allocatable    :: x(:)
-     real, allocatable    :: f(:,:)
-     real, allocatable    :: df(:,:,:)
-     logical, private, allocatable :: df_calculated(:)
+     integer               :: nx, nf, maxrk
+     real, contiguous, pointer         :: x(:)
+     real, contiguous, pointer         :: f(:,:)
+     real, contiguous, pointer         :: df(:,:,:)
+     logical, private, contiguous, pointer :: df_calculated(:)
    contains
      ! obligatory
      procedure :: derivative
