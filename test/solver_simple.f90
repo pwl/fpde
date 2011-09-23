@@ -7,61 +7,75 @@ program solver_simple_program
   use class_solver_simple
   use class_solver_simple_data
 
-  type(solver_simple) :: s
+  class(solver), pointer :: s
   type(solver_simple_data) :: data
   procedure(interface_rhs), pointer :: rhs
   real, pointer :: y(:)
   real :: pi
   integer :: nx = 21
 
-  pi = acos(-1.)
-
-  rhs => my_rhs
-
-  ! @todo: default control type?
   data = solver_simple_data( &
        mesh_id = "sfd3pt",   &
        step_id = "rk4cs",    &
-       nx      = nx,        &
-       nf      = 2,        &
+       nx      = nx,         &
+       nf      = 2,          &
        x0      = 0.,         &
        x1      = 1.,         &
        t1      = 1.,         &
        h0      = 5.e-4,      &
        rhs     = rhs)
-  data % rhs => my_rhs
 
 
-  call s % init(data)
+  s => data % generate_solver()
 
-  ! call data % rhs(s)
+  ! pi = acos(-1.)
 
-  ! call s % info
+  ! rhs => my_rhs
+
+  ! ! @todo: default control type?
+  ! data = solver_simple_data( &
+  !      mesh_id = "sfd3pt",   &
+  !      step_id = "rk4cs",    &
+  !      nx      = nx,        &
+  !      nf      = 2,        &
+  !      x0      = 0.,         &
+  !      x1      = 1.,         &
+  !      t1      = 1.,         &
+  !      h0      = 5.e-4,      &
+  !      rhs     = rhs)
+  ! data % rhs => my_rhs
 
 
-  ! @todo: implement a functional way to give initial data prepare
-  ! initial data
-  s % f(:,1) = sin( s % x * pi )
-  s % f(:,2) = 0.
-  s % f(1,:) = 0.
-  s % f(nx,:) = 0.
-  ! s % y(1:(nx/2)) = sin( s % x * pi )
-  ! s % y(nx+1:2*nx) = 0.
-  ! s % y(nx) = 0.
-  ! s % y(2*nx) = 0.
-  ! print *, s % y(1:6)
-  ! print *,""
+  ! call s % init(data)
 
-  ! call my_rhs(s)
-  ! call s%mesh%calculate_derivatives(2)
-  ! print *, s%mesh%df(:,:,1)
-  ! print *,""
+  ! ! call data % rhs(s)
 
-  call s % solve
+  ! ! call s % info
 
-  ! print *, sum(s % f(:,1)-exp(-s%t1*pi**2)*sin( s % x * pi))
 
-  call s % free
+  ! ! @todo: implement a functional way to give initial data prepare
+  ! ! initial data
+  ! s % f(:,1) = sin( s % x * pi )
+  ! s % f(:,2) = 0.
+  ! s % f(1,:) = 0.
+  ! s % f(nx,:) = 0.
+  ! ! s % y(1:(nx/2)) = sin( s % x * pi )
+  ! ! s % y(nx+1:2*nx) = 0.
+  ! ! s % y(nx) = 0.
+  ! ! s % y(2*nx) = 0.
+  ! ! print *, s % y(1:6)
+  ! ! print *,""
+
+  ! ! call my_rhs(s)
+  ! ! call s%mesh%calculate_derivatives(2)
+  ! ! print *, s%mesh%df(:,:,1)
+  ! ! print *,""
+
+  ! call s % solve
+
+  ! ! print *, sum(s % f(:,1)-exp(-s%t1*pi**2)*sin( s % x * pi))
+
+  ! call s % free
 
 contains
 

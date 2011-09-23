@@ -9,7 +9,7 @@
 
 module class_solver_simple
 
-  use class_solver_simple_data
+  ! use class_solver_simple_data
   use class_solver
   use class_ode_marcher
   use class_ode_stepper
@@ -25,15 +25,15 @@ module class_solver_simple
      real :: h
      ! y(:) holds data used in mesh in a format compatible with
      ! rhs_for_marcher
-     real, pointer :: y(:)
+     real, pointer, contiguous :: y(:)
      class(mesh), pointer :: mesh
      class(ode_stepper), pointer :: step
-     class(solver_simple_data), pointer :: data
+     class(*), pointer :: data
      class(ode_system), pointer :: system
      class(ode_marcher), pointer :: marcher
      ! class(control), pointer :: control
    contains
-     procedure :: init
+     ! procedure :: init
      procedure :: info
      procedure :: free
      procedure :: solve
@@ -43,61 +43,9 @@ module class_solver_simple
   end type solver_simple
 
   private sync_to
+  public solver_simple_rhs_for_marcher
 
 contains
-
-  subroutine init(s, data)
-    class(solver_simple) :: s
-    class(solver_simple_data), target :: data
-    integer :: i,j,nx,nf
-
-    ! local variables
-    nx = data % nx
-    nf = data % nf
-
-    s % name = "simple"
-
-    ! initialize mesh
-    call data % initialize_mesh( s % mesh )
-    ! initialize step
-    call data % initialize_step( s % step )
-    ! initialize time
-    call data % initialize_t( s % t )
-    ! initialize ode_system
-    call data % initialize_ode_system( s % system, s)
-    ! initialize marcher
-    call data % initialize_marcher( s % marcher )
-    ! allocate memory for dfdt
-    call data % initialize_dfdt( s % dfdt )
-    ! initialize right hand side of equations
-    call data % initialize_rhs( s % rhs, s % rhs_status )
-
-    ! assign interface pointers
-    s % x      => s % mesh % x
-    s % f      => s % mesh % f
-    s % dfdx   => s % mesh % df
-    s % params => data % params
-    s % data   => data
-
-    s % nx     = nx
-    s % nf     = nf
-    s % rk     = data % rk
-    s % t1     = data % t1
-    s % h      = data % h0
-
-    ! copy initial data from a mesh
-    allocate( s % y( nf * nx ) )
-    call s % sync_to( s % y )
-    ! s % f( 1:nx, 1:nf ) => s % y
-
-    ! @todo when pointer bounds(rank) remapping (test/array_test.f90)
-    ! is implemented the following should work instead, then no
-    ! copying will be required. (no, no, no, wrong, do it again)
-    !
-    ! s % y( 1 : s % nf * s % nx ) => s % mesh % f
-
-  end subroutine init
-
 
   subroutine calculate_dfdx( s, i )
     class(solver_simple) :: s
@@ -107,7 +55,6 @@ contains
 
   end subroutine calculate_dfdx
 
-
   real function pointwise_dfdx( s, i, j, k )
     class(solver_simple) :: s
     integer :: i, j, k
@@ -116,9 +63,11 @@ contains
 
   end function pointwise_dfdx
 
+  ! used to set the view of s and its subparts (i.e. mesh) to a vector
+  ! v.
   subroutine sync_to( s, v )
     class(solver_simple) :: s
-    real, pointer :: v(:)
+    real, pointer, contiguous :: v(:)
     integer :: nx, nf
     nx = s % nx
     nf = s % nf
@@ -164,12 +113,12 @@ contains
        print *, "marcher: nay!"
     end if
 
-    if( associated(s % data) ) then
-       print *, "data:"
-       call s % data % info
-    else
-       print *, "data: nay!"
-    end if
+    ! if( associated(s % data) ) then
+    !    print *, "data:"
+    !    call s % data % info
+    ! else
+    !    print *, "data: nay!"
+    ! end if
 
   end subroutine info
 

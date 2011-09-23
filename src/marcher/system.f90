@@ -2,7 +2,7 @@
 module class_ode_system
 
    public :: fun_interface, jac_interface
-   
+
    !! interfaces
    abstract interface
       subroutine fun_interface( t, y, dydt, params, status )
@@ -31,7 +31,7 @@ module class_ode_system
       class(*), pointer :: params
       integer :: status
    end type ode_system
-   
+
 
 contains
 

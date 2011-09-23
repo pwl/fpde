@@ -7,6 +7,8 @@ module class_solver_simple_data
   use stepper_factory
   use class_ode_system
   use class_solver
+  use solver_factory
+  use class_solver_simple
 
   private
 
@@ -14,6 +16,7 @@ module class_solver_simple_data
      character(len=30) :: mesh_id = "sfd3pt"
      character(len=30) :: step_id = "rk4cs"
      character(len=30) :: control_id = ""
+     character(len=30) :: solver_id = "simple"
      integer :: nf=1, nx, rk=2
      real :: x0, x1
      real :: h0=1.e-3, t0=0., t1=1.e10
@@ -29,9 +32,76 @@ module class_solver_simple_data
      procedure :: initialize_dfdt
      procedure :: initialize_rhs
      procedure :: info
+     procedure :: generate_solver
   end type solver_simple_data
 
 contains
+
+  function generate_solver ( this ) result(s)
+    class(solver_simple_data), intent(in), target :: this
+    class(solver_simple), pointer :: s
+    integer :: i,j,nx,nf
+
+    allocate( s )
+
+    ! local variables
+    nx = this % nx
+    nf = this % nf
+
+    ! @todo add iterator
+    s % name = "simple"
+
+    ! initialize mesh
+    call this % initialize_mesh( s % mesh )
+    ! initialize step
+    call this % initialize_step( s % step )
+    ! initialize time
+    call this % initialize_t( s % t )
+    ! initialize ode_system
+    call this % initialize_ode_system( s % system, s)
+    ! initialize marcher
+    call this % initialize_marcher( s % marcher )
+    ! allocate memory for dfdt
+    call this % initialize_dfdt( s % dfdt )
+    ! initialize right hand side of equations
+    call this % initialize_rhs( s % rhs, s % rhs_status )
+
+    ! assign interface pointers
+    s % x      => s % mesh % x
+    s % f      => s % mesh % f
+    s % dfdx   => s % mesh % df
+    s % params => this % params
+    s % data   => this
+
+    s % nx     = nx
+    s % nf     = nf
+    s % rk     = this % rk
+    s % t1     = this % t1
+    s % h      = this % h0
+
+    ! @todo is this needed? may be for the reinitialization purposes,
+    ! i.e. to reset the solver without referring to data explicitely?
+    s % data => this
+
+    ! this is where the actual data is being held, the view of s % f
+    ! often points here (but not always) @todo be precise!
+    allocate( s % y( nf * nx ) )
+
+    ! we shall sync the solver in order for the user to set the
+    ! initial data using the s % f view
+    call s % sync_to( s % y )
+
+    ! the view below is outdated
+    ! @todo when pointer bounds(rank) remapping (test/array_test.f90)
+    ! is implemented the following should work instead, then no
+    ! copying will be required. (no, no, no, wrong, do it again)
+    !
+    ! s % y( 1 : s % nf * s % nx ) => s % mesh % f
+
+    ! @todo add initial data for solver_simple_data here
+
+    end function generate_solver
+
 
   subroutine initialize_mesh(data, m)
     class(solver_simple_data), intent(in) :: data
@@ -49,6 +119,7 @@ contains
          data % x0, data % x1 )
 
     deallocate( m % f )
+
   end subroutine initialize_mesh
 
   subroutine initialize_step( data, s )

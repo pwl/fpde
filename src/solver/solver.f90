@@ -33,7 +33,6 @@ module class_solver
      end subroutine interface_rhs
   end interface
 
-
 contains
 
     subroutine calculate_dfdx( s, i )
