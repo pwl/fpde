@@ -1,18 +1,18 @@
 ! Domand-Prince 5(4)
-! @todo referencje 
+! @todo referencje
 module class_ode_stepper_rkpd54
-   
+
    use class_ode_stepper
    use class_ode_system
-   
+
    private
 
    type, public, extends( ode_stepper ) :: ode_stepper_rkpd54
       ! workspace
-      real, allocatable :: k1(:), k2(:), k3(:), k4(:), k5(:), k6(:), k7(:), y0(:), ytmp(:)
+      real, pointer, contiguous :: k1(:), k2(:), k3(:), k4(:), k5(:), k6(:), k7(:), y0(:), ytmp(:)
       !
       real :: c(7) = (/ 0.0, 1.0/5.0, 3.0/10.0, 4.0/5.0, 8.0/9.0, 1.0, 1.0 /)
-      
+
       real :: a2(1) = (/ 1.0/5.0 /)
       real :: a3(2) = (/ 3.0/40.0, 9.0/40.0 /)
       real :: a4(3) = (/ 44.0/45.0, -56.0/15.0, 32.0/9.0 /)
@@ -20,7 +20,7 @@ module class_ode_stepper_rkpd54
       real :: a6(5) = (/ 9017.0/3168.0, -355.0/33.0, 46732.0/5247.0, 49.0/176.0, -5103.0/18656.0 /)
       real :: a7(6) = (/ 35.0/384.0, 0.0, 500.0/1113.0, 125.0/192.0, -2187.0/6784.0, 11.0/84.0 /)
 
-      real :: b(7) = (/ 35.0/384.0, 0.0, 500.0/1113.0, 125.0/192.0, -2187.0/6784.0, 11.0/84.0, 0.0 /) 
+      real :: b(7) = (/ 35.0/384.0, 0.0, 500.0/1113.0, 125.0/192.0, -2187.0/6784.0, 11.0/84.0, 0.0 /)
 
       real :: ec(7) = (/  -71.0/57600.0, 0.0, 71.0/16695.0, -71.0/1920.0, 17253.0/339200.0, -22.0/525.0, 1.0/40.0 /)
 
@@ -36,7 +36,7 @@ contains
    subroutine init(s, dim)
       class(ode_stepper_rkpd54), intent(inout) :: s
       integer :: dim
-      
+
       s % dim = dim
       s % can_use_dydt_in = .true.
       s % gives_exact_dydt_out = .true.
@@ -44,7 +44,7 @@ contains
       s % method_order = 4
       s % name = "rkpd54"
       s % status = 1
-      
+
       ! allocate workspace vectors
       allocate( s % k1( dim ) )
       allocate( s % k2( dim ) )
@@ -61,11 +61,11 @@ contains
       class(ode_stepper_rkpd54), intent(inout) :: s
       integer, intent(in) :: dim
       real, intent(in)  :: t, h
-      real, intent(inout) :: y(:), yerr(:)
-      real, intent(in)  :: dydt_in(:)
-      real, intent(inout) :: dydt_out(:)
+      real, pointer, intent(inout) :: y(:), yerr(:)
+      real, pointer, intent(in)  :: dydt_in(:)
+      real, pointer, intent(inout) :: dydt_out(:)
       class(ode_system)  :: sys
-      
+
       integer, optional :: status
 
       ! Wykonujemy kopie wektora y na wypadek wystapiena bledow
@@ -120,7 +120,7 @@ contains
          s % status = sys % status
          return
       end if
-      
+
       ! krok k4
       s % ytmp = y + h*( (s % a4(1) * s % k1) + (s % a4(2) * s % k2) + (s % a4(3) * s % k3))
       call sys % fun( t + (s % c(4))*h, s % ytmp, s % k4, sys % params, sys % status )
@@ -170,7 +170,7 @@ contains
          call sys % fun( t+h, y, dydt_out, sys % params, sys % status )
          if ( sys % status /= 1 ) then
             s % status = sys % status
-            
+
             ! poniewaz wektor y zostal juz nadpisany
             ! musimy go odzyskac z kopi zrobionej na
             ! poczaktu subrutyny
@@ -190,7 +190,7 @@ contains
 
    subroutine reset( s )
       class(ode_stepper_rkpd54), intent(inout) :: s
-      
+
       s % k1 = 0.0
       s % k2 = 0.0
       s % k3 = 0.0
@@ -205,7 +205,7 @@ contains
 
    subroutine free( s )
       class(ode_stepper_rkpd54), intent(inout) :: s
-      
+
       deallocate( s % k1 )
       deallocate( s % k2 )
       deallocate( s % k3 )

@@ -5,7 +5,7 @@
 ! memory and make s % f the 2d view of it, synced after calculating
 ! rhs. To calculate rhs s % f and s % mesh % f are both temporary
 ! associated to y in solver_simple_rhs_for_marcher. Synchronization is
-! done by a private function sync_to
+! done by a private function sync_f
 
 module class_solver_simple
 
@@ -25,7 +25,7 @@ module class_solver_simple
      real :: h
      ! y(:) holds data used in mesh in a format compatible with
      ! rhs_for_marcher
-     real, pointer, contiguous :: y(:)
+     real, pointer, contiguous :: y(:), dydt(:)
      class(mesh), pointer :: mesh
      class(ode_stepper), pointer :: step
      class(*), pointer :: data
@@ -39,10 +39,11 @@ module class_solver_simple
      procedure :: solve
      procedure :: calculate_dfdx
      procedure :: pointwise_dfdx
-     procedure :: sync_to
+     procedure :: sync_f
+     procedure :: sync_dfdt
   end type solver_simple
 
-  private sync_to
+  private sync_f, sync_dfdt
   public solver_simple_rhs_for_marcher
 
 contains
@@ -65,7 +66,7 @@ contains
 
   ! used to set the view of s and its subparts (i.e. mesh) to a vector
   ! v.
-  subroutine sync_to( s, v )
+  subroutine sync_f( s, v )
     class(solver_simple) :: s
     real, pointer, contiguous :: v(:)
     integer :: nx, nf
@@ -75,7 +76,19 @@ contains
     s % f(1:nx, 1:nf) => v
     s % mesh % f(1:nx, 1:nf) => v
 
-  end subroutine sync_to
+  end subroutine sync_f
+
+  ! same as above, but syncs dfdt
+  subroutine sync_dfdt( s, v )
+    class(solver_simple) :: s
+    real, pointer, contiguous :: v(:)
+    integer :: nx, nf
+    nx = s % nx
+    nf = s % nf
+
+    s % dfdt(1:nx, 1:nf) => v
+
+  end subroutine sync_dfdt
 
   subroutine info( s )
     class(solver_simple) :: s
@@ -126,6 +139,9 @@ contains
   subroutine free( s )
     class(solver_simple) :: s
 
+    ! the pointer in the argument below is moved around pretty much
+    ! during execution of solve() and should be nullified in order not
+    ! to point at some yet to be freed memory area
     nullify( s % mesh % f )
     call s % mesh % free
     call s % step % free
@@ -140,7 +156,7 @@ contains
     class(solver_simple) :: s
     ! integer :: i = 0
     do while( s%t < s%t1)
-    ! do while( i < 3 )
+       ! do while( i < 3 )
        call s % marcher % apply(           &
             s   = s % step,                &
             sys = s % system,          &
@@ -149,12 +165,15 @@ contains
             h   = s % h, &
             y   = s % y )
        ! @todo: neater error handling
+
        if ( s % marcher % status /= 1 ) then
           print *, "marcher error, status=",  s % marcher % status
+          ! @todo change exit to an error report
           exit
        endif
 
-       call s % sync_to( s % y )
+       call s % sync_f( s % y )
+       call s % sync_dfdt( s % dydt )
        ! @todo: extra calculation, probably not needed
        call s % rhs
 
@@ -167,8 +186,8 @@ contains
   ! implementation
   subroutine solver_simple_rhs_for_marcher( t, y, dydt, s, status )
     real, intent(in) :: t
-    real, pointer, intent(in) :: y(:)
-    real, pointer, intent(out) :: dydt(:)
+    real, pointer, contiguous, intent(in) :: y(:)
+    real, pointer, contiguous, intent(out) :: dydt(:)
     class(solver_simple) :: s
     integer, optional :: status
     integer :: nx, nf, i, j
@@ -176,14 +195,10 @@ contains
     nx = s % nx
     nf = s % nf
 
-    call s % sync_to( y )
+    call s % sync_f( y )
+    call s % sync_dfdt( dydt )
     s % t = t
-    ! s % y is a one dimensional view of s % f, so this assignment
-    ! changes s % f
-    ! s % y = y
 
-    ! this is a neat way to write data to dydt, but
-    s % dfdt(1:nx,1:nf) => dydt
     ! calculate rhs (with s % f obtained from y)
     call s % rhs
 

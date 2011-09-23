@@ -1,16 +1,16 @@
 ! Runge-Kutta 4th order classical
 ! without error estimation
 module class_ode_stepper_rk4cs
-   
+
    use class_ode_stepper
    use class_ode_system
-   
+
    private
 
    type, public, extends( ode_stepper ) :: ode_stepper_rk4cs
       ! @todo workspace nie wszystkie ponizsze wektory sa niezbedne
       ! dla steppera ze stalym krokiem
-      real, allocatable :: k(:), k1(:), y0(:), ytmp(:)
+      real, pointer, contiguous :: k(:), k1(:), y0(:), ytmp(:)
    contains
       procedure :: init
       procedure :: apply
@@ -23,7 +23,7 @@ contains
    subroutine init(s, dim)
       class(ode_stepper_rk4cs), intent(inout) :: s
       integer :: dim
-      
+
       s % dim = dim
       s % can_use_dydt_in = .true.
       s % gives_exact_dydt_out = .true.
@@ -31,7 +31,7 @@ contains
       s % method_order = 4
       s % name = "rk4cs"
       s % status = 1
-      
+
       ! allocate workspace vectors
       allocate( s % k( dim ) )
       allocate( s % k1( dim ) )
@@ -43,11 +43,11 @@ contains
       class(ode_stepper_rk4cs), intent(inout) :: s
       integer, intent(in) :: dim
       real, intent(in)  :: t, h
-      real, intent(inout) :: y(:), yerr(:)
-      real, intent(in)  :: dydt_in(:)
-      real, intent(inout) :: dydt_out(:)
+      real, pointer, intent(inout) :: y(:), yerr(:)
+      real, pointer, intent(in)  :: dydt_in(:)
+      real, pointer, intent(inout) :: dydt_out(:)
       class(ode_system)  :: sys
-      
+
       integer, optional :: status
 
       ! Wykonujemy kopie wektora y na wypadek wystapiena bledow
@@ -95,7 +95,7 @@ contains
       end if
       y = y + h/3.0*(s % k)
       s % ytmp = s % y0 + 0.5*h*(s % k)
-      
+
       ! krok k3
       call sys % fun( t+0.5*h, s % ytmp, s % k, sys % params, sys % status )
       if ( sys % status /= 1 ) then
@@ -134,7 +134,7 @@ contains
 
    subroutine reset( s )
       class(ode_stepper_rk4cs), intent(inout) :: s
-      
+
       s % k = 0.0
       s % k1 = 0.0
       s % y0 = 0.0
@@ -144,7 +144,7 @@ contains
 
    subroutine free( s )
       class(ode_stepper_rk4cs), intent(inout) :: s
-      
+
       deallocate( s % k )
       deallocate( s % k1 )
       deallocate( s % y0 )

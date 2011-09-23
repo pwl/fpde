@@ -1,15 +1,15 @@
 ! Runge-Kutta-Fehlberg 4(5)
-! @todo referencje 
+! @todo referencje
 module class_ode_stepper_rkf45
-   
+
    use class_ode_stepper
    use class_ode_system
-   
+
    private
 
    type, public, extends( ode_stepper ) :: ode_stepper_rkf45
       ! workspace
-      real, allocatable :: k1(:), k2(:), k3(:), k4(:), k5(:), k6(:), y0(:), ytmp(:)
+      real, pointer, contiguous :: k1(:), k2(:), k3(:), k4(:), k5(:), k6(:), y0(:), ytmp(:)
       ! RKF constant coefficients. Zero elements left out.
       real :: ah(5) = (/ 1.0/4.0, 3.0/8.0, 12.0/13.0, 1.0, 1.0/2.0 /)
       real :: b3(2) = (/ 3.0/32.0, 9.0/32.0 /)
@@ -22,7 +22,7 @@ module class_ode_stepper_rkf45
       real :: c4 = 3855735.0/7618050.0
       real :: c5 = -1371249.0/7618050.0
       real :: c6 = 277020.0/7618050.0
- 
+
       ! Error coefficients - pierwsze zero
       ! wyrzucone (roznica konwencji indeksowania elementow tablicy C - FORTRAN)
       real :: ec(6) = (/ 1.0/360.0, 0.0, -128.0/4275.0, -2197.0/75240.0, 1.0/50.0, 2.0/55.0 /)
@@ -39,7 +39,7 @@ contains
    subroutine init(s, dim)
       class(ode_stepper_rkf45), intent(inout) :: s
       integer :: dim
-      
+
       s % dim = dim
       s % can_use_dydt_in = .true.
       s % gives_exact_dydt_out = .true.
@@ -47,7 +47,7 @@ contains
       s % method_order = 5 ! @todo do sprawdzenia razem ze wspolczynnikami b czy bbar
       s % name = "rkf45"
       s % status = 1
-      
+
       ! allocate workspace vectors
       allocate( s % k1( dim ) )
       allocate( s % k2( dim ) )
@@ -63,11 +63,11 @@ contains
       class(ode_stepper_rkf45), intent(inout) :: s
       integer, intent(in) :: dim
       real, intent(in)  :: t, h
-      real, intent(inout) :: y(:), yerr(:)
-      real, intent(in)  :: dydt_in(:)
-      real, intent(inout) :: dydt_out(:)
+      real, pointer, intent(inout) :: y(:), yerr(:)
+      real, pointer, intent(in)  :: dydt_in(:)
+      real, pointer, intent(inout) :: dydt_out(:)
       class(ode_system)  :: sys
-      
+
       integer, optional :: status
 
       integer :: i
@@ -116,7 +116,7 @@ contains
          return
       end if
       s % ytmp = y + h*( s%b3(1)*(s % k1) + s%b3(2)*(s % k2) )
-      
+
       ! krok k3
       call sys % fun( t + s%ah(2)*h, s % ytmp, s % k3, sys % params, sys % status )
       if ( sys % status /= 1 ) then
@@ -165,7 +165,7 @@ contains
          call sys % fun( t+h, y, dydt_out, sys % params, sys % status )
          if ( sys % status /= 1 ) then
             s % status = sys % status
-            
+
             ! poniewaz wektor y zostal juz nadpisany
             ! musimy go odzyskac z kopi zrobionej na
             ! poczaktu subrutyny
@@ -176,7 +176,7 @@ contains
 
       ! estymowany blad - roznica pomiedzy 4tym a 5tym rzedem
       yerr = h * ( s%ec(1) * s%k1 + s%ec(3) * s%k3 + s%ec(4) * s%k4 &
-           + s%ec(5) * s%k5 + s%ec(6) * s%k6 ) 
+           + s%ec(5) * s%k5 + s%ec(6) * s%k6 )
 
       ! pomyslnie zakonczono subrutyne
       s % status = 1
@@ -185,7 +185,7 @@ contains
 
    subroutine reset( s )
       class(ode_stepper_rkf45), intent(inout) :: s
-      
+
       s % k1 = 0.0
       s % k2 = 0.0
       s % k3 = 0.0
@@ -199,7 +199,7 @@ contains
 
    subroutine free( s )
       class(ode_stepper_rkf45), intent(inout) :: s
-      
+
       deallocate( s % k1 )
       deallocate( s % k2 )
       deallocate( s % k3 )

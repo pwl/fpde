@@ -1,6 +1,6 @@
 ! Testujemy moduly/klasy:
 ! ode_system, class_stepper, class_marcher
-! 
+!
 ! Rozwiazujemy rownanie drugiego rzedu
 ! y''[t] == -a y[t] + b,
 ! z warunkami poczatkowymi
@@ -16,7 +16,7 @@
 !    ! eps = epsilon(eps)
 !    print *, eps
 !    print *, abs(-1.2)
-   
+
 !    print *, minval(y)
 
 ! end program test_epsilon
@@ -37,7 +37,7 @@ program ode_system_test
    integer :: dim = 2
    real :: t=0.0, t1=10.0
    real :: h=0.01
-   real :: y(2)=(/1.0,0.0/)
+   real, pointer, contiguous :: y(:)
 
    real :: a=1.1, b=0.2
 
@@ -57,14 +57,18 @@ program ode_system_test
    myparams % a = a
    myparams % b = b
 
+   ! alokowanie wektora poczatkowego
+   allocate(y(2))
+   y=(/1.0,0.0/)
+
    ! inicjalizujemy stepper
    call mystepper % init( dim )
 
    ! inicjalizujemy marcher
    call mymarcher % init( dim )
 
-   ! inicjalizujemy controler 
-   call mycontrol % init ( eps_abs=0.0, eps_rel=1.0e-4, a_y=1.0, a_dydt=1.0 ) 
+   ! inicjalizujemy controler
+   call mycontrol % init ( eps_abs=0.0, eps_rel=1.0e-4, a_y=1.0, a_dydt=1.0 )
 
    ! konstruujemy/inicjalizujemy ode_system
    ! call ode_system_construct( myode, myfun, dim, myparams )
@@ -73,7 +77,7 @@ program ode_system_test
    do while (t<t1)
       ! Wolamy marcher % apply
       call mymarcher % apply( s=mystepper, c=mycontrol, sys=myode, t=t, t1=t1, h=h, y=y )
-      
+
       ! Sprawdzamy starus marchera, jezeli jest rozny od 1
       ! wychodzimy z petli
       if ( mymarcher % status /= 1 ) then
@@ -111,7 +115,7 @@ program ode_system_test
    print *, "gives dydt_out:  ", mystepper % gives_exact_dydt_out
    print *, "estimates error: ", mystepper % gives_estimated_yerr
    print *, ""
-   
+
    ! Wyswietlamy informacje kontrolera
    print *, ""
    print *, "step control info"

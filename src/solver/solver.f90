@@ -21,6 +21,7 @@ module class_solver
      procedure, nopass :: rhs_for_marcher
      procedure         :: info
      procedure         :: free
+     procedure         :: solve
   end type solver
 
   ! interface to rhs should be publicly available to all child classes
@@ -35,12 +36,11 @@ module class_solver
 
 contains
 
-    subroutine calculate_dfdx( s, i )
+  subroutine calculate_dfdx( s, i )
     class(solver) :: s
     integer :: i
 
     print *, "calculate_dfdx not defined for ", trim(s % name)
-    stop
 
   end subroutine calculate_dfdx
 
@@ -50,9 +50,16 @@ contains
     pointwise_dfdx = -1.
 
     print *, "pointwise_dfdx not defined for ", trim(s % name)
-    stop
 
   end function pointwise_dfdx
+
+  subroutine solve( s )
+    class(solver) :: s
+
+    print *, "solve not defined for ", trim(s % name)
+
+  end subroutine solve
+
 
   ! this is a default wrapper for solver%rhs to work with marcher
   ! architecture. It should do the right thing for a simple solver,

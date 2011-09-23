@@ -1,18 +1,18 @@
 ! Merson 4(3)
-! @todo referencje 
+! @todo referencje
 module class_ode_stepper_rkm43
-   
+
    use class_ode_stepper
    use class_ode_system
-   
+
    private
 
    type, public, extends( ode_stepper ) :: ode_stepper_rkm43
       ! workspace
-      real, allocatable :: k1(:), k2(:), k3(:), k4(:), k5(:), y0(:), ytmp(:)
+      real, pointer, contiguous :: k1(:), k2(:), k3(:), k4(:), k5(:), y0(:), ytmp(:)
       !
       real :: c(5) = (/ 0.0, 1.0/3.0, 1.0/3.0, 1.0/2.0, 1.0 /)
-      
+
       real :: a2(1) = (/ 1.0/3.0 /)
       real :: a3(2) = (/ 1.0/6.0, 1.0/6.0 /)
       real :: a4(3) = (/ 1.0/8.0, 0.0, 3.0/8.0 /)
@@ -34,7 +34,7 @@ contains
    subroutine init(s, dim)
       class(ode_stepper_rkm43), intent(inout) :: s
       integer :: dim
-      
+
       s % dim = dim
       s % can_use_dydt_in = .true.
       s % gives_exact_dydt_out = .true.
@@ -42,7 +42,7 @@ contains
       s % method_order = 4
       s % name = "rkm43"
       s % status = 1
-      
+
       ! allocate workspace vectors
       allocate( s % k1( dim ) )
       allocate( s % k2( dim ) )
@@ -57,11 +57,11 @@ contains
       class(ode_stepper_rkm43), intent(inout) :: s
       integer, intent(in) :: dim
       real, intent(in)  :: t, h
-      real, intent(inout) :: y(:), yerr(:)
-      real, intent(in)  :: dydt_in(:)
-      real, intent(inout) :: dydt_out(:)
+      real, pointer, intent(inout) :: y(:), yerr(:)
+      real, pointer, intent(in)  :: dydt_in(:)
+      real, pointer, intent(inout) :: dydt_out(:)
       class(ode_system)  :: sys
-      
+
       integer, optional :: status
 
       ! Wykonujemy kopie wektora y na wypadek wystapiena bledow
@@ -116,7 +116,7 @@ contains
          s % status = sys % status
          return
       end if
-      
+
       ! krok k4
       s % ytmp = y + h*( (s % a4(1) * s % k1) + (s % a4(2) * s % k2) + (s % a4(3) * s % k3))
       call sys % fun( t + (s % c(4))*h, s % ytmp, s % k4, sys % params, sys % status )
@@ -148,7 +148,7 @@ contains
          call sys % fun( t+h, y, dydt_out, sys % params, sys % status )
          if ( sys % status /= 1 ) then
             s % status = sys % status
-            
+
             ! poniewaz wektor y zostal juz nadpisany
             ! musimy go odzyskac z kopi zrobionej na
             ! poczaktu subrutyny
@@ -168,7 +168,7 @@ contains
 
    subroutine reset( s )
       class(ode_stepper_rkm43), intent(inout) :: s
-      
+
       s % k1 = 0.0
       s % k2 = 0.0
       s % k3 = 0.0
@@ -181,7 +181,7 @@ contains
 
    subroutine free( s )
       class(ode_stepper_rkm43), intent(inout) :: s
-      
+
       deallocate( s % k1 )
       deallocate( s % k2 )
       deallocate( s % k3 )

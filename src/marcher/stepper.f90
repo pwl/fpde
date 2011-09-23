@@ -1,8 +1,8 @@
 ! General ode_stepper class
 module class_ode_stepper
-   
+
    use class_ode_system
-   
+
    private
 
    type, public :: ode_stepper
@@ -20,25 +20,25 @@ module class_ode_stepper
       procedure :: reset
       procedure :: free
    end type ode_stepper
-      
+
 contains
    subroutine init( s, dim )
       class(ode_stepper), intent(inout) :: s
       integer :: dim
    end subroutine init
-   
+
    subroutine apply( s, dim, t, h, y, yerr, dydt_in, dydt_out, sys, status )
       class(ode_stepper), intent(inout) :: s
       integer, intent(in) :: dim
       real, intent(in)  :: t, h
-      real, intent(inout) :: y(:), yerr(:)
-      real, intent(in)  :: dydt_in(:)
-      real, intent(inout) :: dydt_out(:)
+      real, pointer, intent(inout) :: y(:), yerr(:)
+      real, pointer, intent(in)  :: dydt_in(:)
+      real, pointer, intent(inout) :: dydt_out(:)
       class(ode_system) :: sys
       integer, optional :: status
    end subroutine apply
 
-   subroutine reset( s ) 
+   subroutine reset( s )
       ! @todo ustawia wartosc wyszystkich wektorow workspace
       ! na 0.0 oraz ustawia status steppera na 1 (czyli status braku bledu)
       class(ode_stepper), intent(inout) :: s

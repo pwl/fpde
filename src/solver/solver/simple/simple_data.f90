@@ -1,14 +1,15 @@
+! @todo: reduce the number of functions
 module class_solver_simple_data
 
+  use class_solver_simple
   use class_mesh
   use class_ode_stepper
   use class_ode_marcher
+  use class_ode_system
+
   use mesh_factory
   use stepper_factory
-  use class_ode_system
-  use class_solver
   use solver_factory
-  use class_solver_simple
 
   private
 
@@ -29,7 +30,6 @@ module class_solver_simple_data
      procedure :: initialize_step
      procedure :: initialize_t
      procedure :: initialize_ode_system
-     procedure :: initialize_dfdt
      procedure :: initialize_rhs
      procedure :: info
      procedure :: generate_solver
@@ -61,14 +61,11 @@ contains
     call this % initialize_ode_system( s % system, s)
     ! initialize marcher
     call this % initialize_marcher( s % marcher )
-    ! allocate memory for dfdt
-    call this % initialize_dfdt( s % dfdt )
     ! initialize right hand side of equations
     call this % initialize_rhs( s % rhs, s % rhs_status )
 
     ! assign interface pointers
     s % x      => s % mesh % x
-    s % f      => s % mesh % f
     s % dfdx   => s % mesh % df
     s % params => this % params
     s % data   => this
@@ -86,10 +83,11 @@ contains
     ! this is where the actual data is being held, the view of s % f
     ! often points here (but not always) @todo be precise!
     allocate( s % y( nf * nx ) )
+    allocate( s % dydt( nf * nx ) )
 
     ! we shall sync the solver in order for the user to set the
     ! initial data using the s % f view
-    call s % sync_to( s % y )
+    call s % sync_f( s % y )
 
     ! the view below is outdated
     ! @todo when pointer bounds(rank) remapping (test/array_test.f90)
@@ -111,6 +109,7 @@ contains
 
     if( .not. associated( m ) ) then
        print *, data % mesh_id, "is not a valid mesh_id"
+       ! @todo report error instead of stopping
        stop
     end if
 
@@ -129,6 +128,7 @@ contains
     s => stepper_new( data % step_id )
     if( .not. associated( s )) then
        print *, data % step_id, "is not a valid step_id"
+       ! @todo report error
        stop
     end if
 
@@ -153,7 +153,7 @@ contains
     allocate( system )
     call ode_system_init(&
          sys = system,&
-         fun = rhs_for_marcher,&
+         fun = solver_simple_rhs_for_marcher,&
          dim = data % nx * data % nf,&
          params = params )
 
@@ -168,6 +168,8 @@ contains
        rhs => data % rhs
        rhs_status = 1
     else
+       ! @todo error!
+       print *, "no rhs defined"
        ! no rhs defined!
        rhs_status = -1
     end if
@@ -183,14 +185,6 @@ contains
     call m % init( data % nf * data % nx )
 
   end subroutine initialize_marcher
-
-  subroutine initialize_dfdt( data, dfdt )
-    class(solver_simple_data) :: data
-    real, pointer :: dfdt(:,:)
-
-    allocate( dfdt( data % nx, data % nf ) )
-
-  end subroutine initialize_dfdt
 
   subroutine info( data )
     class(solver_simple_data) :: data
