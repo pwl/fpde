@@ -10,3 +10,6 @@ TODO
 - "pointer bound remapping" is fixed in `ifort` 12.1, but there are some issues with syncing the three classes: `mesh`, `solver` and `marcher`. In particular:
 -- does `y` stay fixed until the end of `apply` and then it's written down?
 
+
+- cyclic use should make `class_solver_simple_data` much simpler and more elegant, possible?
+- another idea is to implement general class `class_solver_data` from which particular `class_solver_simple_data` could inherit. `class_solver_data` should contain solver name and it should be able to "generate" a particular solver via a factory. `class_solver_data` should contain the most of the information required to generate a solver. The problem is how to provide additional data required by certain solver, e.g. the number of meshes or a monitor function.
