@@ -6,7 +6,7 @@ program array_test
 
   integer, allocatable, target :: array_2d(:,:)
   integer, pointer :: array_1d(:)
-  integer, allocatable :: test(:)
+  integer, pointer :: test1(:), test2(:), test3(:), test4(:)
   ! real, allocatable :: test(:)
   ! real, allocatable, target :: test2(:,:)
 
@@ -53,6 +53,16 @@ program array_test
   ! size is not determined correctly?
   print *, "size(array_1d): ", size(array_1d), ", should be 4"
 
-  test => array_1d
+  allocate(test1(1), test2(1))
+
+  test1(1) = 1
+  test2(1) = 2
+
+  test3 => test1
+  test4 => test3
+
+  test3 => test2
+
+  print *, test4, test3
 
 end program array_test

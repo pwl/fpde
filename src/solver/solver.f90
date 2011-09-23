@@ -5,10 +5,10 @@ module class_solver
   type, public :: solver
      ! interface supported by any solver
      real, pointer                     :: t
-     real, pointer                     :: x    (:)
-     real, pointer                     :: f    (:,:)
-     real, allocatable                 :: dfdt (:,:)
-     real, pointer                     :: dfdx (:,:,:)
+     real, contiguous, pointer                     :: x    (:)
+     real, contiguous, pointer                     :: f    (:,:)
+     real, contiguous, pointer                 :: dfdt (:,:)
+     real, contiguous, pointer                     :: dfdx (:,:,:)
      integer                           :: rhs_status
      integer                           :: nx,nf,rk
      procedure(interface_rhs), pointer :: rhs
@@ -55,8 +55,10 @@ contains
 
   end function pointwise_dfdx
 
-  ! this is a universal wrapper for solver%rhs to work with marcher
-  ! architecture
+  ! this is a default wrapper for solver%rhs to work with marcher
+  ! architecture. It should do the right thing for a simple solver,
+  ! but should be rewritten in a more sophisticated solver
+  ! implementation
   subroutine rhs_for_marcher( t, y, dydt, s, status )
     real, intent(in) :: t
     real, intent(in) :: y(:)
@@ -70,21 +72,18 @@ contains
 
     s % f = reshape( y, [ nx,nf ] )
     s % t = t
+    ! s % y is a one dimensional view of s % f, so this assignment
+    ! changes s % f
+    ! s % y = y
 
-    ! print *, y
-    ! print *, s % f
-
-    ! calculate rhs
+    ! calculate rhs (with s % f obtained from y)
     call s % rhs
-
-    ! print *, s % dfdt
 
     if( present(status) ) then
        status = s % rhs_status
     end if
 
     dydt = reshape( s%dfdt, [nx*nf] )
-    ! print *, dydt
 
   end subroutine rhs_for_marcher
 

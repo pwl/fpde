@@ -1,7 +1,7 @@
 program solver_simple_program
 
   use class_mesh
-  use class_stepper
+  use class_ode_stepper
 
   use class_solver
   use class_solver_simple
@@ -12,7 +12,7 @@ program solver_simple_program
   procedure(interface_rhs), pointer :: rhs
   real, pointer :: y(:)
   real :: pi
-  integer :: nx = 101
+  integer :: nx = 21
 
   pi = acos(-1.)
 
@@ -21,13 +21,13 @@ program solver_simple_program
   ! @todo: default control type?
   data = solver_simple_data( &
        mesh_id = "sfd3pt",   &
-       step_id = "rkm43",    &
+       step_id = "rk4cs",    &
        nx      = nx,        &
        nf      = 2,        &
        x0      = 0.,         &
        x1      = 1.,         &
        t1      = 1.,         &
-       h0      = 1.e-2,      &
+       h0      = 5.e-4,      &
        rhs     = rhs)
   data % rhs => my_rhs
 
@@ -41,12 +41,14 @@ program solver_simple_program
 
   ! @todo: implement a functional way to give initial data prepare
   ! initial data
-  ! s % f(:,1) = sin( s % x * pi )
-  ! s % f(:,2) = 0.
-  s % y(1:(nx/2)) = sin( s % x * pi )
-  s % y(nx+1:2*nx) = 0.
-  s % y(nx) = 0.
-  s % y(2*nx) = 0.
+  s % f(:,1) = sin( s % x * pi )
+  s % f(:,2) = 0.
+  s % f(1,:) = 0.
+  s % f(nx,:) = 0.
+  ! s % y(1:(nx/2)) = sin( s % x * pi )
+  ! s % y(nx+1:2*nx) = 0.
+  ! s % y(nx) = 0.
+  ! s % y(2*nx) = 0.
   ! print *, s % y(1:6)
   ! print *,""
 
@@ -91,9 +93,6 @@ contains
     print *, ""
     print *, ""
 
-
-
   end subroutine my_rhs
-
 
 end program solver_simple_program

@@ -79,10 +79,22 @@ contains
   subroutine free( m )
     class(mesh), intent(inout) :: m
 
-    deallocate( m % x )
-    deallocate( m % f )
-    deallocate( m % df )
-    deallocate( m % df_calculated )
+    if( associated( m % x ) ) then
+       deallocate( m % x )
+    end if
+
+    if( associated( m % f ) ) then
+       deallocate( m % f )
+    end if
+
+    if( associated( m % df ) ) then
+       deallocate( m % df )
+    end if
+
+    if( associated( m % df_calculated ) ) then
+       deallocate( m % df_calculated )
+    end if
+
   end subroutine free
 
 

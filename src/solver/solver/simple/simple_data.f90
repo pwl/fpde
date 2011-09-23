@@ -47,6 +47,8 @@ contains
     call m % init(                 &
          data % nx, data % nf, data % rk, &
          data % x0, data % x1 )
+
+    deallocate( m % f )
   end subroutine initialize_mesh
 
   subroutine initialize_step( data, s )
@@ -113,7 +115,7 @@ contains
 
   subroutine initialize_dfdt( data, dfdt )
     class(solver_simple_data) :: data
-    real, allocatable :: dfdt(:,:)
+    real, pointer :: dfdt(:,:)
 
     allocate( dfdt( data % nx, data % nf ) )
 

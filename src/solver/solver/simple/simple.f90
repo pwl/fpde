@@ -1,5 +1,12 @@
 ! simple solver class with one mesh and one marcher
 
+! The trick here is to synchronise three arrays, s % y, s % mesh % f
+! and s % f. The idea is to make s % y the pointer to an allocated
+! memory and make s % f the 2d view of it, synced after calculating
+! rhs. To calculate rhs s % f and s % mesh % f are both temporary
+! associated to y in solver_simple_rhs_for_marcher. Synchronization is
+! done by a private function sync_to
+
 module class_solver_simple
 
   use class_solver_simple_data
@@ -32,14 +39,21 @@ module class_solver_simple
      procedure :: solve
      procedure :: calculate_dfdx
      procedure :: pointwise_dfdx
+     procedure :: sync_to
   end type solver_simple
+
+  private sync_to
 
 contains
 
   subroutine init(s, data)
     class(solver_simple) :: s
     class(solver_simple_data), target :: data
-    integer :: i,j
+    integer :: i,j,nx,nf
+
+    ! local variables
+    nx = data % nx
+    nf = data % nf
 
     s % name = "simple"
 
@@ -65,19 +79,20 @@ contains
     s % params => data % params
     s % data   => data
 
-    s % nx     = data % nx
-    s % nf     = data % nf
+    s % nx     = nx
+    s % nf     = nf
     s % rk     = data % rk
     s % t1     = data % t1
     s % h      = data % h0
 
     ! copy initial data from a mesh
-    allocate( s%y( s%nf * s%nx ) )
-    s % y = reshape( s % mesh % f, [ s%nf*s%nx ] )
+    allocate( s % y( nf * nx ) )
+    call s % sync_to( s % y )
+    ! s % f( 1:nx, 1:nf ) => s % y
 
     ! @todo when pointer bounds(rank) remapping (test/array_test.f90)
     ! is implemented the following should work instead, then no
-    ! copying will be required
+    ! copying will be required. (no, no, no, wrong, do it again)
     !
     ! s % y( 1 : s % nf * s % nx ) => s % mesh % f
 
@@ -101,6 +116,17 @@ contains
 
   end function pointwise_dfdx
 
+  subroutine sync_to( s, v )
+    class(solver_simple) :: s
+    real, pointer :: v(:)
+    integer :: nx, nf
+    nx = s % nx
+    nf = s % nf
+
+    s % f(1:nx, 1:nf) => v
+    s % mesh % f(1:nx, 1:nf) => v
+
+  end subroutine sync_to
 
   subroutine info( s )
     class(solver_simple) :: s
@@ -151,6 +177,7 @@ contains
   subroutine free( s )
     class(solver_simple) :: s
 
+    nullify( s % mesh % f )
     call s % mesh % free
     call s % step % free
     call s % marcher % free
@@ -177,10 +204,47 @@ contains
           print *, "marcher error, status=",  s % marcher % status
           exit
        endif
-       ! i = i + 1
-       ! print *, s%t
+
+       call s % sync_to( s % y )
+       ! @todo: extra calculation, probably not needed
+       call s % rhs
+
     end do
   end subroutine solve
+
+  ! this is a default wrapper for solver%rhs to work with marcher
+  ! architecture. It should do the right thing for a simple solver,
+  ! but should be rewritten in a more sophisticated solver
+  ! implementation
+  subroutine solver_simple_rhs_for_marcher( t, y, dydt, s, status )
+    real, intent(in) :: t
+    real, pointer, intent(in) :: y(:)
+    real, pointer, intent(out) :: dydt(:)
+    class(solver_simple) :: s
+    integer, optional :: status
+    integer :: nx, nf, i, j
+
+    nx = s % nx
+    nf = s % nf
+
+    call s % sync_to( y )
+    s % t = t
+    ! s % y is a one dimensional view of s % f, so this assignment
+    ! changes s % f
+    ! s % y = y
+
+    ! this is a neat way to write data to dydt, but
+    s % dfdt(1:nx,1:nf) => dydt
+    ! calculate rhs (with s % f obtained from y)
+    call s % rhs
+
+    if( present(status) ) then
+       status = s % rhs_status
+    end if
+
+  end subroutine solver_simple_rhs_for_marcher
+
+
 
 end module class_solver_simple
 
