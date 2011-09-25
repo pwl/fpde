@@ -2,12 +2,13 @@ program module_test
   use class_module_bundle
   use class_module
   use class_module_test1
+  use class_module_test2
 
   type(module_bundle) :: mb
   class(module), pointer :: mt1, mt2
 
   mt1 => module_test1_init()
-  mt2 => module_test1_init()
+  mt2 => module_test2_init()
 
   allocate(mb % modules)
   call mb % add ( mt1 )

@@ -1,3 +1,18 @@
+!>
+!! @addtogroup Modules
+!! @{
+!!
+!>
+!! @file   module_bundle.f90
+!! @author Pawel Biernat <pawel.biernat@gmail.com>
+!! @date   Sat Sep 24 21:16:54 2011
+!!
+!! @brief
+!!
+!!
+!!
+
+
 module class_module_bundle
 
   use class_list
@@ -8,9 +23,13 @@ module class_module_bundle
    contains
      procedure :: add
      procedure :: info
+     ! procedure :: start
+     ! procedure :: stop
+     ! procedure :: run
   end type module_bundle
 
   private
+  ! @todo is there any way of not exposing it to the public?
   public module_info
 
 contains
@@ -35,3 +54,4 @@ contains
 
 
 end module class_module_bundle
+!> @}

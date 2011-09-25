@@ -5,8 +5,13 @@ program trigger_program
 
   class(trigger), pointer :: t
 
-  t => class_trigger_always_init()
+  ! t => trigger_new()
 
-  call t % info
+  t => trigger_always_init()
+
+  call trigger_start(t)
+  print *, trigger_test(t)
+  call trigger_info(t)
+  call trigger_stop(t)
 
 end program trigger_program
