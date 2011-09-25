@@ -37,9 +37,10 @@ contains
     class(*), pointer :: element
     integer, intent(in) :: i
     integer :: j
-    nullify(element,r)
+    nullify(element)
+    nullify(r)
 
-    if( i < this % length() ) then
+    if( i > this % length() ) then
        return
     else
        r => this

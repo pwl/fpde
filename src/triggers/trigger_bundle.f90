@@ -49,6 +49,8 @@ contains
   !> Function returning .true. if at least one of the triggers in the
   !> bundle is activated (i.e. trigger%test( ) returns .true. )
   !!
+  !! @todo optimize? this function is executed very often
+  !!
   !! @param this
   !!
   !! @return
@@ -56,15 +58,36 @@ contains
   function test(this) result(r)
     class(trigger_bundle), target :: this
     class(trigger), pointer :: t
+    class(*), pointer :: element
     integer :: i
     logical :: r
     r = .false.
 
     do i = 1, this % triggers % length()
-       t => up_to_trigger(this % triggers % element)
-       r = r .or. t % test()
-    end do
 
+       element => this % triggers % take(i)
+
+       if( .not. associated( element ) ) then
+          ! @todo this should not happen, it would mean a bug
+          print *, "error in class_trigger_bundle test()"
+          return
+       end if
+
+
+       t => up_to_trigger( element )
+
+       if( .not. associated(t) ) then
+          ! @todo this should not happen, it would mean a bug
+          print *, "error in class_trigger_bundle test()"
+          return
+       end if
+
+       ! short circuited .or.
+       if( t % test() ) then
+          r = .true.
+          return
+       end if
+    end do
 
   end function test
 
@@ -75,15 +98,19 @@ contains
   !! @return
   !!
   function up_to_trigger( up ) result(r)
-    class(*), target :: up
+    class(*), pointer :: up
     class(trigger), pointer :: r
     nullify(r)
-    select type(up)
-    class is (trigger)
-       r => up
-    end select
+
+    if( .not. associated( up )) then
+       return
+    else
+       select type(up)
+       class is (trigger)
+          r => up
+       end select
+    end if
+
   end function up_to_trigger
-
-
 
 end module class_trigger_bundle

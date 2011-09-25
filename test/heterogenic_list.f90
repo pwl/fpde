@@ -40,6 +40,7 @@ program heterogenic_list
   type(list), pointer :: l
   type(list), pointer :: lp
   class(*), pointer :: bu, ba, bz
+  class(*), pointer :: taken
 
   allocate( l )
 
@@ -55,6 +56,11 @@ program heterogenic_list
   call l % add( bz )
   print *, l % length()
   call l % map(interpret_as_beba)
+
+  taken => l % take(1)
+  print *, associated(taken)
+  taken => l % take(2)
+  taken => l % take(3)
 
 contains
 
