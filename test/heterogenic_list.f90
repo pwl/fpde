@@ -39,21 +39,21 @@ program heterogenic_list
 
   type(list), pointer :: l
   type(list), pointer :: lp
-  class(*), pointer :: bu, ba, bz
+  class(*), pointer :: bu, ba, be
   class(*), pointer :: taken
 
   allocate( l )
 
   allocate(buba :: bu)
   allocate(baba :: ba)
-  allocate(beba :: bz)
+  allocate(beba :: be)
 
   print *, l % length()
   call l % add( bu )
   print *, l % length()
   call l % add( ba )
   print *, l % length()
-  call l % add( bz )
+  call l % add( be )
   print *, l % length()
   call l % map(interpret_as_beba)
 

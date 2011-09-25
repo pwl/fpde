@@ -77,18 +77,17 @@ contains
   !!
   !! @return
   !!
-  subroutine map_subroutine_on_list( this, f )
+  recursive subroutine map_subroutine_on_list( this, f )
     class(list), target, intent(in) :: this
     procedure(call_subroutine_interface) :: f
     class(list), pointer :: current
 
     ! if list has no elements yet
-    if( length(this) == 0 ) then
+    if( this % length() == 0 ) then
        return
     else
        current => this
        call f( current % element )
-       ! loop below should be entered at least once
        do while( associated( current % next ) )
           current => current % next
           ! call f on element, condition is just a precaution

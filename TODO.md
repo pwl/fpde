@@ -37,3 +37,7 @@ TODO
 
 - add iterators to factories, to enumerate the products and count
   products number
+
+- move `up_to_`typename to corresponding `class_`typename
+
+- implement `take(i)` as a method in `bundle`s

@@ -1,3 +1,12 @@
+!>
+!! @file   trigger_bundle.f90
+!! @author Pawel Biernat <pawel.biernat@gmail.com>
+!! @date   Sun Sep 25 19:33:48 2011
+!!
+!! @brief
+!!
+!!
+!!
 module class_trigger_bundle
   use class_list
   use class_trigger
@@ -7,6 +16,7 @@ module class_trigger_bundle
 
   type, public :: trigger_bundle
      class(list), pointer :: triggers
+     integer :: n_triggers
    contains
      procedure :: add
      procedure :: info
@@ -21,6 +31,7 @@ contains
   subroutine init(this)
     class(trigger_bundle) :: this
     allocate(this%triggers)
+    this % n_triggers = 0
   end subroutine init
 
   subroutine add(this, t)
@@ -29,6 +40,7 @@ contains
     class(*), pointer :: dummy
     dummy => t
     call this % triggers % add(dummy)
+    this % n_triggers = this % triggers % length()
   end subroutine add
 
   subroutine info(this)
@@ -106,7 +118,7 @@ contains
        return
     else
        select type(up)
-       class is (trigger)
+          class is (trigger)
           r => up
        end select
     end if

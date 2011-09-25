@@ -7,20 +7,31 @@ module class_module_test1
    contains
      procedure :: start
      ! procedure :: stop
-     ! procedure :: step
+     procedure :: step
   end type module_test1
 
   public module_test1_init
 
 contains
-  subroutine start(this)
+  function start(this) result(r)
     class(module_test1) :: this
+    logical :: r
+    r = .true.
     this % name = "test1_started"
-  end subroutine start
+  end function start
+
+  function step(this) result(r)
+    class(module_test1) :: this
+    logical :: r
+    r = .true.
+    print *, trim(this % name), " % step()"
+  end function step
 
   function module_test1_init() result(m)
     type(module_test1), pointer :: m
     allocate(m)
+    call m % init
+
     m % name = "test1"
   end function module_test1_init
 

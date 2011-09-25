@@ -11,28 +11,35 @@
 !!
 !!
 !!
-
-
 module class_module_bundle
 
   use class_list
   use class_module
 
+  private
+
   type, public :: module_bundle
      class(list), pointer :: modules
+     integer :: n_modules
    contains
      procedure :: add
      procedure :: info
-     ! procedure :: start
-     ! procedure :: stop
-     ! procedure :: run
+     procedure :: start
+     procedure :: stop
+     procedure :: step
+     procedure :: init
   end type module_bundle
 
-  private
   ! @todo is there any way of not exposing it to the public?
-  public module_info
+  ! public module_info
 
 contains
+
+  subroutine init(this)
+    class(module_bundle) :: this
+    allocate(this%modules)
+    this % n_modules = 0
+  end subroutine init
 
   subroutine add(this, m)
     class(module_bundle) :: this
@@ -40,6 +47,8 @@ contains
     class(*), pointer :: dummy
     dummy => m
     call this % modules % add(dummy)
+
+    this % n_modules = this % modules % length()
   end subroutine add
 
   subroutine info(this)
@@ -47,11 +56,20 @@ contains
     call this % modules % map(module_info)
   end subroutine info
 
-  subroutine module_info(m)
-    class(module) :: m
-    print *, m % name
-  end subroutine module_info
+  subroutine start(this)
+    class(module_bundle) :: this
+    call this % modules % map(module_start)
+  end subroutine start
 
+  subroutine stop(this)
+    class(module_bundle) :: this
+    call this % modules % map(module_stop)
+  end subroutine stop
+
+  subroutine step(this)
+    class(module_bundle) :: this
+    call this % modules % map(module_step)
+  end subroutine step
 
 end module class_module_bundle
 !> @}

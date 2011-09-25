@@ -157,13 +157,11 @@ contains
     ! @todo print some general information, than call a
     ! trigger-specific info function
     ! e.g.
-    print *, "I:trigger%name= ", t % name
-    print *, "I:trigger%state=", t % state
+    print *, "I:trigger % name = ", t % name
+    print *, "I:trigger % state =", t % state
 
     select case(t % state)
-    case(trigger_started)
-       call t % info
-    case(trigger_stopped)
+    case(trigger_started, trigger_stopped)
        call t % info
     case(trigger_error)
        ! do nothing
