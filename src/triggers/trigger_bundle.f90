@@ -13,7 +13,7 @@ module class_trigger_bundle
      procedure :: init
      procedure :: start
      procedure :: stop
-     ! procedure :: test
+     procedure :: test
   end type trigger_bundle
 
 contains
@@ -45,5 +45,45 @@ contains
     class(trigger_bundle) :: this
     call this % triggers % map(trigger_stop)
   end subroutine stop
+
+  !> Function returning .true. if at least one of the triggers in the
+  !> bundle is activated (i.e. trigger%test( ) returns .true. )
+  !!
+  !! @param this
+  !!
+  !! @return
+  !!
+  function test(this) result(r)
+    class(trigger_bundle), target :: this
+    class(trigger), pointer :: t
+    integer :: i
+    logical :: r
+    r = .false.
+
+    do i = 1, this % triggers % length()
+       t => up_to_trigger(this % triggers % element)
+       r = r .or. t % test()
+    end do
+
+
+  end function test
+
+  !> Nasty trick used to interpret class(*) as class(trigger)
+  !!
+  !! @param up
+  !!
+  !! @return
+  !!
+  function up_to_trigger( up ) result(r)
+    class(*), target :: up
+    class(trigger), pointer :: r
+    nullify(r)
+    select type(up)
+    class is (trigger)
+       r => up
+    end select
+  end function up_to_trigger
+
+
 
 end module class_trigger_bundle

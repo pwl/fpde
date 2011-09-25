@@ -5,7 +5,7 @@ module class_trigger_always
   private
 
   type, public, extends(trigger) :: trigger_always
-     character(len=30) :: buba
+     logical :: test_result
    contains
      procedure :: info
      procedure :: start
@@ -18,16 +18,17 @@ module class_trigger_always
 
 contains
 
-  function trigger_always_init(buba) result(t)
+  function trigger_always_init(test_result) result(t)
     class(trigger_always), pointer :: t
-    character(*), optional :: buba
+    logical, optional :: test_result
     allocate(t)
     call t % init
 
-    if( present(buba) ) then
-       t % buba = buba
+    if( present(test_result) ) then
+       t % test_result = test_result
     else
-       t % buba = "no buba!"
+       ! test result defaults to .true.
+       t % test_result = .true.
     end if
 
     t % name = "trigger_always"
@@ -36,27 +37,24 @@ contains
   function start(t) result(r)
     class(trigger_always) :: t
     logical :: r
-    ! print *, "started!!!"
     r = .true.
   end function start
 
   function stop(t) result(r)
     class(trigger_always) :: t
     logical :: r
-    ! print *, "stopped!!!"
     r = .true.
   end function stop
 
   function test(t) result(r)
     class(trigger_always) :: t
     logical :: r
-    r = .true.
+    r = t % test_result
   end function test
 
   subroutine info(t)
     class(trigger_always) :: t
-    ! print *, "calling info for trigger_always"
-    print *, "I:trigger%buba=", t%buba
+    print *, "I:trigger%test_result=", t%test_result
   end subroutine info
 
 

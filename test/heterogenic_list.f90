@@ -45,7 +45,7 @@ program heterogenic_list
 
   allocate(buba :: bu)
   allocate(baba :: ba)
-  allocate(real :: bz)
+  allocate(beba :: bz)
 
   print *, l % length()
   call l % add( bu )

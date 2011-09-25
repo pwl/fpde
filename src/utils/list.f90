@@ -11,9 +11,9 @@
 module class_list
 
   abstract interface
-     subroutine call_f_interface(this)
+     subroutine call_subroutine_interface(this)
        class(*) :: this
-     end subroutine call_f_interface
+     end subroutine call_subroutine_interface
   end interface
 
   private
@@ -22,13 +22,37 @@ module class_list
      class(*), pointer :: element
      type(list), pointer :: next
    contains
-     procedure :: map => map_f_on_list
+     procedure :: map => map_subroutine_on_list
      procedure :: last
      procedure :: add
      procedure :: length
+     procedure :: take
   end type list
 
 contains
+
+  function take(this, i) result (element)
+    class(list), intent(in), target :: this
+    class(list), pointer :: r
+    class(*), pointer :: element
+    integer, intent(in) :: i
+    integer :: j
+    nullify(element,r)
+
+    if( i < this % length() ) then
+       return
+    else
+       r => this
+       j = 1
+       do while( j < i )
+          r => r % next
+          j = j + 1
+       end do
+       element => r % element
+    end if
+
+  end function take
+
 
   !> Function used as a wrapper to call f on class(*) object.
   !!
@@ -39,7 +63,7 @@ contains
   !!
   subroutine call_f_on_this( this, f )
     class(*) :: this
-    procedure(call_f_interface) :: f
+    procedure(call_subroutine_interface) :: f
 
     call f(this)
   end subroutine call_f_on_this
@@ -52,9 +76,9 @@ contains
   !!
   !! @return
   !!
-  subroutine map_f_on_list( this, f )
+  subroutine map_subroutine_on_list( this, f )
     class(list), target, intent(in) :: this
-    procedure(call_f_interface) :: f
+    procedure(call_subroutine_interface) :: f
     class(list), pointer :: current
 
     ! if list has no elements yet
@@ -74,7 +98,7 @@ contains
           end if
        end do
     end if
-  end subroutine map_f_on_list
+  end subroutine map_subroutine_on_list
 
   !> Adds an element to the end of the list
   !!
