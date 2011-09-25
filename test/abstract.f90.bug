@@ -1,0 +1,43 @@
+module mod_a
+
+  type type_a
+     procedure(interface_proc), pointer :: proc
+  end type type_a
+
+  abstract interface
+     subroutine interface_proc(this)
+       import :: type_a
+       class(type_a) :: this
+     end subroutine interface_proc
+  end interface
+
+contains
+
+end module mod_a
+
+module mod_b
+  use mod_a
+  type, extends(type_a) :: type_b
+  end type type_b
+end module mod_b
+
+program test
+  use mod_b
+
+  type(type_b) :: b
+  ! type(type_a), pointer :: a
+
+  ! a => b % type_a
+
+  b % proc => proc
+
+contains
+
+  subroutine proc(this)
+    ! import :: type_a
+    class(type_b) :: this
+  end subroutine proc
+
+
+end program test
+

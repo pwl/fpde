@@ -1,6 +1,8 @@
 ! @todo: reduce the number of functions
 module class_solver_simple_data
 
+  use class_solver_data
+  use class_solver
   use class_solver_simple
   use class_mesh
   use class_ode_stepper

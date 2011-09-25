@@ -41,3 +41,7 @@ TODO
 - move `up_to_`typename to corresponding `class_`typename
 
 - implement `take(i)` as a method in `bundle`s
+
+- compiler bug? see `test/abstract.f90.bug`, due to this in the
+  `test/solver_simple.f90` one cannot use `class(solver)` in the
+  subroutine `my_rhs`

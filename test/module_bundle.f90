@@ -8,10 +8,8 @@ program module_bundle_test
   use class_module_bundle
 
   class(module), pointer :: m1, m2
-  class(trigger), pointer :: t1, t2
+  class(trigger), pointer :: t1
   type(module_bundle) :: mb
-  class(*), pointer :: m
-  class(list), pointer :: l
 
   call mb % init
 
@@ -24,6 +22,12 @@ program module_bundle_test
 
   call mb % add(m1)
   call mb % add(m2)
+
+  call mb % info
+
+  print *, ""
+  print *, "sending start signal to module_bundle"
+  call mb % start
 
   call mb % info
 

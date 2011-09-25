@@ -3,6 +3,7 @@ program solver_simple_program
   use class_mesh
   use class_ode_stepper
 
+  use class_solver_data
   use class_solver
   use class_solver_simple
   use class_solver_simple_data
@@ -23,7 +24,7 @@ program solver_simple_program
        x1      = 1.,         &
        t1      = 1.,         &
        h0      = 1.e-4,      &
-       rhs     = rhs)
+       rhs     = rhs)           !what does it mean?
   ! @todo any way to squeeze this into initialization expression?
   data % rhs => my_rhs
 
@@ -51,7 +52,7 @@ program solver_simple_program
 contains
 
   subroutine my_rhs( s )
-    class(solver) :: s
+    class(solver_data) :: s
     integer :: i
 
     call s % calculate_dfdx( 2 )
