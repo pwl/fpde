@@ -26,7 +26,9 @@ module class_solver
      procedure         :: solve
      procedure         :: init
      procedure         :: add => add_module
-     procedure         :: run_modules
+     procedure         :: step
+     procedure         :: start
+     procedure         :: stop
   end type solver
 
   ! interface to rhs should be publicly available to all child classes
@@ -43,21 +45,27 @@ contains
     use class_trigger
     class(solver), target :: s
     class(module) :: m
-    class(trigger), pointer, optional :: t1, t2, t3
+    class(trigger), optional :: t1, t2, t3
 
-    call s % modules % add(m)
-    m % solver_data => s % solver_data
+    if( .not. m % try_init() ) then
+       ! @todo report error, module failed to initialize
+       return
+    else
+       ! module initialized succesfully, adding it to solver.
+       call s % modules % add(m)
+       m % solver_data => s % solver_data
 
-    if(present(t1)) then
-
+       if(present(t1)) then
+          call m % add(t1)
+       end if
     end if
 
   end subroutine add_module
 
-  subroutine run_modules(s)
+  subroutine step(s)
     class(solver) :: s
     call s % modules % step
-  end subroutine run_modules
+  end subroutine step
 
   subroutine solve( s )
     class(solver) :: s
@@ -73,6 +81,16 @@ contains
   subroutine free (s)
     class(solver) :: s
   end subroutine free
+
+  subroutine start(s)
+    class(solver) :: s
+    call s % modules % start
+  end subroutine start
+
+  subroutine stop(s)
+    class(solver) :: s
+    call s % modules % stop
+  end subroutine stop
 
 end module class_solver
 !> @}

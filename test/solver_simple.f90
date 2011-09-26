@@ -3,6 +3,11 @@ program solver_simple_program
   use class_mesh
   use class_ode_stepper
 
+  use class_module
+  use class_module_test
+  use class_trigger
+  use class_trigger_always
+
   use class_solver_data
   use class_solver
   use class_solver_simple
@@ -17,7 +22,7 @@ program solver_simple_program
 
   data = solver_simple_data( &
        mesh_id = "sfd3pt",   &
-       step_id = "rk4cs",    &
+       stepper_id = "rk4cs",    &
        nx      = nx,         &
        nf      = 2,          &
        x0      = 0.,         &
@@ -30,6 +35,11 @@ program solver_simple_program
 
   s => data % generate_solver()
 
+  call s % add(&
+       module_test(),&
+       trigger_always(test_result=.true.))
+
+  call s % modules % info
 
   ! @todo: implement a functional way to give initial data prepare
   ! initial data
@@ -38,6 +48,7 @@ program solver_simple_program
   s % f(:,2) = 0.
   s % f(1,:) = 0.
   s % f(nx,:) = 0.
+
 
   ! solve the equation up to time t1
   call s % solve

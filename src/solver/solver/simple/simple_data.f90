@@ -17,7 +17,7 @@ module class_solver_simple_data
 
   type, public :: solver_simple_data
      character(len=30) :: mesh_id = "sfd3pt"
-     character(len=30) :: step_id = "rk4cs"
+     character(len=30) :: stepper_id = "rk4cs"
      character(len=30) :: control_id = ""
      character(len=30) :: solver_id = "simple"
      integer :: nf=1, nx, rk=2
@@ -29,7 +29,7 @@ module class_solver_simple_data
    contains
      procedure :: initialize_mesh
      procedure :: initialize_marcher
-     procedure :: initialize_step
+     procedure :: initialize_stepper
      procedure :: initialize_t
      procedure :: initialize_ode_system
      procedure :: initialize_rhs
@@ -45,6 +45,7 @@ contains
     integer :: i,j,nx,nf
 
     allocate( s )
+    call s % init
 
     ! local variables
     nx = this % nx
@@ -55,8 +56,8 @@ contains
 
     ! initialize mesh
     call this % initialize_mesh( s % mesh )
-    ! initialize step
-    call this % initialize_step( s % step )
+    ! initialize stepper
+    call this % initialize_stepper( s % stepper )
     ! initialize time
     call this % initialize_t( s % t )
     ! initialize ode_system
@@ -123,20 +124,20 @@ contains
 
   end subroutine initialize_mesh
 
-  subroutine initialize_step( data, s )
+  subroutine initialize_stepper( data, s )
     class(solver_simple_data), intent(in) :: data
     class(ode_stepper), pointer :: s
 
-    s => stepper_new( data % step_id )
+    s => stepper_new( data % stepper_id )
     if( .not. associated( s )) then
-       print *, data % step_id, "is not a valid step_id"
+       print *, data % stepper_id, "is not a valid stepper_id"
        ! @todo report error
        stop
     end if
 
     call s % init( data % nx * data % nf )
 
-  end subroutine initialize_step
+  end subroutine initialize_stepper
 
   subroutine initialize_t( data, t )
     class(solver_simple_data), intent(in) :: data
@@ -192,7 +193,7 @@ contains
     class(solver_simple_data) :: data
 
     print *, "mesh_id: ", trim(data % mesh_id)
-    print *, "step_id: ", trim(data % step_id)
+    print *, "stepper_id: ", trim(data % stepper_id)
     print *, "control_id: ", trim(data % control_id)
     print *, "t0 = ", data % t0
     print *, "t1 = ", data % t1

@@ -27,7 +27,7 @@ module class_solver_simple
      ! rhs_for_marcher
      real, pointer, contiguous :: y(:), dydt(:)
      class(mesh), pointer :: mesh
-     class(ode_stepper), pointer :: step
+     class(ode_stepper), pointer :: stepper
      class(*), pointer :: data
      class(ode_system), pointer :: system
      class(ode_marcher), pointer :: marcher
@@ -102,10 +102,10 @@ contains
        print *, "mesh: NONE"
     end if
 
-    if( associated(s % step) ) then
-       print *, "step: ", trim(s % step % name )
+    if( associated(s % stepper) ) then
+       print *, "stepper: ", trim(s % stepper % name )
     else
-       print *, "step: NONE"
+       print *, "stepper: NONE"
     end if
 
     if( associated(s % system) ) then
@@ -144,7 +144,7 @@ contains
     ! to point at some yet to be freed memory area
     nullify( s % mesh % f )
     call s % mesh % free
-    call s % step % free
+    call s % stepper % free
     call s % marcher % free
 
     deallocate( s % system, s % t, s % dfdt, s % y )
@@ -155,10 +155,13 @@ contains
   subroutine solve( s )
     class(solver_simple) :: s
     ! integer :: i = 0
+
+    call s % start
+
     do while( s%t < s%t1)
        ! do while( i < 3 )
        call s % marcher % apply(           &
-            s   = s % step,                &
+            s   = s % stepper,                &
             sys = s % system,          &
             t   = s % t,                   &
             t1  = s % t1,               &
@@ -178,9 +181,12 @@ contains
           ! @todo: extra calculation, probably not needed
           call s % rhs
 
-          call s % run_modules
+          call s % step
        endif
     end do
+
+    call s % stop
+
   end subroutine solve
 
   ! this is a default wrapper for solver%rhs to work with marcher

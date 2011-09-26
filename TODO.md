@@ -52,3 +52,6 @@ TODO
   trigger1 and trigger2, so they shall be executed at the same time)
 
 - add an `uninitialized` state?
+
+- add a class `initializable`? Now impossible due to the bug in ifort
+  12.1.0 20110811
