@@ -1,6 +1,7 @@
 module class_trigger
 
-  use class_solver
+  use class_initializable
+  use class_solver_data
 
   private
 
@@ -9,10 +10,10 @@ module class_trigger
        trigger_stopped = "stopped",     &
        trigger_error = "error"
 
-  type, public :: trigger
-     class(solver), pointer :: solver
-     character(len=30) :: name
-     character(len=30) :: state
+  type, public, extends(initializable) :: trigger
+     class(solver_data), pointer :: solver_data => null()
+     character(len=30)           :: name = ""
+     character(len=30)           :: state = trigger_stopped
    contains
      procedure :: info
      procedure :: start
@@ -208,6 +209,33 @@ contains
     class(trigger) :: t
     print *, t % name
   end subroutine info
+
+  !> Initializes a trigger.
+  !!
+  function init(this) result(r)
+    class(trigger) :: this
+    logical :: r
+    ! nothing to init in a trigger
+    r = .true.
+  end function init
+
+
+  ! a wrapper function to try_init
+  function try_init(this) result(r)
+    class(trigger) :: this
+    logical :: r
+
+    r = this % initializable % try_init()
+
+    if( r ) then
+       return
+    else
+       print *, "E: trigger ", trim(this % name), " failed to initialize"
+    end if
+
+  end function try_init
+
+
   ! end of skeletons
 
   ! theese are functions used to maintain the trigger class
@@ -221,12 +249,6 @@ contains
     class(trigger) :: t
   end subroutine free
 
-  !> Initializes a trigger.
-  !!
-  subroutine init(t)
-    class(trigger) :: t
-    t % state = trigger_stopped
-  end subroutine init
 
 
 

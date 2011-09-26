@@ -1,34 +1,42 @@
 program module_bundle_test
+
+  ! @bug this program should work without the class_initializable, it
+  ! is a compiler bug
+  use class_initializable
+
   use class_list
   use class_trigger
   use class_trigger_always
   use class_module
-  use class_module_test1
-  use class_module_test2
+  use class_module_test
   use class_module_bundle
 
-  class(module), pointer :: m1, m2
-  class(trigger), pointer :: t1
+  type(module_test) :: m1, m2
   type(module_bundle) :: mb
 
   call mb % init
 
-  m1 => module_test1_init()
-  m2 => module_test2_init()
+  m1 = module_test(name = "test1")
+  m2 = module_test(name = "test2")
 
-  t1 => trigger_always_init(.true.)
+  ! add two triggers to m1
 
-  call m1 % add(t1)
+  call m1 % add(trigger_always(test_result = .true.))
+  call m1 % add(trigger_always(test_result = .false.))
+  call module_info(m1)
+
+  ! add one trigger to m2
+  call m2 % add(trigger_always(test_result = .true.))
 
   call mb % add(m1)
   call mb % add(m2)
 
-  call mb % info
+  ! call mb % info
 
   print *, ""
   print *, "sending start signal to module_bundle"
   call mb % start
 
-  call mb % info
+  ! call mb % info
 
 end program module_bundle_test

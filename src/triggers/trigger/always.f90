@@ -5,34 +5,36 @@ module class_trigger_always
   private
 
   type, public, extends(trigger) :: trigger_always
-     logical :: test_result
+     ! initialization data goes here
+     logical :: test_result = .false.
+     ! end of initialization data
    contains
      procedure :: info
      procedure :: start
      procedure :: stop
      procedure :: test
-     ! procedure :: free
+     procedure :: init
   end type trigger_always
-
-  public :: trigger_always_init
 
 contains
 
-  function trigger_always_init(test_result) result(t)
-    class(trigger_always), pointer :: t
-    logical, optional :: test_result
-    allocate(t)
-    call t % init
+  function init(this) result(r)
+    class(trigger_always) :: this
+    logical :: r
 
-    if( present(test_result) ) then
-       t % test_result = test_result
+    ! call common initialization for triggers
+    if( this % trigger % init() ) then
+       ! we proceede with trigger-specific initialization. For this
+       ! particular trigger there is no data to initialize other than
+       ! test_result and name, so we return true
+       this % name = "trigger_always"
+       r = .true.
     else
-       ! test result defaults to .true.
-       t % test_result = .true.
+       ! if init has failed we return false
+       r = .false.
     end if
 
-    t % name = "trigger_always"
-  end function trigger_always_init
+  end function init
 
   function start(t) result(r)
     class(trigger_always) :: t

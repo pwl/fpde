@@ -10,7 +10,6 @@
 module class_trigger_bundle
   use class_list
   use class_trigger
-  use class_solver
 
   private
 
@@ -36,11 +35,16 @@ contains
 
   subroutine add(this, t)
     class(trigger_bundle) :: this
-    class(trigger), pointer :: t
+    class(trigger), target :: t
     class(*), pointer :: dummy
-    dummy => t
-    call this % triggers % add(dummy)
-    this % n_triggers = this % triggers % length()
+
+    if( t % try_init() ) then
+       ! add a trigger to the bundle
+       dummy => t
+       call this % triggers % add(dummy)
+       this % n_triggers = this % triggers % length()
+    end if
+
   end subroutine add
 
   subroutine info(this)

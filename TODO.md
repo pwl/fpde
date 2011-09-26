@@ -19,9 +19,8 @@ TODO
   some issues with syncing the three classes: `mesh`, `solver` and
   `marcher`. In particular:
 
--- does `y` stay fixed until the end of `apply` and then it's written
-   down?
-
+- does `y` stay fixed until the end of `apply` and then it's written
+  down?
 
 - cyclic use should make `class_solver_simple_data` much simpler and
   more elegant, possible?
@@ -45,3 +44,11 @@ TODO
 - compiler bug? see `test/abstract.f90.bug`, due to this in the
   `test/solver_simple.f90` one cannot use `class(solver)` in the
   subroutine `my_rhs`
+
+- give module % add and solver % add several arguments of different
+  types (so that you could write solver % add (module1, module2,
+  trigger1, trigger2) and this would result in adding module1 and
+  module2 to solver both with pointers to the same instances of
+  trigger1 and trigger2, so they shall be executed at the same time)
+
+- add an `uninitialized` state?

@@ -1,3 +1,4 @@
+! should this work, or is it incorrect?
 module mod_a
 
   type type_a

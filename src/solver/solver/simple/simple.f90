@@ -170,13 +170,16 @@ contains
           print *, "marcher error, status=",  s % marcher % status
           ! @todo change exit to an error report
           exit
+       else
+          ! sync pointers first
+          call s % sync_f( s % y )
+          call s % sync_dfdt( s % dydt )
+
+          ! @todo: extra calculation, probably not needed
+          call s % rhs
+
+          call s % run_modules
        endif
-
-       call s % sync_f( s % y )
-       call s % sync_dfdt( s % dydt )
-       ! @todo: extra calculation, probably not needed
-       call s % rhs
-
     end do
   end subroutine solve
 

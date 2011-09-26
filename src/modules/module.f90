@@ -1,5 +1,6 @@
 module class_module
-  use class_solver
+  use class_initializable
+  use class_solver_data
   use class_trigger
   use class_trigger_bundle
 
@@ -10,12 +11,13 @@ module class_module
        module_stopped = "stopped",&
        module_error   = "error"
 
-  type, public :: module
-     class(solver), pointer :: solver
-     type(trigger_bundle), pointer :: triggers
-     character(len=30) :: name
-     character(len=30) :: state
-     integer :: steps_made
+  type, public, extends(initializable) :: module
+     character(len=30) :: state = module_stopped
+     class(solver_data), pointer :: solver_data => null()
+     type(trigger_bundle), pointer :: triggers => null()
+     character(len=30) :: name => ""
+     ! character(len=30) :: state => module_stopped
+     integer :: steps_made = 0
    contains
      procedure :: info
      procedure :: start
@@ -117,8 +119,7 @@ contains
     select case(m % state)
     case( module_stopped, module_started )
        call m % info
-       call m % triggers % triggers % map(trigger_info)
-       ! call m % triggers % info
+       call m % triggers % info
     case( module_error )
        print *, "info error"
        ! do nothing
@@ -157,27 +158,48 @@ contains
     class(module):: this
   end subroutine free
 
+  function init( this ) result(r)
+    class(module):: this
+    logical :: r
+
+    allocate(this % triggers)
+    call this % triggers % init
+    this % state = module_stopped
+
+    r = .true.
+  end function init
+
+  ! a wrapper function to try_init
+  function try_init(this) result(r)
+    class(module) :: this
+    logical :: r
+
+    r = this % initializable % try_init()
+
+    if( r ) then
+       return
+    else
+       print *, "E: module ", trim(this % name), " failed to initialize"
+    end if
+
+  end function try_init
+
   ! internal procedures, not to be overloaded
 
   subroutine add_trigger( this, tr )
     class(module) :: this
-    class(trigger), pointer :: tr
+    class(trigger) :: tr
 
-    call this % triggers % add( tr )
-
-    ! tr % solver => this % solver
+    if( this % try_init() ) then
+       call this % triggers % add( tr )
+       tr % solver_data => this % solver_data
+    else
+       ! @todo report an error
+       this % state = module_error
+    end if
 
   end subroutine add_trigger
 
-  subroutine init( this )
-    class(module):: this
-
-    allocate(this % triggers)
-    call this % triggers % init
-
-    this % state = module_stopped
-    this % steps_made = 0
-  end subroutine init
   ! end of internal procedures
 
 end module class_module

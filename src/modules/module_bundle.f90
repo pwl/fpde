@@ -18,6 +18,7 @@ module class_module_bundle
 
   private
 
+  ! @todo extends(initializable)
   type, public :: module_bundle
      class(list), pointer :: modules
      integer :: n_modules
@@ -30,9 +31,6 @@ module class_module_bundle
      procedure :: init
   end type module_bundle
 
-  ! @todo is there any way of not exposing it to the public?
-  ! public module_info
-
 contains
 
   subroutine init(this)
@@ -43,12 +41,15 @@ contains
 
   subroutine add(this, m)
     class(module_bundle) :: this
-    class(module), pointer :: m
+    class(module), target :: m
     class(*), pointer :: dummy
-    dummy => m
-    call this % modules % add(dummy)
 
-    this % n_modules = this % modules % length()
+    if( m % try_init() ) then
+       dummy => m
+       call this % modules % add(dummy)
+       this % n_modules = this % modules % length()
+    end if
+
   end subroutine add
 
   subroutine info(this)

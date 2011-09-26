@@ -2,13 +2,12 @@ module class_solver_data
 
   private
 
-
   type, public :: solver_data
      real, pointer                     :: t
-     real, contiguous, pointer                     :: x    (:)
-     real, contiguous, pointer                     :: f    (:,:)
-     real, contiguous, pointer                 :: dfdt (:,:)
-     real, contiguous, pointer                     :: dfdx (:,:,:)
+     real, contiguous, pointer         :: x    (:)
+     real, contiguous, pointer         :: f    (:,:)
+     real, contiguous, pointer         :: dfdt (:,:)
+     real, contiguous, pointer         :: dfdx (:,:,:)
      integer                           :: nx,nf,rk
      procedure(interface_rhs), pointer :: rhs
      class(*), pointer                 :: params
@@ -17,11 +16,11 @@ module class_solver_data
      ! interface supported by any solver
      integer                           :: rhs_status
    contains
-     procedure         :: calculate_dfdx
-     procedure         :: pointwise_dfdx
+     procedure                         :: calculate_dfdx
+     procedure                         :: pointwise_dfdx
      ! @todo why rhs_for_marcher is here anyway? It is a public
      ! function and it isn't needed as a method
-     procedure, nopass :: rhs_for_marcher
+     procedure, nopass                 :: rhs_for_marcher
   end type solver_data
 
  abstract interface

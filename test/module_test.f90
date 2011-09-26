@@ -1,38 +1,43 @@
-program module_test
+program module_test_
   ! quite a lot of use statements
   use class_trigger
   use class_trigger_always
-  use class_trigger_bundle
-  use class_module_bundle
+  use class_initializable
   use class_module
-  use class_module_test1
-  use class_module_test2
+  use class_module_test
 
-  class(module), pointer :: mt1, mt2
-  class(trigger), pointer :: t1, t2
+  type(module_test) :: m1, m2
 
-  t1 => trigger_always_init(.false.)
-  t2 => trigger_always_init(.true.)
+  ! @bug the test won't compile with ifort 12.1 without those two
+  ! lines
 
-  mt1 => module_test1_init()
-  mt2 => module_test2_init()
+  class(trigger), pointer :: t
+  class(initializable), pointer :: i
+  type(trigger_always) :: ta
 
-  call module_info(mt1)
+  ! ta = trigger_always()
 
-  call mt1 % add(t2)
-  call module_info(mt1)
+  ! m1 = module_test(name = "test1")
+  ! m2 = module_test(name = "test2")
 
-  call module_start(mt1)
-  call module_info(mt1)
+  ! if( m1 % try_init() .and. m2 % try_init() ) then
 
-  call module_step(mt1)
-  call module_info(mt1)
+  !    call module_info(m1)
 
-  call module_stop(mt1)
-  call module_info(mt1)
+  !    call m1 % add(trigger_always(test_result = .true.))
+  !    call module_info(m1)
+
+  !    call module_start(m1)
+  !    call module_info(m1)
+
+  !    call module_step(m1)
+  !    call module_info(m1)
+
+  !    call module_stop(m1)
+  !    call module_info(m1)
+
+  ! end if
 
 
-contains
 
-
-end program module_test
+end program module_test_
