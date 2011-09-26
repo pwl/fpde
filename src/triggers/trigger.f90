@@ -1,6 +1,5 @@
 module class_trigger
 
-  use class_initializable
   use class_solver_data
 
   private
@@ -10,10 +9,11 @@ module class_trigger
        trigger_stopped = "stopped",     &
        trigger_error = "error"
 
-  type, public, extends(initializable) :: trigger
+  type, public :: trigger
      class(solver_data), pointer :: solver_data => null()
      character(len=30)           :: name = ""
      character(len=30)           :: state = trigger_stopped
+     logical :: initialized = .false.
    contains
      procedure :: info
      procedure :: start
@@ -21,6 +21,7 @@ module class_trigger
      procedure :: test
      procedure :: free
      procedure :: init
+     procedure :: try_init
   end type trigger
 
   ! public interface to this module
@@ -29,6 +30,8 @@ module class_trigger
        trigger_start,&
        trigger_stop, &
        trigger_test
+
+  private info, start, stop, test, free, init, try_init
 
 contains
 
@@ -219,22 +222,32 @@ contains
     r = .true.
   end function init
 
-
-  ! a wrapper function to try_init
+  !> returns tries to initialize a class instance
+  !!
+  !! @param this
+  !!
+  !! @return
+  !!
   function try_init(this) result(r)
     class(trigger) :: this
     logical :: r
+    r = .false.
 
-    r = this % initializable % try_init()
-
-    if( r ) then
+    if( this % initialized ) then
+       r = .true.
+       ! if module is not in uninitialized state we leave it alone
+    else if( this % init() ) then
+       ! m % init() is not evaluated if one of the previous conditions
+       ! holds. Also calling m % init() sets m % initialized to .true.
+       r = .true.
        return
     else
+       ! @todo error: module failed to initialize
+       r = .false.
        print *, "E: trigger ", trim(this % name), " failed to initialize"
+       return
     end if
-
   end function try_init
-
 
   ! end of skeletons
 

@@ -1,9 +1,11 @@
 program trigger_program
 
-  ! use class_trigger
+  use class_initializable
+  use class_trigger
   use class_trigger_always
 
-  ! class(trigger), pointer :: t
+  type(initializable) :: i
+  type(trigger) :: t
   type(trigger_always) :: ta
 
   ta = trigger_always()

@@ -28,15 +28,15 @@ contains
   !!
   !! @return
   !!
-  function try_init(m) result(r)
-    class(initializable) :: m
+  function try_init(this) result(r)
+    class(initializable) :: this
     logical :: r
     r = .false.
 
-    if( m % initialized ) then
+    if( this % initialized ) then
        r = .true.
        ! if module is not in uninitialized state we leave it alone
-    else if( m % init() ) then
+    else if( this % init() ) then
        ! m % init() is not evaluated if one of the previous conditions
        ! holds. Also calling m % init() sets m % initialized to .true.
        r = .true.

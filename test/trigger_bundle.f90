@@ -1,8 +1,10 @@
 program trigger_bundle_test
+  use class_initializable
   use class_trigger_bundle
   use class_trigger
   use class_trigger_always
 
+  type(initializable) :: i
   type(trigger_bundle) :: tb
   type(trigger_always) :: t1, t2
   logical :: r

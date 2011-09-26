@@ -1,5 +1,4 @@
 module class_module
-  use class_initializable
   use class_solver_data
   use class_trigger
   use class_trigger_bundle
@@ -11,19 +10,20 @@ module class_module
        module_stopped = "stopped",&
        module_error   = "error"
 
-  type, public, extends(initializable) :: module
+  type, public :: module
      character(len=30) :: state = module_stopped
      class(solver_data), pointer :: solver_data => null()
      type(trigger_bundle), pointer :: triggers => null()
      character(len=30) :: name => ""
-     ! character(len=30) :: state => module_stopped
      integer :: steps_made = 0
+     logical :: initialized = .false.
    contains
      procedure :: info
      procedure :: start
      procedure :: stop
      procedure :: step
      procedure :: init
+     procedure :: try_init
      procedure :: free
      procedure :: add => add_trigger
   end type module
@@ -109,6 +109,13 @@ contains
 
   end subroutine module_step
 
+  !> Function to print information on module. @todo check if triggers
+  !> is initialized, maybe call m % try_init()?
+  !!
+  !! @param m
+  !!
+  !! @return
+  !!
   recursive subroutine module_info(m)
     class(module) :: m
 
@@ -169,23 +176,48 @@ contains
     r = .true.
   end function init
 
-  ! a wrapper function to try_init
+  !> returns tries to initialize a class instance
+  !!
+  !! @param this
+  !!
+  !! @return
+  !!
   function try_init(this) result(r)
     class(module) :: this
     logical :: r
+    r = .false.
 
-    r = this % initializable % try_init()
-
-    if( r ) then
+    if( this % initialized ) then
+       r = .true.
+       ! if module is not in uninitialized state we leave it alone
+    else if( this % init() ) then
+       ! m % init() is not evaluated if one of the previous conditions
+       ! holds. Also calling m % init() sets m % initialized to .true.
+       r = .true.
        return
     else
+       ! @todo error: module failed to initialize
+       r = .false.
        print *, "E: module ", trim(this % name), " failed to initialize"
+       return
     end if
-
   end function try_init
+
 
   ! internal procedures, not to be overloaded
 
+  !> This procedure adds a trigger to a module. It also tries to
+  !! initialize module using module % try_init().
+  !!
+  !! @todo calling try_init() by this functionthis might cause
+  !! confusion, as other functions don't do this. A user might try to
+  !! use a module before initializing it and get caught in a segfault.
+  !!
+  !! @param this
+  !! @param tr
+  !!
+  !! @return
+  !!
   subroutine add_trigger( this, tr )
     class(module) :: this
     class(trigger) :: tr
