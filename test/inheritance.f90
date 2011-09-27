@@ -12,26 +12,51 @@ end module class_aa
 
 module class_aaa
   use class_aa
-  type, extends(b) :: aaa
+  type, extends(aa) :: aaa
   end type aaa
 end module class_aaa
 
 
-module class_c
+module class_b
   use class_a
-  type :: c
+  type :: b
      class(a), pointer :: ap
-  end type c
-end module class_c
+  end type b
+end module class_b
+
+module class_bb
+  use class_b
+  type, extends(b) :: bb
+  end type bb
+end module class_bb
+
 
 program inheritance_test
-  use class_a
-  use class_aa
-  use class_c
+  use class_aaa
+  use class_bb
 
+  class(aa), pointer :: aac
+  type(bb) :: bbc
+
+
+  allocate(aaa :: aac)
+  allocate(aac % t)
+
+  aac % t = 999.
+  print *, aac % t
+
+  aac % a = a()
+
+  print *, aac % t
 
 contains
-  subroutine test(b,c)
+  subroutine test(aac,bc)
+    use class_aa
+    use class_b
+    class(aa), target :: aac
+    class(b) :: bc
+
+    bc % ap => aac % a
 
   end subroutine test
 
