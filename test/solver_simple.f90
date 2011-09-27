@@ -15,7 +15,8 @@ program solver_simple_program
   use class_solver_simple_data
 
   class(solver), pointer :: s
-  type(module_test) :: mt
+  type(module_test), target :: mt
+  class(module), pointer :: m
   type(solver_simple_data) :: data
   procedure(interface_rhs), pointer :: rhs
   real, pointer :: y(:)
@@ -39,12 +40,19 @@ program solver_simple_program
 
   s => data % generate_solver()
 
-  call s % add(&
-       module_test(),&
-       trigger_always(test_result=.true.),&
-       trigger_timed(dt = .1))
+  mt = module_test()
+  ! s % solver_data = solver_data()
+  ! m => mt
 
-  print *, s % name
+  ! call s % add(&
+  !      m,&
+  !      trigger_always(test_result=.true.),&
+  !      trigger_timed(dt = .1))
+
+  ! m % solver_data => s % solver_data
+  ! print *, m % solver_data % t
+
+  ! print *, s % name
 
   ! @todo: implement a functional way to give initial data prepare
   ! initial data

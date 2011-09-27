@@ -1,21 +1,24 @@
+!>
+!! @file   inheritance.f90
+!! @author Pawel Biernat <pawel.biernat@gmail.com>
+!! @date   Tue Sep 27 13:42:17 2011
+!!
+!! @brief  this is a @bug of ifort 12.1 Update 6.
+!!
+!!
+!!
 module class_a
   type :: a
      real, pointer :: t => null()
+     real :: p = 11.
   end type a
 end module class_a
 
-module class_aa
+module class_a_extended
   use class_a
-  type, extends(a) :: aa
-  end type aa
-end module class_aa
-
-module class_aaa
-  use class_aa
-  type, extends(aa) :: aaa
-  end type aaa
-end module class_aaa
-
+  type, extends(a) :: a_extended
+  end type a_extended
+end module class_a_extended
 
 module class_b
   use class_a
@@ -24,40 +27,35 @@ module class_b
   end type b
 end module class_b
 
-module class_bb
-  use class_b
-  type, extends(b) :: bb
-  end type bb
-end module class_bb
-
-
 program inheritance_test
-  use class_aaa
-  use class_bb
+  use class_a_extended
+  use class_b
 
-  class(aa), pointer :: aac
-  type(bb) :: bbc
+  type(a_extended), target :: a_extended_type
+  class(b), pointer :: b_class
+  type(b) :: b_type
 
+  allocate(a_extended_type % t)
+  allocate(b_class)
 
-  allocate(aaa :: aac)
-  allocate(aac % t)
+  a_extended_type % t = 888.
 
-  aac % t = 999.
-  print *, aac % t
+  b_class % ap => a_extended_type % a
+  b_type % ap => a_extended_type % a
 
-  aac % a = a()
+  ! this does not work
+  print *, a_extended_type % t
+  print *, b_class % ap % t
+  print *, b_type % ap % t
 
-  print *, aac % t
+  ! this works just fine
+  print *, a_extended_type % p
+  print *, b_class % ap % p
+  print *, b_type % ap % p
 
-contains
-  subroutine test(aac,bc)
-    use class_aa
-    use class_b
-    class(aa), target :: aac
-    class(b) :: bc
+  if ( b_class % ap % t /= a_extended_type % t ) then
+     print *, "bug persists!"
+  end if
 
-    bc % ap => aac % a
-
-  end subroutine test
 
 end program inheritance_test

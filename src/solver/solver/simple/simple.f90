@@ -25,7 +25,7 @@ module class_solver_simple
      real :: h
      ! y(:) holds data used in mesh in a format compatible with
      ! rhs_for_marcher
-     real, pointer, contiguous :: y(:), dydt(:)
+     real, contiguous, pointer :: y(:), dydt(:)
      class(mesh), pointer :: mesh
      class(ode_stepper), pointer :: stepper
      class(*), pointer :: data
