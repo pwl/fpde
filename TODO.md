@@ -55,3 +55,8 @@ TODO
 
 - add a class `initializable`? Now impossible due to the bug in ifort
   12.1.0 20110811
+
+- `solver_data` and `solver_simple_data` are not related classes. In
+  this case one of the names should be changed. Also a way of
+  initializing `solver_simple` is not analogous to this of `module`
+  and `trigger`.
