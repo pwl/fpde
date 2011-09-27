@@ -45,7 +45,7 @@ program solver_simple_program
   !      trigger_timed(dt = .001))
 
   call s % add(&
-       module_print_data( file_name = "test/test.dat" ),&
+       module_print_data( file_name = "data/test" ),&
        trigger_timed(dt = .01))
 
   ! @todo: implement a functional way to give initial data prepare

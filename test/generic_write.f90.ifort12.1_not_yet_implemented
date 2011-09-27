@@ -1,0 +1,28 @@
+module list_module
+  type node
+     integer::value=0
+     type(node),pointer::next_node=>null()
+   contains
+     generic :: write(formatted) => pwf
+  end type node
+contains
+
+  recursive subroutine pwf(dtv,unit,iotype,vlist,iostat,iomsg)
+
+    class(node),intent(in)::dtv
+    integer,intent(in)::unit
+    character(len=*),intent(in)::iotype
+    integer,intent(in)::vlist(:)
+    integer,intent(out)::iostat
+    character(len=*),intent(inout)::iomsg
+    write(unit,'(i9,/)',iostat=iostat)&
+         dtv%value
+    if(iostat/=0) return
+    if(associated(dtv%next_node))&
+         write(unit,'(dt)',iostat=iostat)dtv%next_node
+  end subroutine pwf
+end module list_module
+
+program list_module_test
+  use list_module
+end program list_module_test

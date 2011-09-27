@@ -175,6 +175,9 @@ contains
           exit
        else
 
+          ! increment the iteration number
+          s % n_iter = s % n_iter + 1
+
           ! sync pointers first
           call s % sync_f( s % y )
           call s % sync_dfdt( s % dydt )

@@ -22,14 +22,42 @@ contains
   function start(this) result(r)
     class(module_print_data) :: this
     logical :: r
-    integer :: iostat
 
     r = .true.
 
     call new_directory(this % file_name)
 
-    open(newunit = this % file_handle,&
-         file    = this % file_name,  &
+
+    ! @todo write a header
+
+  end function start
+
+  function step(this) result(r)
+    class(module_print_data) :: this
+    logical :: r
+    integer :: nx, nf, i,j
+    real, pointer :: x(:), f(:,:)
+    integer :: file_handle
+    integer :: iostat
+    character(len=1000) :: file_name
+
+    r = .true.
+
+    x => this % solver_data % x
+    f => this % solver_data % f
+
+    nx = this % solver_data % nx
+    nf = this % solver_data % nf
+
+    ! set a new file name
+    write(file_name, '(a,a,i20.20)')                      &
+         trim(this % file_name),             &
+         "_n=", this % solver_data % n_iter
+         ! "_t=", this % solver_data % t
+
+    ! @todo write a timestamp
+    open(newunit = file_handle,&
+         file    = file_name,  &
          form    = 'formatted', &
          action  = 'write', &
          ! access = 'direct', &
@@ -44,50 +72,32 @@ contains
        return
     end if
 
-    if( this % file_handle == 0) then
+    if( file_handle == 0) then
        ! @todo report error
        print *, "error in module_print_data file_handle == 0"
        r = .false.
        return
     end if
 
-    ! @todo write a header
 
-  end function start
-
-  function step(this) result(r)
-    class(module_print_data) :: this
-    logical :: r
-    integer :: nx, nf, i,j
-    real, pointer :: x(:), f(:,:)
-    r = .true.
-    x => this % solver_data % x
-    f => this % solver_data % f
-
-    nx = this % solver_data % nx
-    nf = this % solver_data % nf
-
-    ! @todo write a timestamp
-
-    write( this % file_handle, *)&
+    write( file_handle, *)&
          "# ",&
          "t = ", this % solver_data % t
 
     do i = 1, nx
-       write( this % file_handle, *)&
+       write( file_handle, *)&
             x(i), (f(i,j), j=1,nf)
     end do
 
-    write( this % file_handle, *) (new_line('a'), i=1,3)
+    write( file_handle, *) (new_line('a'), i=1,3)
 
+    close( file_handle )
 
   end function step
 
   function stop(this) result(r)
     class(module_print_data) :: this
     logical :: r
-
-    close( this % file_handle )
 
     r = .true.
   end function stop

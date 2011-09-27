@@ -9,6 +9,7 @@ module class_solver_data
      real, contiguous, pointer         :: dfdt (:,:) => null()
      real, contiguous, pointer         :: dfdx (:,:,:) => null()
      integer                           :: nx = 0, nf = 0, rk = 0
+     integer                           :: n_iter = 0
      procedure(interface_rhs), pointer :: rhs => null()
      class(*), pointer                 :: params => null()
      character(len=20)                 :: time_started = ""

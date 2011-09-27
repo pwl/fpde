@@ -1,0 +1,24 @@
+program testplplot2d
+  use plplot
+  implicit none
+  real(plflt),dimension(6) :: x,y
+  real(plflt)::xmin,xmax,ymin,ymax
+  x=(/1,2,3,4,5,6/)
+  y=x**2
+  write(*,*) y
+  call plinit()
+  xmin=1.0
+  xmax=6.0
+  ymin=1.0
+  ymax=40.0
+  call plcol0(1)
+  call plenv(xmin,xmax,ymin,ymax,0,0)
+  call pllab('X','Y','Test 1D plot')
+  call plpoin(x,y,9)
+  call plline(x,y)
+  y=x**3
+  call plpoin(x,y,9)
+  call plline(x,y)
+  call plend()
+
+end program testplplot2d
