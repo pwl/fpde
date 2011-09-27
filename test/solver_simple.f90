@@ -18,10 +18,8 @@ program solver_simple_program
   class(solver), pointer :: s
   type(solver_simple_data) :: data
   procedure(interface_rhs), pointer :: rhs
-  real, pointer :: y(:)
   real :: pi
-  integer :: nx = 101, i
-  logical :: r
+  integer :: nx = 101
 
   data = solver_simple_data( &
        mesh_id = "sfd3pt",   &
@@ -45,7 +43,9 @@ program solver_simple_program
   !      trigger_timed(dt = .001))
 
   call s % add(&
-       module_print_data( file_name = "data/test", extension = ".dat" ),&
+       module_print_data( &
+       file_name = "data/test",&
+       extension = ".dat" ),&
        trigger_timed(dt = .01))
 
   ! @todo: implement a functional way to give initial data prepare
@@ -57,7 +57,6 @@ program solver_simple_program
   s % f(:,2) = 0.
   s % f(1,:) = 0.
   s % f(nx,:) = 0.
-
 
   ! solve the equation up to time t1
   call s % solve

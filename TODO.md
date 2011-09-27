@@ -60,3 +60,12 @@ TODO
   this case one of the names should be changed. Also a way of
   initializing `solver_simple` is not analogous to this of `module`
   and `trigger`.
+
+- module to calculate convergence
+
+- module to print a function of data (or expand `module_data_print` to
+  this functionality)
+
+- `solver_mmpde6` (would be best to clean up `solver_simple`)
+
+- modify `CMakeList.txt` to copy the scripts to a build location
