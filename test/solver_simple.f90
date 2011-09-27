@@ -15,8 +15,6 @@ program solver_simple_program
   use class_solver_simple_data
 
   class(solver), pointer :: s
-  type(module_test), target :: mt
-  class(module), pointer :: m
   type(solver_simple_data) :: data
   procedure(interface_rhs), pointer :: rhs
   real, pointer :: y(:)
@@ -40,38 +38,29 @@ program solver_simple_program
 
   s => data % generate_solver()
 
-  mt = module_test()
-  ! s % solver_data = solver_data()
-  ! m => mt
-
-  ! call s % add(&
-  !      m,&
-  !      trigger_always(test_result=.true.),&
-  !      trigger_timed(dt = .1))
-
-  ! m % solver_data => s % solver_data
-  ! print *, m % solver_data % t
-
-  ! print *, s % name
+  call s % add(&
+       module_test(),&
+       trigger_always(test_result=.false.),&
+       trigger_timed(dt = .1))
 
   ! @todo: implement a functional way to give initial data prepare
   ! initial data
-  ! pi = acos(-1.)
-  ! s % f(:,1) = sin( s % x * pi )
-  ! s % f(:,2) = 0.
-  ! s % f(1,:) = 0.
-  ! s % f(nx,:) = 0.
+  pi = acos(-1.)
+  s % f(:,1) = sin( s % x * pi )
+  s % f(:,2) = 0.
+  s % f(1,:) = 0.
+  s % f(nx,:) = 0.
 
 
   ! solve the equation up to time t1
-  ! call s % solve
+  call s % solve
 
   ! print *, s%f(:,1)-sin( pi*s%x )*cos(pi*s%t)
   ! print *, ""
   ! print *, "#l2norm(x_numeric-x_theoretical) = ", &
   !      norm2( s%f(:,1)-sin( pi*s%x )*cos(pi*s%t) )/ real(s % nx - 1)
 
-  ! call s % free
+  call s % free
 
 contains
 

@@ -12,7 +12,7 @@ module class_module
 
   type, public :: module
      character(len=30) :: state = module_stopped
-     class(solver_data), pointer :: solver_data => null()
+     type(solver_data), pointer :: solver_data => null()
      type(trigger_bundle), pointer :: triggers => null()
      character(len=30) :: name => ""
      integer :: steps_made = 0
@@ -238,7 +238,8 @@ contains
     class(module) :: this
     logical :: r
 
-    r = ( trim(this % name) == "" )
+    r = ( trim(this % name) /= "" )
+
   end function named
 
 

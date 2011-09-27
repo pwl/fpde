@@ -23,7 +23,8 @@ end module class_a_extended
 module class_b
   use class_a
   type :: b
-     class(a), pointer :: ap
+     ! @bug: if `type` is changed to `class` the error occurs
+     type(a), pointer :: ap
   end type b
 end module class_b
 

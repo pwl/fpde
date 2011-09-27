@@ -10,7 +10,7 @@ module class_trigger
        trigger_error = "error"
 
   type, public :: trigger
-     class(solver_data), pointer :: solver_data => null()
+     type(solver_data), pointer :: solver_data => null()
      character(len=30)           :: name = ""
      character(len=30)           :: state = trigger_stopped
      logical :: initialized = .false.

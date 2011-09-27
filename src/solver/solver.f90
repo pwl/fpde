@@ -51,16 +51,8 @@ contains
 
        ! module initialized succesfully, adding it to solver.
        call s % modules % add(m)
+       !
        m % solver_data => s % solver_data
-
-       print *, s % t
-       ! print *, s % solver_data % name
-
-       print *, associated(m % solver_data % f)
-       ! m % solver_data % t = 1.
-
-       print *, m % solver_data % t
-       ! print *, m % solver_data % name
 
        if(present(t1)) then
           call m % add(t1)
