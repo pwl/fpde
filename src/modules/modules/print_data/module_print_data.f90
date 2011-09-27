@@ -9,7 +9,7 @@ module class_module_print_data
      ! initialization parameters
      character(len=1000) :: file_name = ""
      ! end of initialization parameters
-     integer :: file_handle = -1
+     integer :: file_handle = 0
    contains
      procedure :: init
      procedure :: start
@@ -22,22 +22,64 @@ contains
   function start(this) result(r)
     class(module_print_data) :: this
     logical :: r
+    integer :: iostat
+
+    r = .true.
 
     call new_directory(this % file_name)
 
-    open( newunit = this % file_handle,&
-          file    = this % file_name,  &
-          status  = 'unknown')
+    open(newunit = this % file_handle,&
+         file    = this % file_name,  &
+         form    = 'formatted', &
+         action  = 'write', &
+         ! access = 'direct', &
+         recl    = 1000, &
+         iostat = iostat, &
+         status  = 'replace')
 
-    r = .true.
+    if( iostat /= 0  ) then
+       ! @todo report error
+       print *, "error in module_print_data ioostat /= 0"
+       r = .false.
+       return
+    end if
+
+    if( this % file_handle == 0) then
+       ! @todo report error
+       print *, "error in module_print_data file_handle == 0"
+       r = .false.
+       return
+    end if
+
+    ! @todo write a header
+
   end function start
 
   function step(this) result(r)
     class(module_print_data) :: this
     logical :: r
+    integer :: nx, nf, i,j
+    real, pointer :: x(:), f(:,:)
     r = .true.
+    x => this % solver_data % x
+    f => this % solver_data % f
 
-    write( this % file_handle, *) this % file_handle
+    nx = this % solver_data % nx
+    nf = this % solver_data % nf
+
+    ! @todo write a timestamp
+
+    write( this % file_handle, *)&
+         "# ",&
+         "t = ", this % solver_data % t
+
+    do i = 1, nx
+       write( this % file_handle, *)&
+            x(i), (f(i,j), j=1,nf)
+    end do
+
+    write( this % file_handle, *) (new_line('a'), i=1,3)
+
 
   end function step
 
@@ -62,6 +104,7 @@ contains
           this % name = "module_print_data"
        end if
 
+       ! if no file_name has been specified, one is generated
        if( trim(this%file_name) == "" ) then
        !    ! should generate file name automatically as follows
        !    ! [date]/[solver%name]/[module_print_data%name + some unique

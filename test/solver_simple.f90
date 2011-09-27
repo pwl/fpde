@@ -8,7 +8,7 @@ program solver_simple_program
   use class_module_print_data
   use class_trigger
   use class_trigger_timed
-  use class_trigger_always
+  use class_trigger_once
 
   use class_solver_data
   use class_solver
@@ -20,7 +20,7 @@ program solver_simple_program
   procedure(interface_rhs), pointer :: rhs
   real, pointer :: y(:)
   real :: pi
-  integer :: nx = 41, i
+  integer :: nx = 51, i
   logical :: r
 
   data = solver_simple_data( &
@@ -30,8 +30,8 @@ program solver_simple_program
        nf      = 2,          &
        x0      = 0.,         &
        x1      = 1.,         &
-       t0      = .1,         &
-       t1      = .2,         &
+       t0      = 0.,         &
+       t1      = 1.,         &
        h0      = 1.e-4,      &
        rhs     = rhs)           !what does it mean?
   ! @todo any way to squeeze this into initialization expression?
@@ -39,16 +39,21 @@ program solver_simple_program
 
   s => data % generate_solver()
 
+  ! call s % add(&
+  !      module_print_data( file_name = "test/test.dat" ),&
+  !      trigger_always(test_result=.false.),&
+  !      trigger_timed(dt = .001))
+
   call s % add(&
-       module_print_data(),&
-       trigger_always(test_result=.false.),&
-       trigger_timed(dt = .05))
+       module_print_data( file_name = "test/test.dat" ),&
+       trigger_timed(dt = .01))
 
   ! @todo: implement a functional way to give initial data prepare
   ! initial data
   ! @todo: or put this to the solver_simple_data
   pi = acos(-1.)
-  s % f(:,1) = sin( s % x * pi )
+  s % f(:,1) = 0.
+  s % f(1:nx/4,1) = 1. !sin( s % x * pi )
   s % f(:,2) = 0.
   s % f(1,:) = 0.
   s % f(nx,:) = 0.
