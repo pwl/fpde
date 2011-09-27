@@ -1,26 +1,38 @@
 module class_a
   type :: a
-     integer :: aa = 1
+     real, pointer :: t => null()
   end type a
 end module class_a
 
-module class_b
+module class_aa
   use class_a
-  type, extends(a) :: b
-     integer :: bb = 2
-  end type b
-end module class_b
+  type, extends(a) :: aa
+  end type aa
+end module class_aa
+
+module class_aaa
+  use class_aa
+  type, extends(b) :: aaa
+  end type aaa
+end module class_aaa
+
 
 module class_c
-  use class_b
-  type, extends(b) :: c
-     integer :: cc = 3
+  use class_a
+  type :: c
+     class(a), pointer :: ap
   end type c
 end module class_c
 
 program inheritance_test
-  use class_b
+  use class_a
+  use class_aa
+  use class_c
 
-  type(b) :: cb
-  cb = b()
+
+contains
+  subroutine test(b,c)
+
+  end subroutine test
+
 end program inheritance_test

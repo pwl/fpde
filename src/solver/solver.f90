@@ -14,6 +14,7 @@ module class_solver
   use class_module
   use class_module_bundle
   use class_solver_data
+  use class_trigger
 
   private
 
@@ -42,22 +43,40 @@ contains
   end subroutine init
 
   subroutine add_module(s, m, t1, t2, t3)
-    use class_trigger
     class(solver), target :: s
     class(module) :: m
     class(trigger), optional :: t1, t2, t3
 
-    if( .not. m % try_init() ) then
-       ! @todo report error, module failed to initialize
-       return
-    else
+    if( m % try_init() ) then
+
        ! module initialized succesfully, adding it to solver.
        call s % modules % add(m)
        m % solver_data => s % solver_data
 
+       print *, s % t
+       ! print *, s % solver_data % name
+
+       print *, associated(m % solver_data % f)
+       ! m % solver_data % t = 1.
+
+       print *, m % solver_data % t
+       ! print *, m % solver_data % name
+
        if(present(t1)) then
           call m % add(t1)
        end if
+
+       if(present(t2)) then
+          call m % add(t2)
+       end if
+
+       if(present(t3)) then
+          call m % add(t3)
+       end if
+
+    else
+       ! @todo report error, module failed to initialize
+       return
     end if
 
   end subroutine add_module

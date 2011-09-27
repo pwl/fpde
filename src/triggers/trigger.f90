@@ -200,7 +200,7 @@ contains
   end function stop
 
   function test(t) result(r)
-    class(trigger) :: t
+    class(trigger), target :: t
     logical :: r
 
     ! trigger does not run by default
@@ -237,15 +237,14 @@ contains
        r = .true.
        ! if module is not in uninitialized state we leave it alone
     else if( this % init() ) then
+       this % initialized = .true.
        ! m % init() is not evaluated if one of the previous conditions
        ! holds. Also calling m % init() sets m % initialized to .true.
        r = .true.
-       return
     else
        ! @todo error: module failed to initialize
        r = .false.
        print *, "E: trigger ", trim(this % name), " failed to initialize"
-       return
     end if
   end function try_init
 

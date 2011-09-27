@@ -160,12 +160,12 @@ contains
 
     do while( s%t < s%t1)
        ! do while( i < 3 )
-       call s % marcher % apply(           &
-            s   = s % stepper,                &
-            sys = s % system,          &
-            t   = s % t,                   &
-            t1  = s % t1,               &
-            h   = s % h, &
+       call s % marcher % apply( &
+            s   = s % stepper,   &
+            sys = s % system,    &
+            t   = s % t,         &
+            t1  = s % t1,        &
+            h   = s % h,         &
             y   = s % y )
        ! @todo: neater error handling
 
@@ -174,6 +174,7 @@ contains
           ! @todo change exit to an error report
           exit
        else
+
           ! sync pointers first
           call s % sync_f( s % y )
           call s % sync_dfdt( s % dydt )

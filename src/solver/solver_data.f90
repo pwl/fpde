@@ -3,18 +3,18 @@ module class_solver_data
   private
 
   type, public :: solver_data
-     real, pointer                     :: t
-     real, contiguous, pointer         :: x    (:)
-     real, contiguous, pointer         :: f    (:,:)
-     real, contiguous, pointer         :: dfdt (:,:)
-     real, contiguous, pointer         :: dfdx (:,:,:)
-     integer                           :: nx,nf,rk
-     procedure(interface_rhs), pointer :: rhs
-     class(*), pointer                 :: params
+     real, pointer                     :: t => null()
+     real, contiguous, pointer         :: x    (:) => null()
+     real, contiguous, pointer         :: f    (:,:) => null()
+     real, contiguous, pointer         :: dfdt (:,:) => null()
+     real, contiguous, pointer         :: dfdx (:,:,:) => null()
+     integer                           :: nx = 0, nf = 0, rk = 0
+     procedure(interface_rhs), pointer :: rhs => null()
+     class(*), pointer                 :: params => null()
      ! solver name
-     character(len=30)                 :: name
+     character(len=30)                 :: name = ""
      ! interface supported by any solver
-     integer                           :: rhs_status
+     integer                           :: rhs_status = 0
    contains
      procedure                         :: calculate_dfdx
      procedure                         :: pointwise_dfdx

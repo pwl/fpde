@@ -49,7 +49,7 @@ contains
   end function stop
 
   function test(t) result(r)
-    class(trigger_always) :: t
+    class(trigger_always), target :: t
     logical :: r
     r = t % test_result
   end function test

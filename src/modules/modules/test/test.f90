@@ -6,8 +6,8 @@ module class_module_test
   type, public, extends(module) :: module_test
    contains
      procedure :: start
-     ! procedure :: stop
      procedure :: step
+     procedure :: init
   end type module_test
 
 contains
@@ -21,15 +21,22 @@ contains
     class(module_test) :: this
     logical :: r
     r = .true.
-    print *, "calling ", trim(this % name), " % step()"
+    print *, "   calling ", trim(this % name), " % step()"
+    print *, "   t = ", this % solver_data % t
   end function step
 
-  function init(m) result(r)
-    class(module_test) :: m
+  function init(this) result(r)
+    class(module_test) :: this
     logical :: r
-    r = m % module % init()
-    ! no further initialization needed, this is only a test module
+    r = this % module % init()
 
+    if(r) then
+       if( .not. this % named() ) then
+          this % name = "module_test"
+       end if
+    end if
+
+    ! no further initialization needed, this is only a test module
   end function init
 
 

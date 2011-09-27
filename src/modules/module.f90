@@ -26,6 +26,7 @@ module class_module
      procedure :: try_init
      procedure :: free
      procedure :: add => add_trigger
+     procedure :: named
   end type module
 
   public&
@@ -191,6 +192,7 @@ contains
        r = .true.
        ! if module is not in uninitialized state we leave it alone
     else if( this % init() ) then
+       this % initialized = .true.
        ! m % init() is not evaluated if one of the previous conditions
        ! holds. Also calling m % init() sets m % initialized to .true.
        r = .true.
@@ -231,6 +233,14 @@ contains
     end if
 
   end subroutine add_trigger
+
+  function named( this ) result(r)
+    class(module) :: this
+    logical :: r
+
+    r = ( trim(this % name) == "" )
+  end function named
+
 
   ! end of internal procedures
 

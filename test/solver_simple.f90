@@ -6,6 +6,7 @@ program solver_simple_program
   use class_module
   use class_module_test
   use class_trigger
+  use class_trigger_timed
   use class_trigger_always
 
   use class_solver_data
@@ -14,11 +15,13 @@ program solver_simple_program
   use class_solver_simple_data
 
   class(solver), pointer :: s
+  type(module_test) :: mt
   type(solver_simple_data) :: data
   procedure(interface_rhs), pointer :: rhs
   real, pointer :: y(:)
   real :: pi
   integer :: nx = 41, i
+  logical :: r
 
   data = solver_simple_data( &
        mesh_id = "sfd3pt",   &
@@ -27,6 +30,7 @@ program solver_simple_program
        nf      = 2,          &
        x0      = 0.,         &
        x1      = 1.,         &
+       t0      = .1,         &
        t1      = 1.,         &
        h0      = 1.e-4,      &
        rhs     = rhs)           !what does it mean?
@@ -37,28 +41,29 @@ program solver_simple_program
 
   call s % add(&
        module_test(),&
-       trigger_always(test_result=.true.))
+       trigger_always(test_result=.true.),&
+       trigger_timed(dt = .1))
 
-  call s % modules % info
+  print *, s % name
 
   ! @todo: implement a functional way to give initial data prepare
   ! initial data
-  pi = acos(-1.)
-  s % f(:,1) = sin( s % x * pi )
-  s % f(:,2) = 0.
-  s % f(1,:) = 0.
-  s % f(nx,:) = 0.
+  ! pi = acos(-1.)
+  ! s % f(:,1) = sin( s % x * pi )
+  ! s % f(:,2) = 0.
+  ! s % f(1,:) = 0.
+  ! s % f(nx,:) = 0.
 
 
   ! solve the equation up to time t1
-  call s % solve
+  ! call s % solve
 
-  print *, s%f(:,1)-sin( pi*s%x )*cos(pi*s%t)
-  print *, ""
-  print *, "#l2norm(x_numeric-x_theoretical) = ", &
-       norm2( s%f(:,1)-sin( pi*s%x )*cos(pi*s%t) )/ real(s % nx - 1)
+  ! print *, s%f(:,1)-sin( pi*s%x )*cos(pi*s%t)
+  ! print *, ""
+  ! print *, "#l2norm(x_numeric-x_theoretical) = ", &
+  !      norm2( s%f(:,1)-sin( pi*s%x )*cos(pi*s%t) )/ real(s % nx - 1)
 
-  call s % free
+  ! call s % free
 
 contains
 
