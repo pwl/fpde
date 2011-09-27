@@ -20,7 +20,7 @@ program solver_simple_program
   procedure(interface_rhs), pointer :: rhs
   real, pointer :: y(:)
   real :: pi
-  integer :: nx = 51, i
+  integer :: nx = 101, i
   logical :: r
 
   data = solver_simple_data( &
@@ -31,7 +31,7 @@ program solver_simple_program
        x0      = 0.,         &
        x1      = 1.,         &
        t0      = 0.,         &
-       t1      = 1.,         &
+       t1      = 10.,         &
        h0      = 1.e-4,      &
        rhs     = rhs)           !what does it mean?
   ! @todo any way to squeeze this into initialization expression?
@@ -45,15 +45,15 @@ program solver_simple_program
   !      trigger_timed(dt = .001))
 
   call s % add(&
-       module_print_data( file_name = "data/test" ),&
+       module_print_data( file_name = "data/test", extension = ".dat" ),&
        trigger_timed(dt = .01))
 
   ! @todo: implement a functional way to give initial data prepare
   ! initial data
   ! @todo: or put this to the solver_simple_data
   pi = acos(-1.)
-  s % f(:,1) = 0.
-  s % f(1:nx/4,1) = 1. !sin( s % x * pi )
+  ! s % f(:,1) = 0.
+  s % f(:,1) = sin( s % x * pi )**6
   s % f(:,2) = 0.
   s % f(1,:) = 0.
   s % f(nx,:) = 0.

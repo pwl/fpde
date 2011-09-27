@@ -8,6 +8,7 @@ module class_module_print_data
   type, public, extends(module) :: module_print_data
      ! initialization parameters
      character(len=1000) :: file_name = ""
+     character(len=10)   :: extension = ""
      ! end of initialization parameters
      integer :: file_handle = 0
    contains
@@ -50,10 +51,10 @@ contains
     nf = this % solver_data % nf
 
     ! set a new file name
-    write(file_name, '(a,a,i20.20)')                      &
+    write(file_name, '(a,a,i20.20,a)')       &
          trim(this % file_name),             &
-         "_n=", this % solver_data % n_iter
-         ! "_t=", this % solver_data % t
+         "_n=", this % solver_data % n_iter, &
+         trim(this % extension)
 
     ! @todo write a timestamp
     open(newunit = file_handle,&
