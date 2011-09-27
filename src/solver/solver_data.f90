@@ -11,6 +11,7 @@ module class_solver_data
      integer                           :: nx = 0, nf = 0, rk = 0
      procedure(interface_rhs), pointer :: rhs => null()
      class(*), pointer                 :: params => null()
+     character(len=20)                 :: time_started = ""
      ! solver name
      character(len=30)                 :: name = ""
      ! interface supported by any solver

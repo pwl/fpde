@@ -5,6 +5,7 @@ program solver_simple_program
 
   use class_module
   use class_module_test
+  use class_module_print_data
   use class_trigger
   use class_trigger_timed
   use class_trigger_always
@@ -30,7 +31,7 @@ program solver_simple_program
        x0      = 0.,         &
        x1      = 1.,         &
        t0      = .1,         &
-       t1      = 1.,         &
+       t1      = .2,         &
        h0      = 1.e-4,      &
        rhs     = rhs)           !what does it mean?
   ! @todo any way to squeeze this into initialization expression?
@@ -39,12 +40,13 @@ program solver_simple_program
   s => data % generate_solver()
 
   call s % add(&
-       module_test(),&
+       module_print_data(),&
        trigger_always(test_result=.false.),&
-       trigger_timed(dt = .1))
+       trigger_timed(dt = .05))
 
   ! @todo: implement a functional way to give initial data prepare
   ! initial data
+  ! @todo: or put this to the solver_simple_data
   pi = acos(-1.)
   s % f(:,1) = sin( s % x * pi )
   s % f(:,2) = 0.

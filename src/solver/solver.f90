@@ -38,8 +38,13 @@ contains
 
   subroutine init(s)
     class(solver) :: s
+    character(len=10) :: date, time
+
     allocate( s % modules )
     call s % modules % init
+
+    call date_and_time(date=date, time=time)
+    write(s % time_started, *) trim(date), "-", trim(time)
   end subroutine init
 
   subroutine add_module(s, m, t1, t2, t3)
@@ -47,12 +52,14 @@ contains
     class(module) :: m
     class(trigger), optional :: t1, t2, t3
 
+    ! this has to be done prior to initialization as module%init() may
+    ! need a solver_data structure
+    m % solver_data => s % solver_data
+
     if( m % try_init() ) then
 
        ! module initialized succesfully, adding it to solver.
        call s % modules % add(m)
-       !
-       m % solver_data => s % solver_data
 
        if(present(t1)) then
           call m % add(t1)
