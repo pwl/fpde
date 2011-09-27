@@ -22,6 +22,7 @@ module class_trigger
      procedure :: free
      procedure :: init
      procedure :: try_init
+     procedure :: named
   end type trigger
 
   ! public interface to this module
@@ -260,6 +261,14 @@ contains
   subroutine free(t)
     class(trigger) :: t
   end subroutine free
+
+  function named( this ) result(r)
+    class(trigger) :: this
+    logical :: r
+
+    r = ( trim(this % name) /= "" )
+
+  end function named
 
 
 
