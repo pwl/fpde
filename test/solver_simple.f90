@@ -19,7 +19,7 @@ program solver_simple_program
   type(solver_simple_data) :: data
   procedure(interface_rhs), pointer :: rhs
   real :: pi
-  integer :: nx = 101
+  integer :: nx = 51
 
   data = solver_simple_data( &
        mesh_id = "sfd3pt",   &

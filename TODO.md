@@ -69,3 +69,5 @@ TODO
 - `solver_mmpde6` (would be best to clean up `solver_simple`)
 
 - modify `CMakeList.txt` to copy the scripts to a build location
+
+- `info_module` to print an information on the simulation, steps/s
