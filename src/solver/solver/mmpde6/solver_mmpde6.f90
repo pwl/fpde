@@ -24,9 +24,12 @@ module class_solver_mmpde6
      real, contiguous, pointer :: y(:)
      real, contiguous, pointer :: monitor(:)
      integer :: total_nf
+     ! spacing of the computational mesh
+     real :: h
    contains
      procedure :: set_pointers
      procedure :: g
+     procedure :: calculate_monitor
   end type solver_mmpde6
 
 contains
@@ -46,9 +49,9 @@ contains
     rk = s % rk
     xmin = s % x0
     xmax = s % x1
+    s % h = (s%x1-s%x0)/real(nx-1)
+
     ! total memory is nf + 1 (x(:)) + 1 (monitor(:)) + ... =  nf + 2?
-    total_nf = nf + 2
-    s % total_nf = total_nf
 
     call s % solver % init
 
@@ -66,7 +69,7 @@ contains
 
     ! allocate the memory used to contain all of the sovler data
     ! the last +1 is for the physical time
-    allocate( s % y( nx * total_nf + 1) )
+    allocate( s % y( nx * (nf + 1) + 1) )
 
     ! allocate the memory for computational time
     allocate( s % tau )
@@ -133,20 +136,30 @@ contains
   end subroutine calculate_dfdx
 
 
+  ! dydt's real name should be dydtau, as we calculate here the
+  ! temporal derivative over computational time
   subroutine rhs_for_marcher( t, y, dydt, s, status )
     real, intent(in) :: t       !computational time!
-    real, intent(in) :: y(:)    !input data vector
-    real, intent(out) :: dydt(:) !output data vector
+    real, target, intent(in) :: y(:)    !input data vector
+    real, target, intent(out) :: dydt(:) !output data vector
+    real, pointer    :: m(:), x(:), dxdt(:)
     class(solver_mmpde6) :: s
     integer, optional :: status
-    integer :: nx, nf, i, j
-    real :: g
+    integer :: nx, nf, i
+    real :: g, epsilon, h
 
     nx = s % nx
     nf = s % nf
+    h  = s % h
+
+    ! temporary pointers, introduced for convenience
+    m => s % monitor
+    x => y( nx * nf + 1 : nx * (nf + 1) )
+    dxdt => dydt( nx * nf + 1 : nx * (nf + 1) )
 
     ! initial pointer setup
     call s % set_pointers( t = t, y = y, dydt = dydt )
+
 
     !!!!!!!!!!! calculate d/dt of f and store it in the appropriate
     !!!!!!!!!!! part of dydt
@@ -154,19 +167,45 @@ contains
     ! calling rhs after set_pointers sets a part of dydt (see the
     ! definition of set_pointers)
     call s % rhs
+    ! after calling rhs dydt( 1 : nx * (total_nf - 2)) is set
+
 
     !!!!!!!!!!! now calculate the Sundman transform g()
 
     ! calculate g right after calling s % rhs, order matters
     g = s % g()
 
-    ! proceed to calculating dx/dt
-    ! first calculate the monitor function
+    ! we also set the value of d/datu of t to a trivial 1.
+    dydt( nx*nf + 1 ) = 1.
 
 
-    ! after calling rhs dydt( 1 : nx * (total_nf - 2)) is set, but not
-    ! corrected by g(tau), also s % f(:,:) is set to the appropriate
-    ! values
+    !!!!!!!!!!! proceed to calculating dx/dt
+
+    ! first calculate the values of the monitor function
+    call s % calculate_monitor
+
+    ! than use a symmetric discretization of (m*x_xi)_xi from [Budd and
+    ! Williams 2009]
+    ! the forall loop should run over all d/dt of x(2:nx-1) values
+    ! according to pointer association in set_pointers
+    forall( i = 2 : nx - 1 ) &
+         dxdt( i ) = - 1./epsilon(g)  &
+         * ( ( m(i+1) + m(i) ) * ( x(i+1) - x(i) ) &
+         -   ( m(i) + m(i+1) ) * ( x(i) - x(i-1))) &
+         /(2.*h**2)
+
+    ! @todo calculate the inverse of laplacian in xi coordinates and
+    ! multiply dxdt by it
+
+    ! the boundary conditions for the mesh are
+    dxdt(  1 ) = 0.
+    dxdt( nx ) = 0.
+
+    ! now the whole dydt vector should be set up to the almost
+    ! appropriate values, all is left is to multiply it by the
+    ! dilation g()
+    dydt = g * dydt
+
 
   end subroutine rhs_for_marcher
 
@@ -184,6 +223,15 @@ contains
     g = (abs(u_x_0) + 1.)/(abs(u_tx_0) + 1.)
 
   end function g
+
+  ! this function was found to be giving best results, see Biernat and
+  ! Bizon [2011]
+  real function epsilon(g)
+    real :: g
+    epsilon = 100. * sqrt(g) + .05
+
+  end function epsilon
+
 
   subroutine calculate_monitor(s)
     class(solver_mmpde6) :: s
