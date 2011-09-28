@@ -22,7 +22,7 @@ program solver_simple_program
   integer :: nx = 51
 
   data = solver_simple_data( &
-       mesh_id = "sfd3pt",   &
+       mesh_id = "afd5pt",   &
        stepper_id = "rk4cs",    &
        nx      = nx,         &
        nf      = 2,          &
@@ -42,11 +42,11 @@ program solver_simple_program
   !      trigger_always(test_result=.false.),&
   !      trigger_timed(dt = .001))
 
-  call s % add(&
-       module_print_data( &
-       file_name = "data/test",&
-       extension = ".dat" ),&
-       trigger_timed(dt = .01))
+  call s % add(                   &
+       module_print_data(         &
+       file_name = "data/test",   &
+       extension = ".dat" ),      &
+       trigger_timed( dt = .01 ) )
 
   ! @todo: implement a functional way to give initial data prepare
   ! initial data
@@ -60,11 +60,6 @@ program solver_simple_program
 
   ! solve the equation up to time t1
   call s % solve
-
-  ! print *, s%f(:,1)-sin( pi*s%x )*cos(pi*s%t)
-  ! print *, ""
-  ! print *, "#l2norm(x_numeric-x_theoretical) = ", &
-  !      norm2( s%f(:,1)-sin( pi*s%x )*cos(pi*s%t) )/ real(s % nx - 1)
 
   call s % free
 

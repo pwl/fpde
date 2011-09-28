@@ -8,6 +8,7 @@ module class_solver_data
      real, contiguous, pointer         :: f    (:,:) => null()
      real, contiguous, pointer         :: dfdt (:,:) => null()
      real, contiguous, pointer         :: dfdx (:,:,:) => null()
+     real                              :: x0=0., x1=1.
      integer                           :: nx = 0, nf = 0, rk = 0
      integer                           :: n_iter = 0
      procedure(interface_rhs), pointer :: rhs => null()
