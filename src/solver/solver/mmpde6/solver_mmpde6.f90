@@ -201,6 +201,8 @@ contains
     dxdt(  1 ) = 0.
     dxdt( nx ) = 0.
 
+    ! @todo add -x_t*f_x to the rhs
+
     ! now the whole dydt vector should be set up to the almost
     ! appropriate values, all is left is to multiply it by the
     ! dilation g()
