@@ -71,3 +71,6 @@ TODO
 - modify `CMakeList.txt` to copy the scripts to a build location
 
 - `info_module` to print an information on the simulation, steps/s
+
+- add subroutine `print` to `solver_data` to be used along with
+  `module_data_print`?

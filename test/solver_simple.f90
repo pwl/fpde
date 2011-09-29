@@ -53,8 +53,8 @@ program solver_simple_program
   ! @todo: or put this to the solver_simple_data
   pi = acos(-1.)
   ! s % f(:,1) = 0.
-  s % f(:,1) = sin( s % x * pi )**6
-  s % f(:,2) = 0.
+  s % f(:,1) = sin( 2.* s % x * pi )**6
+  s % f(:,2) = sin( s % x * pi) ** 6
   s % f(1,:) = 0.
   s % f(nx,:) = 0.
 
