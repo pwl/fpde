@@ -6,7 +6,7 @@ program test_inverse_green
   real :: L = 3.
   integer :: i,j
 
-  call discrete_igf(array)
+  call discrete_igf(array,L)
 
   do i = 1, nx
      do j = 1, nx
@@ -14,6 +14,5 @@ program test_inverse_green
      end do
      print *, ""
   end do
-
 
 end program test_inverse_green
