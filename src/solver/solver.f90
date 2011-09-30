@@ -31,6 +31,7 @@ module class_solver
      procedure         :: step
      procedure         :: start
      procedure         :: stop
+     procedure         :: calculate_dfdx
   end type solver
 
   abstract interface
@@ -92,7 +93,9 @@ contains
 
   subroutine step(s)
     class(solver) :: s
-    call s % modules % step
+    if( associated( s % modules ) ) then
+       call s % modules % step
+    end if
   end subroutine step
 
   subroutine solve( s )
@@ -112,13 +115,26 @@ contains
 
   subroutine start(s)
     class(solver) :: s
-    call s % modules % start
+    if( associated( s % modules ) ) then
+       call s % modules % start
+    end if
   end subroutine start
 
   subroutine stop(s)
     class(solver) :: s
-    call s % modules % stop
+    if( associated( s % modules ) ) then
+       call s % modules % stop
+    end if
   end subroutine stop
+
+  subroutine calculate_dfdx(s, i)
+    class(solver) :: s
+    integer :: i
+
+    print *, "solver: mam cie"
+
+  end subroutine calculate_dfdx
+
 
 end module class_solver
 !> @}

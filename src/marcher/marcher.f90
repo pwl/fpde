@@ -70,13 +70,13 @@ contains
 
       ! Sprawdzamy zgodnosc wymiarow marchera oraz steppera
       if ( m % dim /= s % dim ) then
-         m % status = 0 ! status bledu
+         m % status = -1 ! status bledu
          return
       end if
 
       ! Sprawdzamy zgodnosc kierunku calkowania
       if ( (dt<0.0 .and. h0>0.0) .or. (dt>0.0 .and. h0<0.0) ) then
-         m % status = 0 ! status bledu
+         m % status = -2 ! status bledu
          return
       end if
 

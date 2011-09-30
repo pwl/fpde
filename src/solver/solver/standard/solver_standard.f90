@@ -51,7 +51,7 @@ module class_solver_standard
      procedure :: free
      procedure :: info
      procedure :: set_rhs_marcher
-
+     procedure :: calculate_dfdx
   end type solver_standard
 
 contains
@@ -79,6 +79,8 @@ contains
     s % stepper => stepper_new( s % stepper_id )
     if( .not. associated( s % stepper )) then
        print *, s % stepper_id, "is not a valid stepper_id"
+    else
+       call s % stepper % init( ny )
     end if
 
     ! @todo create step_control from step_control_id
@@ -89,7 +91,7 @@ contains
          sys    = s % system,      &
          fun    = s % rhs_marcher, &
          dim    = ny,              &
-         params = s % params )
+         params = s )
 
   end subroutine init
 
@@ -101,8 +103,10 @@ contains
     print *, "========================"
     print *, "--- SOLVER_STANDARD --- "
     print *, "========================"
-    print *, "stepper_id:       ", trim(s % stepper_id)
-    print *, "step_control_id:  ", trim(s % step_control_id)
+    print *, "stepper_id:       ", trim(s % stepper_id),&
+         ",   ready: ", associated(s % stepper)
+    print *, "step_control_id:  ", trim(s % step_control_id), &
+         ",   ready: ", associated(s % step_control)
     print *, "ny:               ", s % ny
     print *, "associated(y(:)): ", associated( s%y )
 
@@ -115,6 +119,15 @@ contains
     deallocate( s % y )
 
   end subroutine free
+
+  subroutine calculate_dfdx(s, i)
+    class(solver_standard) :: s
+    integer :: i
+
+    print *, "solver_standard: mam cie"
+
+  end subroutine calculate_dfdx
+
 
   subroutine set_rhs_marcher( s, rhs )
     class(solver_standard) :: s

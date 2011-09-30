@@ -1,6 +1,7 @@
 module class_solver_mmpde6
 
   use class_solver_standard
+  use class_solver_data
   use class_solver
   use class_mesh
   use class_ode_marcher
@@ -40,14 +41,17 @@ module class_solver_mmpde6
      procedure :: free
   end type solver_mmpde6
 
-  ! public solver_mmpde6_rhs_for_marcher
-
 contains
 
   subroutine init(s)
     class(solver_mmpde6) :: s
     integer :: nx,nf,rk,total_nf
     real :: xmin,xmax
+
+    if( trim(s%name) == "" ) then
+       s % name = "solver_mmpde6"
+    end if
+
 
     if( s % rk > 2) then
        print *, trim(s%name), " this sovler works only for 0 < rk < 2, setting rk = 2"
@@ -106,11 +110,11 @@ contains
     class(solver_mmpde6) :: s
     real, target, optional, intent(in) :: y(:), dydt(:)
     real, target, optional, intent(in) :: t
-    integer :: nx,total_nf,nf,rk
+    integer :: nx,nf,rk
     nx = s % nx
     nf = s % nf
     rk = s % rk
-    total_nf = nf + 2           !total_nf should always be nf+2
+    print *, "set_pointers"
 
     if( present( t ) ) then
        s % tau => t
@@ -121,7 +125,7 @@ contains
        ! f(:, 1:nf) are, as expected functions introduced by user
        s % x( 1 : nx ) => y( nx * nf + 1 : nx * (nf + 1) )
        s % f( 1 : nx, 1 : nf ) => y( 1 : nx * nf )
-       s % t => y( nx * total_nf + 1 )
+       s % t => y( nx * ( nf + 1 ) + 1 )
 
        ! physical mesh differentiates over physical domain
        s % physical % x( 1 : nx ) => y( nx * nf+ 1 : nx * (nf + 1) )
@@ -152,11 +156,13 @@ contains
     integer :: i
     integer :: j
 
+    print *, "calculate_dfdx"
+
     do j = 1, i
        call s % physical % calculate_derivatives( i )
     end do
 
-    end subroutine calculate_dfdx
+  end subroutine calculate_dfdx
 
 
   ! dydt's real name should be dydtau, as we calculate here the
@@ -250,7 +256,6 @@ contains
     ! appropriate values, all is left is to multiply it by the
     ! dilation g()
     dydt = g * dydt
-
 
   end subroutine solver_mmpde6_rhs_for_marcher
 
