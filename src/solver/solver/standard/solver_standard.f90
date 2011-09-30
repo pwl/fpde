@@ -25,11 +25,10 @@ module class_solver_standard
 
      ! initialization data
      character(len=30) :: stepper_id = ""
-     character(len=30) :: marcher_id = ""
      character(len=30) :: step_control_id = ""
      ! this is the length of the vector y(:), should be set only by
      ! classes inheriting from solver_standard
-     integer, private :: ny = 0
+     integer :: ny = 0
      ! @todo rhs_for_marcher should be deleted from solver_data and
      ! considered as depreciatede
      procedure(fun_interface), pointer, private, nopass :: rhs_marcher => null()
@@ -53,17 +52,6 @@ module class_solver_standard
 
   end type solver_standard
 
-  ! abstract interface
-  !    subroutine interface_rhs_for_marcher( t, y, dydt, s, status )
-  !      import :: solver_standard
-  !      real, intent(in) :: t
-  !      real, intent(in) :: y(:)
-  !      real, intent(out) :: dydt(:)
-  !      class(solver_standard) :: s
-  !      integer, optional :: status
-  !    end subroutine interface_rhs_for_marcher
-  ! end interface
-
 contains
 
   subroutine init( s )
@@ -71,6 +59,12 @@ contains
     integer :: ny
 
     ny = s % ny
+
+    if( ny == 0 ) then
+       ! @todo report error
+       print *, "ERROR: solver_standard: ny = 0"
+    end if
+
 
     ! allocate the memory used to contain all of the sovler data
     allocate( s % y( ny ) )

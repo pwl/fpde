@@ -14,7 +14,7 @@ module class_solver_mmpde6
 
   private
 
-  type, public, extends(solver) :: solver_mmpde6
+  type, public, extends(solver_standard) :: solver_mmpde6
      ! initialization parameters
      ! end of initialization parameters
      real, pointer :: tau
@@ -22,8 +22,6 @@ module class_solver_mmpde6
      class(mesh), pointer :: physical
      ! physical2 mesh is used to calculate d/dx of d/dt of f(:,:)
      class(mesh), pointer :: physical2
-     ! all the data goes into various sectors of this vector
-     real, contiguous, pointer :: y(:)
      real, contiguous, pointer :: monitor(:)
      ! greens function for -D^2 ( so that G is positive definite )
      real, contiguous, pointer :: greens(:,:)
@@ -32,20 +30,13 @@ module class_solver_mmpde6
      real :: h
      real, contiguous, pointer :: temporary(:)
 
-     ! marcher data
-     character(len=30) :: stepper_id = ""
-     character(len=30) :: marcher_id = ""
-     character(len=30) :: step_control_id = ""
-     class(ode_stepper), pointer :: stepper
-     class(*), pointer :: data
-     class(ode_system), pointer :: system
-     class(ode_marcher), pointer :: marcher
-     class(ode_step_control), pointer :: step_control
    contains
      procedure :: set_pointers
      procedure :: g
      procedure :: calculate_monitor
   end type solver_mmpde6
+
+  public solver_mmpde6_rhs_for_marcher
 
 contains
 
@@ -66,7 +57,12 @@ contains
     xmax = s % x1
     s % h = (s%x1-s%x0)/real(nx-1)
 
-    call s % solver % init
+    ! the length of the y(:) vector, used to initialize
+    ! sovler_standard
+    s % ny =  nx * (nf + 1) + 1
+    s % rhs_marcher => solver_mmpde6_rhs_for_marcher
+
+    call s % solver_standard % init
 
     s % physical => mesh_new("afd5pt")
     s % physical2 => mesh_new("afd5pt")
@@ -79,10 +75,6 @@ contains
     ! the dilation transform described by g(). It is required to
     ! calculate only the first spatial derivative at most
     call s % physical2 % init( nx, nf, 1, xmin, xmax)
-
-    ! allocate the memory used to contain all of the sovler data
-    ! the last +1 is for the physical time
-    allocate( s % y( nx * (nf + 1) + 1) )
 
     ! allocate the memory for computational time
     allocate( s % tau )
@@ -165,7 +157,7 @@ contains
 
   ! dydt's real name should be dydtau, as we calculate here the
   ! temporal derivative over computational time
-  subroutine rhs_for_marcher( t, y, dydt, s, status )
+  subroutine solver_mmpde6_rhs_for_marcher( t, y, dydt, s, status )
     real, intent(in) :: t       !computational time!
     real, target, intent(in) :: y(:)    !input data vector
     real, target, intent(out) :: dydt(:) !output data vector
@@ -256,7 +248,7 @@ contains
     dydt = g * dydt
 
 
-  end subroutine rhs_for_marcher
+  end subroutine solver_mmpde6_rhs_for_marcher
 
 
   real function g(s)
@@ -338,6 +330,8 @@ contains
   subroutine free( s )
     class(solver_mmpde6) :: s
 
+    call s % solver_standard % free
+
     ! the pointer in the argument below is moved around pretty much
     ! during execution of solve() and should be nullified in order not
     ! to point at some yet to be freed memory area
@@ -346,7 +340,7 @@ contains
     call s % marcher % free
 
     ! @bug not all of the arrays are freed
-    deallocate( s % system, s % t, s % dfdt, s % y )
+    ! deallocate( s % system, s % t, s % dfdt, s % y )
     ! deallocate( s % system, s % t, s % dfdt )
 
   end subroutine free
