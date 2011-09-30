@@ -24,7 +24,7 @@ module class_b
   use class_a
   type :: b
      ! @bug: if `type` is changed to `class` the error occurs
-     type(a), pointer :: ap
+     class(a), pointer :: ap
   end type b
 end module class_b
 

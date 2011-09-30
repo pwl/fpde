@@ -93,7 +93,7 @@ contains
       ! pochodne na wejsciu
       ! @todo narazie zakladam ze jezel s % can_use_dydt_in == .true.
       ! to pochodne musza zostac podane na wejsciu
-      if ( s % can_use_dydt_in == .true. ) then
+      if ( s % can_use_dydt_in ) then
          ! wykorzystujemy juz wyliczone pochodne,
          ! kopiujemy je do s%k1
          s % k1 = dydt_in
@@ -160,7 +160,7 @@ contains
 
       ! @todo narazie zakladam ze jezel s % gives_exact_dydt_out == .true.
       ! to pochodne musza zostac podane na wejsciu
-      if ( s % gives_exact_dydt_out == .true. ) then
+      if ( s % gives_exact_dydt_out ) then
          ! wyliczamy pochodne
          call sys % fun( t+h, y, dydt_out, sys % params, sys % status )
          if ( sys % status /= 1 ) then
