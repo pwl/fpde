@@ -21,7 +21,6 @@ module class_solver_simple
   private
 
   type, public, extends(solver) :: solver_simple
-     real :: t1
      real :: h
      ! y(:) holds data used in mesh in a format compatible with
      ! rhs_for_marcher

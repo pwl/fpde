@@ -98,12 +98,12 @@ contains
   end subroutine free
 
 
-  ! calculates k-th derivative of j-th function at i-th point
-  function derivative( m, i, j, k )
+  ! calculates i-th derivative of j-th function at k-th point
+  function derivative( m, k, j, i ) result(d)
     class(mesh), intent(inout) :: m
     integer, intent(in) :: i,j,k
-    real :: derivative
-    derivative = 0
+    real :: d
+    d = 0.
 
     stop 'method "derivative" is not overloaded'
 

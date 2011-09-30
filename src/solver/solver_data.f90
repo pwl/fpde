@@ -4,6 +4,7 @@ module class_solver_data
 
   type, public :: solver_data
      real, pointer                     :: t => null()
+     real                              :: t0,t1
      real, contiguous, pointer         :: x    (:) => null()
      real, contiguous, pointer         :: f    (:,:) => null()
      real, contiguous, pointer         :: dfdt (:,:) => null()

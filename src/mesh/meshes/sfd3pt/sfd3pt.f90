@@ -33,17 +33,17 @@ contains
 
   end subroutine init
 
-  function derivative( m, i, j, k )
+  function derivative( m, k, j, i ) result(d)
     class(mesh_sfd3pt), intent(inout) :: m
     integer, intent(in) :: i,j,k
-    real :: derivative
+    real :: d
 
-    if( .not. m%check_derivatives(i) ) then
+    if( .not. m%check_derivatives(k) ) then
        return
     end if
 
     call m % calculate_derivatives( k )
-    derivative = m % df( i, j, k )
+    d = m % df( k, j, i )
 
   end function derivative
 

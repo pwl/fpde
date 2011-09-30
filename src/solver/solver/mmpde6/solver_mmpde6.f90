@@ -5,6 +5,7 @@ module class_solver_mmpde6
   use class_ode_marcher
   use class_ode_stepper
   use class_ode_system
+  use class_ode_step_control
 
   use mesh_factory
 
@@ -29,6 +30,16 @@ module class_solver_mmpde6
      ! spacing of the computational mesh
      real :: h
      real, contiguous, pointer :: temporary(:)
+
+     ! marcher data
+     character(len=30) :: stepper_id = ""
+     character(len=30) :: marcher_id = ""
+     character(len=30) :: step_control_id = ""
+     class(ode_stepper), pointer :: stepper
+     class(*), pointer :: data
+     class(ode_system), pointer :: system
+     class(ode_marcher), pointer :: marcher
+     class(ode_step_control), pointer :: step_control
    contains
      procedure :: set_pointers
      procedure :: g
@@ -280,6 +291,67 @@ contains
     s % monitor(:) = abs(dxdxi(:,1,1)) + sqrt(abs(dxdxi(:,1,2)))
 
   end subroutine calculate_monitor
+
+
+  subroutine solve( s )
+    class(solver_mmpde6) :: s
+
+    call s % start
+
+    do while( s%t < s%t1 )
+       ! do while( i < 3 )
+       call s % marcher % apply( &
+            s   = s % stepper,   &
+            sys = s % system,    &
+            t   = s % t,         &
+            t1  = s % t1,        &
+            h   = s % h,         &
+            y   = s % y )
+       ! @todo: neater error handling
+
+       if ( s % marcher % status /= 1 ) then
+          print *, "marcher error, status=",  s % marcher % status
+          ! @todo change exit to an error report
+          exit
+       else
+
+          ! increment the iteration number
+          s % n_iter = s % n_iter + 1
+
+          ! sync pointers first
+          call s % set_pointers
+
+          ! @todo: extra calculation, probably not needed
+          call s % rhs
+
+          call s % step
+       endif
+    end do
+
+    call s % stop
+
+  end subroutine solve
+
+
+  ! @todo better free for solver_mmpde6
+  subroutine free( s )
+    class(solver_mmpde6) :: s
+
+    ! the pointer in the argument below is moved around pretty much
+    ! during execution of solve() and should be nullified in order not
+    ! to point at some yet to be freed memory area
+    call s % physical % free
+    call s % stepper % free
+    call s % marcher % free
+
+    ! @bug not all of the arrays are freed
+    deallocate( s % system, s % t, s % dfdt, s % y )
+    ! deallocate( s % system, s % t, s % dfdt )
+
+  end subroutine free
+
+
+
 
 
 end module class_solver_mmpde6
