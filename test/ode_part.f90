@@ -10,29 +10,15 @@
 ! powyzsze warunki poczatkowe ma postac:
 ! y[t]=(b + a Cos[Sqrt[a] t] - b Cos[Sqrt[a] t])/a
 
-! program test_epsilon
-!    real, parameter :: eps=epsilon(0.0)
-!    real :: y(3)=(/1.0,eps,2.0/)
-!    ! eps = epsilon(eps)
-!    print *, eps
-!    print *, abs(-1.2)
-
-!    print *, minval(y)
-
-! end program test_epsilon
 
 program ode_system_test
 
    ! Dolaczamy niezbedne moduly/klasy
    use class_ode_system
-
    use class_ode_marcher
-   use class_ode_stepper_rk4cs
-   use class_ode_stepper_rkf45
-   use class_ode_stepper_rkm43
-   use class_ode_stepper_rkpd54
-   use class_ode_step_control_standard
-   use class_ode_step_control_sty
+   ! Fabryki
+   use stepper_factory
+   use control_factory
 
    integer :: dim = 2
    real :: t=0.0, t1=10.0
@@ -42,9 +28,10 @@ program ode_system_test
    real :: a=1.1, b=0.2
 
    type(ode_system) :: myode
-   type(ode_stepper_rkpd54) :: mystepper
    type(ode_marcher) :: mymarcher
-   type(ode_step_control_standard) :: mycontrol
+ 
+   class(ode_stepper), pointer :: mystepper
+   class(ode_step_control), pointer :: mycontrol
 
    ! parametry rownania
    type :: paramsab
@@ -56,6 +43,9 @@ program ode_system_test
    ! inicjalizujemy parametry
    myparams % a = a
    myparams % b = b
+
+   mystepper => stepper_new( "rk4cs" )
+   mycontrol => control_new( "standard" )
 
    ! alokowanie wektora poczatkowego
    allocate(y(2))

@@ -29,7 +29,7 @@ contains
       integer, intent(in), optional :: dim
    end subroutine init
 
-   subroutine apply( c, s, y, yerr, dydt, h)
+   subroutine apply( c, s, y, yerr, dydt, h )
       class(ode_step_control), intent(inout) :: c
       class(ode_stepper), intent(in) :: s
       real, intent(in) :: y(:)
@@ -108,9 +108,8 @@ end module class_ode_step_control
 !
 ! standard
 ! scaled
-! sty    - standard z parametrami a_y=1.0, a_dydt=0.0
-! stdydt - standard z parametrami a_y=0.0, a_dydt=1.0
-
+! standard_y    - standard z parametrami a_y=1.0, a_dydt=0.0
+! standard_dydt - standard z parametrami a_y=0.0, a_dydt=1.0
 
 
 
@@ -255,29 +254,29 @@ end module class_ode_step_control_scaled
 
 
 
-! sty - standard z parametrami a_y=1.0, a_dydt=0.0
+! standard_y - standard z parametrami a_y=1.0, a_dydt=0.0
 ! funkcja bledu:
 !   eps_abs + eps_rel * abs(yi)
 !
 ! gdzie parametrami sa: eps_abs, eps_rel
 !
-module class_ode_step_control_sty
+module class_ode_step_control_standard_y
 
    use class_ode_stepper
    use class_ode_step_control
    
    private
 
-   type, public, extends( ode_step_control ) :: ode_step_control_sty
+   type, public, extends( ode_step_control ) :: ode_step_control_standard_y
    contains
       procedure :: init
       procedure :: error_fnc
-   end type ode_step_control_sty
+   end type ode_step_control_standard_y
 
 contains
    
    subroutine init ( c, eps_abs, eps_rel, a_y, a_dydt, scale_abs, dim )
-      class(ode_step_control_sty), intent(inout) :: c
+      class(ode_step_control_standard_y), intent(inout) :: c
       real, intent(in) :: eps_abs, eps_rel
       real, intent(in), optional :: a_y, a_dydt
       real, intent(in), optional :: scale_abs
@@ -292,7 +291,7 @@ contains
       c % eps_rel = eps_rel
       c % a_y = 1.0
       c % a_dydt = 0.0
-      c % name = "sty"
+      c % name = "standard_y"
 
       c % status = 0 !@todo co zrobic ze statusem step controlera
       ! zastanawiam sie czy jest on potrzebny, narazie domyslnie
@@ -301,7 +300,7 @@ contains
    end subroutine init
 
    subroutine error_fnc( c, i, yi, dydti, h, err )
-      class(ode_step_control_sty), intent(inout) :: c
+      class(ode_step_control_standard_y), intent(inout) :: c
       integer, intent(in) :: i
       real, intent(in) :: yi
       real, intent(in) :: dydti
@@ -312,33 +311,33 @@ contains
 
    end subroutine error_fnc
 
-end module class_ode_step_control_sty
+end module class_ode_step_control_standard_y
 
 
 
-! stdydt - standard z parametrami a_y=0.0, a_dydt=1.0
+! standard_dydt - standard z parametrami a_y=0.0, a_dydt=1.0
 ! funkcja bledu:
 !   eps_abs + eps_rel * a_dydt * abs( h * dydti )
 !
 ! gdzie parametrami sa: eps_abs, eps_rel
 !
-module class_ode_step_control_stdydt
+module class_ode_step_control_standard_dydt
 
    use class_ode_stepper
    use class_ode_step_control
    
    private
 
-   type, public, extends( ode_step_control ) :: ode_step_control_stdydt
+   type, public, extends( ode_step_control ) :: ode_step_control_standard_dydt
    contains
       procedure :: init
       procedure :: error_fnc
-   end type ode_step_control_stdydt
+   end type ode_step_control_standard_dydt
 
 contains
    
    subroutine init ( c, eps_abs, eps_rel, a_y, a_dydt, scale_abs, dim )
-      class(ode_step_control_stdydt), intent(inout) :: c
+      class(ode_step_control_standard_dydt), intent(inout) :: c
       real, intent(in) :: eps_abs, eps_rel
       real, intent(in), optional :: a_y, a_dydt
       real, intent(in), optional :: scale_abs
@@ -353,7 +352,7 @@ contains
       c % eps_rel = eps_rel
       c % a_y = 0.0
       c % a_dydt = 1.0
-      c % name = "stdydt"
+      c % name = "standard_dydt"
 
       c % status = 0 !@todo co zrobic ze statusem step controlera
       ! zastanawiam sie czy jest on potrzebny, narazie domyslnie
@@ -362,7 +361,7 @@ contains
    end subroutine init
 
    subroutine error_fnc( c, i, yi, dydti, h, err )
-      class(ode_step_control_stdydt), intent(inout) :: c
+      class(ode_step_control_standard_dydt), intent(inout) :: c
       integer, intent(in) :: i
       real, intent(in) :: yi
       real, intent(in) :: dydti
@@ -373,4 +372,4 @@ contains
 
    end subroutine error_fnc
 
-end module class_ode_step_control_stdydt
+end module class_ode_step_control_standard_dydt

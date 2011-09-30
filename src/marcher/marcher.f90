@@ -84,12 +84,12 @@ contains
       ! wylicza blad kroku oraz zostala podana metoda kontrolujaca
       ! krok to wykonujemy kopie wejsciowego wektora y do struktury
       ! matchera m % y0
-      if ( s % gives_estimated_yerr == .true. .and. present( c ) ) then
+      if ( s % gives_estimated_yerr .and. present( c ) ) then
          m % y0 = y
       end if
 
       ! Wyliczamy pochodne jezeli metoda moze z nich skorzystac
-      if ( s % can_use_dydt_in == .true. ) then
+      if ( s % can_use_dydt_in ) then
          call sys % fun( t, y, m % dydt_in, sys % params, sys % status )
          if ( sys % status /= 1 ) then
             m % status = sys % status
@@ -109,7 +109,7 @@ contains
       end if
 
       ! Uruchamiamy stepper z uzyciem dydt_in
-      if ( s % can_use_dydt_in == .true. ) then
+      if ( s % can_use_dydt_in ) then
          ! Kopiujemy wektor y na wypadek wystapienia bledu
          m % y0 = y
          call s % apply( s % dim, t0, h0, y, m % yerr, m % dydt_in, m % dydt_out, sys, s % status )
@@ -145,7 +145,7 @@ contains
 
       ! Jezeli metoda na to pozwala oraz zostal podany step control
       ! uzywamy metody z adaptywnym krokiem
-      if ( s % gives_estimated_yerr == .true. .and. present( c ) ) then
+      if ( s % gives_estimated_yerr .and. present( c ) ) then
          ! present( c ) zwraca .true. jesli zostal podany step control
          h_old = h0 ! zapamietujemy wielkosc kroku
          call c % apply ( s, y, m % yerr, m % dydt_out, h0 )
