@@ -1,8 +1,9 @@
-module utils_inverse_greens
+module utils_greens
 
 contains
 
-  subroutine discrete_igf(array, L)
+  ! calculates the discrete greens function for -D^2
+  subroutine discrete_greens(array, L)
     real, intent(out) :: array(:,:)
     real, intent(in)  :: L
     integer :: nx, i, j
@@ -19,7 +20,7 @@ contains
        end forall
     end forall
 
-  end subroutine discrete_igf
+  end subroutine discrete_greens
 
 
-end module utils_inverse_greens
+end module utils_greens

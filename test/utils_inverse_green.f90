@@ -1,12 +1,12 @@
 program test_inverse_green
-  use utils_inverse_greens
+  use utils_greens
 
   integer, parameter :: nx = 30
   real :: array(nx,nx)
   real :: L = 3.
   integer :: i,j
 
-  call discrete_igf(array,L)
+  call discrete_greens(array,L)
 
   do i = 1, nx
      do j = 1, nx

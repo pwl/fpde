@@ -8,6 +8,8 @@ module class_solver_mmpde6
 
   use mesh_factory
 
+  use utils_greens
+
   private
 
   type, public, extends(solver) :: solver_mmpde6
@@ -23,6 +25,8 @@ module class_solver_mmpde6
      ! all the data goes into various sectors of this vector
      real, contiguous, pointer :: y(:)
      real, contiguous, pointer :: monitor(:)
+     ! greens function for -D^2 ( so that G is positive definite )
+     real, contiguous, pointer :: greens(:,:)
      integer :: total_nf
      ! spacing of the computational mesh
      real :: h
@@ -51,8 +55,6 @@ contains
     xmax = s % x1
     s % h = (s%x1-s%x0)/real(nx-1)
 
-    ! total memory is nf + 1 (x(:)) + 1 (monitor(:)) + ... =  nf + 2?
-
     call s % solver % init
 
     s % physical => mesh_new("afd5pt")
@@ -77,6 +79,13 @@ contains
     ! deallocate the memory allocated by meshes
     deallocate( s%physical%f,  s%physical%x )
     deallocate( s%physical2%f, s%physical2%x )
+
+    ! allocate memory for monitor(:)
+    allocate( s % monitor( nx ) )
+
+    ! allocate and calculate the greens function
+    allocate( s % greens( nx, nx ) )
+    call discrete_greens( s % greens, xmax - xmin )
 
     ! set the appropriate interface pointers to current values
     call s % set_pointers( y = s % y )
@@ -197,11 +206,14 @@ contains
     ! @todo calculate the inverse of laplacian in xi coordinates and
     ! multiply dxdt by it
 
-    ! the boundary conditions for the mesh are
+    ! the boundary conditions for the mesh are (theese are imposed by
+    ! greens function multiplication above, but we emphasize them
+    ! here)
     dxdt(  1 ) = 0.
     dxdt( nx ) = 0.
 
     ! @todo add -x_t*f_x to the rhs
+
 
     ! now the whole dydt vector should be set up to the almost
     ! appropriate values, all is left is to multiply it by the
