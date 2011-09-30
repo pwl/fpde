@@ -4,7 +4,7 @@ module class_solver_data
 
   type, public :: solver_data
      real, pointer                     :: t => null()
-     real                              :: t0,t1
+     real                              :: t0 = 0.,t1 = 0.
      real, contiguous, pointer         :: x    (:) => null()
      real, contiguous, pointer         :: f    (:,:) => null()
      real, contiguous, pointer         :: dfdt (:,:) => null()
@@ -12,7 +12,6 @@ module class_solver_data
      real                              :: x0=0., x1=1.
      integer                           :: nx = 0, nf = 0, rk = 0
      integer                           :: n_iter = 0
-     procedure(interface_rhs), pointer :: rhs => null()
      class(*), pointer                 :: params => null()
      character(len=20)                 :: time_started = ""
      ! solver name
@@ -24,17 +23,10 @@ module class_solver_data
      procedure                         :: pointwise_dfdx
      ! @todo why rhs_for_marcher is here anyway? It is a public
      ! function and it isn't needed as a method
-     procedure, nopass                 :: rhs_for_marcher
+     ! procedure, nopass                 :: rhs_for_marcher
   end type solver_data
 
- abstract interface
-     subroutine interface_rhs( s )
-       import :: solver_data
-       class(solver_data) :: s
-     end subroutine interface_rhs
-  end interface
-
-    public :: interface_rhs, rhs_for_marcher
+    ! public :: rhs_for_marcher
 
 contains
 
@@ -56,37 +48,37 @@ contains
   end function pointwise_dfdx
 
 
-  ! this is a default wrapper for solver%rhs to work with marcher
-  ! architecture. It should do the right thing for a simple solver,
-  ! but should be rewritten in a more sophisticated solver
-  ! implementation
-  subroutine rhs_for_marcher( t, y, dydt, s, status )
-    real, intent(in) :: t
-    real, intent(in) :: y(:)
-    real, intent(out) :: dydt(:)
-    class(solver_data) :: s
-    integer, optional :: status
-    integer :: nx, nf, i, j
+  ! ! this is a default wrapper for solver%rhs to work with marcher
+  ! ! architecture. It should do the right thing for a simple solver,
+  ! ! but should be rewritten in a more sophisticated solver
+  ! ! implementation
+  ! subroutine rhs_for_marcher( t, y, dydt, s, status )
+  !   real, intent(in) :: t
+  !   real, intent(in) :: y(:)
+  !   real, intent(out) :: dydt(:)
+  !   class(solver_data) :: s
+  !   integer, optional :: status
+  !   integer :: nx, nf, i, j
 
-    nx = s % nx
-    nf = s % nf
+  !   nx = s % nx
+  !   nf = s % nf
 
-    s % f = reshape( y, [ nx,nf ] )
-    s % t = t
-    ! s % y is a one dimensional view of s % f, so this assignment
-    ! changes s % f
-    ! s % y = y
+  !   s % f = reshape( y, [ nx,nf ] )
+  !   s % t = t
+  !   ! s % y is a one dimensional view of s % f, so this assignment
+  !   ! changes s % f
+  !   ! s % y = y
 
-    ! calculate rhs (with s % f obtained from y)
-    call s % rhs
+  !   ! calculate rhs (with s % f obtained from y)
+  !   call s % rhs
 
-    if( present(status) ) then
-       status = s % rhs_status
-    end if
+  !   if( present(status) ) then
+  !      status = s % rhs_status
+  !   end if
 
-    dydt = reshape( s%dfdt, [nx*nf] )
+  !   dydt = reshape( s%dfdt, [nx*nf] )
 
-  end subroutine rhs_for_marcher
+  ! end subroutine rhs_for_marcher
 
 
 

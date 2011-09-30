@@ -20,7 +20,8 @@ module class_solver
 
 
   type, public, extends(solver_data) :: solver
-     class(module_bundle), pointer :: modules
+     class(module_bundle), pointer :: modules => null()
+     procedure(interface_rhs), pointer :: rhs => null()
    contains
      procedure         :: info
      procedure         :: free
@@ -31,6 +32,15 @@ module class_solver
      procedure         :: start
      procedure         :: stop
   end type solver
+
+  abstract interface
+     subroutine interface_rhs( s )
+       import :: solver
+       class(solver) :: s
+     end subroutine interface_rhs
+  end interface
+
+ public interface_rhs
 
   ! interface to rhs should be publicly available to all child classes
 

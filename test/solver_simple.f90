@@ -66,7 +66,7 @@ program solver_simple_program
 contains
 
   subroutine my_rhs( s )
-    class(solver_data) :: s
+    class(solver) :: s
     integer :: i
 
     call s % calculate_dfdx( 2 )

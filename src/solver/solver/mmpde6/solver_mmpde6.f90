@@ -17,26 +17,30 @@ module class_solver_mmpde6
   type, public, extends(solver_standard) :: solver_mmpde6
      ! initialization parameters
      ! end of initialization parameters
-     real, pointer :: tau
+     real, pointer :: tau => null()
      ! physical mesh is used to calculate d/dx of f(:,:)
-     class(mesh), pointer :: physical
+     class(mesh), pointer :: physical => null()
      ! physical2 mesh is used to calculate d/dx of d/dt of f(:,:)
-     class(mesh), pointer :: physical2
-     real, contiguous, pointer :: monitor(:)
+     class(mesh), pointer :: physical2 => null()
+     real, contiguous, pointer :: monitor(:) => null()
      ! greens function for -D^2 ( so that G is positive definite )
-     real, contiguous, pointer :: greens(:,:)
+     real, contiguous, pointer :: greens(:,:) => null()
      ! integer :: total_nf
      ! spacing of the computational mesh
-     real :: h
-     real, contiguous, pointer :: temporary(:)
+     real :: h = 0.
+     real, contiguous, pointer :: temporary(:) => null()
 
    contains
      procedure :: set_pointers
      procedure :: g
      procedure :: calculate_monitor
+     procedure :: init
+     procedure :: calculate_dfdx
+     procedure :: solve
+     procedure :: free
   end type solver_mmpde6
 
-  public solver_mmpde6_rhs_for_marcher
+  ! public solver_mmpde6_rhs_for_marcher
 
 contains
 
@@ -60,7 +64,7 @@ contains
     ! the length of the y(:) vector, used to initialize
     ! sovler_standard
     s % ny =  nx * (nf + 1) + 1
-    s % rhs_marcher => solver_mmpde6_rhs_for_marcher
+    call s % set_rhs_marcher( solver_mmpde6_rhs_for_marcher )
 
     call s % solver_standard % init
 
@@ -159,8 +163,8 @@ contains
   ! temporal derivative over computational time
   subroutine solver_mmpde6_rhs_for_marcher( t, y, dydt, s, status )
     real, intent(in) :: t       !computational time!
-    real, target, intent(in) :: y(:)    !input data vector
-    real, target, intent(out) :: dydt(:) !output data vector
+    real, pointer, intent(in) :: y(:)    !input data vector
+    real, pointer, intent(out) :: dydt(:) !output data vector
     real, pointer    :: m(:), x(:), dxdt(:), dxdt_tmp(:), greens(:,:)
     real, pointer    :: dfdt(:,:), dfdx(:,:,:)
     class(solver_mmpde6) :: s
@@ -298,7 +302,7 @@ contains
             sys = s % system,    &
             t   = s % t,         &
             t1  = s % t1,        &
-            h   = s % h,         &
+            h   = s % dt,         &
             y   = s % y )
        ! @todo: neater error handling
 

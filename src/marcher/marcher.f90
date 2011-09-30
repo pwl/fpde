@@ -53,7 +53,7 @@ contains
       real, intent(inout) :: t
       real, intent(in) :: t1
       real, intent(inout) :: h
-      real, pointer, contiguous, intent(inout) :: y(:)
+      real, pointer, intent(inout) :: y(:)
 
       logical :: final_step
       integer :: step_status

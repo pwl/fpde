@@ -40,7 +40,7 @@ contains
       procedure(fun_interface), pointer, intent(in) :: fun
       procedure(jac_interface), pointer, intent(in), optional :: jac
       integer :: dim
-      class (*),target :: params
+      class (*), target :: params
 
       type(ode_system) :: sys
 
