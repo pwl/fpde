@@ -16,8 +16,6 @@ module class_solver_mmpde6
      ! initialization parameters
      ! end of initialization parameters
      real, pointer :: tau
-     ! positions of mesh points in the computational space
-     real, contiguous, pointer :: xi(:)
      ! physical mesh is used to calculate d/dx of f(:,:)
      class(mesh), pointer :: physical
      ! physical2 mesh is used to calculate d/dx of d/dt of f(:,:)
@@ -30,6 +28,7 @@ module class_solver_mmpde6
      integer :: total_nf
      ! spacing of the computational mesh
      real :: h
+     real, contiguous, pointer :: temporary(:)
    contains
      procedure :: set_pointers
      procedure :: g
@@ -82,6 +81,9 @@ contains
 
     ! allocate memory for monitor(:)
     allocate( s % monitor( nx ) )
+
+    ! allocate temporary table
+    allocate( s % temporary( nx ) )
 
     ! allocate and calculate the greens function
     allocate( s % greens( nx, nx ) )
@@ -140,9 +142,13 @@ contains
   subroutine calculate_dfdx( s, i )
     class(solver_mmpde6) :: s
     integer :: i
+    integer :: j
 
+    do j = 1, i
+       call s % physical % calculate_derivatives( i )
+    end do
 
-  end subroutine calculate_dfdx
+    end subroutine calculate_dfdx
 
 
   ! dydt's real name should be dydtau, as we calculate here the
@@ -151,23 +157,33 @@ contains
     real, intent(in) :: t       !computational time!
     real, target, intent(in) :: y(:)    !input data vector
     real, target, intent(out) :: dydt(:) !output data vector
-    real, pointer    :: m(:), x(:), dxdt(:)
+    real, pointer    :: m(:), x(:), dxdt(:), dxdt_tmp(:), greens(:,:)
+    real, pointer    :: dfdt(:,:), dfdx(:,:,:)
     class(solver_mmpde6) :: s
     integer, optional :: status
-    integer :: nx, nf, i
+    integer :: nx, nf, i, j
     real :: g, epsilon, h
 
     nx = s % nx
     nf = s % nf
     h  = s % h
 
+    ! initial pointer setup
+    call s % set_pointers( t = t, y = y, dydt = dydt )
+
     ! temporary pointers, introduced for convenience
     m => s % monitor
     x => y( nx * nf + 1 : nx * (nf + 1) )
     dxdt => dydt( nx * nf + 1 : nx * (nf + 1) )
+    dxdt_tmp => s % temporary
+    greens => s % greens
+    dfdt => s % dfdt
+    dfdx => s % dfdx
 
-    ! initial pointer setup
-    call s % set_pointers( t = t, y = y, dydt = dydt )
+    ! after setting pointers we calculate the required spatial
+    ! derivatives
+
+    call s % calculate_dfdx( s % rk )
 
 
     !!!!!!!!!!! calculate d/dt of f and store it in the appropriate
@@ -203,8 +219,12 @@ contains
          -   ( m(i) + m(i+1) ) * ( x(i) - x(i-1))) &
          /(2.*h**2)
 
-    ! @todo calculate the inverse of laplacian in xi coordinates and
-    ! multiply dxdt by it
+    ! multiply the dxdt by the greens function
+    dxdt_tmp = 0.
+
+    forall( i = 1 : nx )
+       dxdt_tmp(i) = dxdt_tmp(i) + sum(dxdt(:)*greens(i,:))
+    end forall
 
     ! the boundary conditions for the mesh are (theese are imposed by
     ! greens function multiplication above, but we emphasize them
@@ -213,6 +233,9 @@ contains
     dxdt( nx ) = 0.
 
     ! @todo add -x_t*f_x to the rhs
+    forall( i = 1 : nf )
+       dfdt(:,i) = dfdt(:,i) - dxdt(:) * dfdx(:,i,1)
+    end forall
 
 
     ! now the whole dydt vector should be set up to the almost
