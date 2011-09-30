@@ -1,5 +1,6 @@
 module class_solver_mmpde6
 
+  use class_solver_standard
   use class_solver
   use class_mesh
   use class_ode_marcher
@@ -26,7 +27,7 @@ module class_solver_mmpde6
      real, contiguous, pointer :: monitor(:)
      ! greens function for -D^2 ( so that G is positive definite )
      real, contiguous, pointer :: greens(:,:)
-     integer :: total_nf
+     ! integer :: total_nf
      ! spacing of the computational mesh
      real :: h
      real, contiguous, pointer :: temporary(:)
