@@ -48,7 +48,7 @@ module class_solver
 contains
 
   subroutine init(s)
-    class(solver) :: s
+    class(solver), target :: s
     character(len=10) :: date, time
 
     allocate( s % modules )

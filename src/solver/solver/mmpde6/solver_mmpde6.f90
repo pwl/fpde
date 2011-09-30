@@ -44,7 +44,7 @@ module class_solver_mmpde6
 contains
 
   subroutine init(s)
-    class(solver_mmpde6) :: s
+    class(solver_mmpde6), target :: s
     integer :: nx,nf,rk,total_nf
     real :: xmin,xmax
 
@@ -156,7 +156,7 @@ contains
     integer :: i
     integer :: j
 
-    print *, "calculate_dfdx"
+    print *, "solver_mmpde6: calculate_dfdx"
 
     do j = 1, i
        call s % physical % calculate_derivatives( i )
@@ -178,6 +178,7 @@ contains
     integer :: nx, nf, i, j
     real :: g, epsilon, h
 
+
     nx = s % nx
     nf = s % nf
     h  = s % h
@@ -197,7 +198,7 @@ contains
     ! after setting pointers we calculate the required spatial
     ! derivatives
 
-    call s % calculate_dfdx( s % rk )
+    ! call s % calculate_dfdx( s % rk )
 
 
     !!!!!!!!!!! calculate d/dt of f and store it in the appropriate

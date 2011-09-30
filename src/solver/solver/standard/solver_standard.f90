@@ -57,8 +57,10 @@ module class_solver_standard
 contains
 
   subroutine init( s )
-    class(solver_standard) :: s
+    class(solver_standard), target :: s
     integer :: ny
+
+    call s % solver % init
 
     ny = s % ny
 

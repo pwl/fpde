@@ -6,9 +6,7 @@ program test_solver_mmpde6
   use class_solver_mmpde6
 
   type(solver_mmpde6) :: s
-  real, target :: p = 1.
 
-  s % rhs => my_rhs
   s % t0 = 0.
   s % t1 = 1.
   s % nx = 11
@@ -19,14 +17,14 @@ program test_solver_mmpde6
   call s % init
 
   call s % info
-  call s % calculate_dfdx(2)
+! call s % calculate_dfdx(2)
 
-  ! call s % set_pointers( dydt = s % dydt, y = s % y)
+  s % rhs => my_rhs1
   call s % solve
 
 contains
 
-  subroutine my_rhs( s )
+  subroutine my_rhs1( s )
     class(solver) :: s
     integer :: i
 
@@ -38,7 +36,7 @@ contains
     s % dfdt(1,:) = 0.
     s % dfdt(s%nx,:) = 0.
 
-  end subroutine my_rhs
+  end subroutine my_rhs1
 
 
 end program test_solver_mmpde6
