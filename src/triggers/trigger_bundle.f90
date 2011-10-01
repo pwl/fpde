@@ -77,7 +77,8 @@ contains
     class(*), pointer :: element
     integer :: i
     logical :: r
-    r = .false.
+    r = .true.
+    ! r = .false. ! works for the "or" version
 
     do i = 1, this % triggers % length()
 
@@ -98,9 +99,15 @@ contains
           return
        end if
 
-       ! short circuited .or.
-       if( t % test() ) then
-          r = .true.
+       ! ! short circuited .or.
+       ! if( t % test() ) then
+       !    r = .true.
+       !    return
+       ! end if
+
+       ! short circuited .and.
+       if( .not. t % test() ) then
+          r = .false.
           return
        end if
     end do

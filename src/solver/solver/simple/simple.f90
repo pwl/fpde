@@ -185,6 +185,13 @@ contains
           call s % rhs
 
           call s % step
+
+          ! check the status after running triggers
+          if( trim(s % status) == "stopped" .or. &
+               trim(s % status) == "error" ) then
+             return
+          end if
+
        endif
     end do
 

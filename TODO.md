@@ -74,3 +74,5 @@ TODO
 
 - add subroutine `print` to `solver_data` to be used along with
   `module_data_print`?
+
+- logical combinations of triggers, now only "and" is available

@@ -22,9 +22,12 @@ module class_solver_mmpde6
   use class_solver_simple
   use class_module
   use class_module_print_data
+  use class_module_solver_stop
   use class_trigger
   use class_trigger_timed
   use class_trigger_always
+  use class_trigger_dfdt_norm
+  use class_trigger_f_control
 
   private
 
@@ -226,16 +229,27 @@ contains
 
     call si % add(&
          m, &
-         trigger_timed( dt = .01 ),&
-         trigger_always(test_result = .true.))
+         trigger_timed( dt = 1.e-3 ))
+    ! stop if stationary state reached
+    call si % add(&
+         module_solver_stop(),&
+         trigger_dfdt_norm( min = 1.e-13 ), &
+         trigger_timed( dt = 2.e-3 ) )
+    ! stop if mesh points are out of control
+    call si % add(&
+         module_solver_stop(),&
+         trigger_f_control(&
+         max = 2.*(s % x1 - s % x0),&
+         center = .5*(s % x1 + s % x0)) )
+
     si % f(:,1) = s % x
     call si % sync_dfdt(si % dydt)
-    call si % rhs
-    r = m % start()
-    r = m % step()
-    r = m % stop()
+    ! call si % rhs
+    ! r = m % start()
+    ! r = m % step()
+    ! r = m % stop()
     ! forall()
-    stop
+    ! stop
     call si % solve
     call si % free
 
@@ -348,7 +362,7 @@ contains
     integer :: i
     integer :: j
 
-    print *, "DEBUG: solver_mmpde6: calculate_dfdx"
+    ! print *, "DEBUG: solver_mmpde6: calculate_dfdx"
 
     do j = 1, i
        call s % physical % calculate_derivatives( j )
@@ -533,7 +547,7 @@ contains
        if ( s % marcher % status /= 1 ) then
           print *, "marcher error, status=",  s % marcher % status
           ! @todo change exit to an error report
-          exit
+          return
        else
 
           ! increment the iteration number
@@ -546,6 +560,13 @@ contains
           call s % rhs
 
           call s % step
+
+          ! check the status after running triggers
+          if( trim(s % status) == "stopped" .or. &
+               trim(s % status) == "error" ) then
+             return
+          end if
+
        endif
     end do
 
@@ -591,7 +612,7 @@ contains
 
     call s % solver_standard % info
 
-    print *, "DEBUG: solver_mmpde6: info"
+    ! print *, "DEBUG: solver_mmpde6: info"
   end subroutine info
 
 end module class_solver_mmpde6

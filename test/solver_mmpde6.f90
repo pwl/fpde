@@ -13,7 +13,7 @@ program test_solver_mmpde6
   use class_trigger_timed
   use class_trigger_always
 
-  integer, parameter :: nx = 11
+  integer, parameter :: nx = 101
   integer :: i
   real :: pi, h, xi(nx), dxdt(nx)
   real, pointer :: x(:), m(:)
@@ -34,7 +34,6 @@ program test_solver_mmpde6
   ! s % g => g
   ! s % calculate_monitor => calculate_monitor
 
-  pi = acos(-1.)
   h = (1.)/real(nx-1)
 
   call s % init
@@ -81,7 +80,8 @@ contains
     real, intent(out)   :: f(:,:)
     class(*), pointer  :: params
 
-    f(:,1) = x*(1.-x)
+    pi = acos(-1.)
+    f(:,1) = sin(2*pi*x)**4
   end subroutine initial
 
 
@@ -118,7 +118,7 @@ contains
     class(solver_mmpde6) :: s
     real, pointer ::  dfdx(:,:,:)
 
-    print *, "DEBUG: calculate_monitor"
+    ! print *, "DEBUG: calculate_monitor"
 
     dfdx => s % dfdx
 

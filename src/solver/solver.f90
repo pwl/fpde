@@ -117,6 +117,7 @@ contains
     class(solver) :: s
     if( associated( s % modules ) ) then
        call s % modules % start
+       s % status = solver_started
     end if
   end subroutine start
 

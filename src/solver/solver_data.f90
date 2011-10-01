@@ -1,5 +1,11 @@
 module class_solver_data
 
+  character(len=30), public, parameter :: &
+       solver_started = "started",     &
+       solver_stopped = "stopped",     &
+       solver_error = "error"
+
+
   private
 
   type, public :: solver_data
@@ -18,6 +24,7 @@ module class_solver_data
      character(len=30)                 :: name = ""
      ! interface supported by any solver
      integer                           :: rhs_status = 0
+     character(len=30)                 :: status = "stopped"
    contains
      procedure                         :: calculate_dfdx
      procedure                         :: pointwise_dfdx

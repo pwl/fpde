@@ -1,5 +1,6 @@
 module class_module_print_data
 
+  use class_solver_data
   use system_functions
   use class_module
 
