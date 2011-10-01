@@ -13,7 +13,7 @@ program test_solver_mmpde6
   use class_trigger_timed
   use class_trigger_always
 
-  integer, parameter :: nx = 101
+  integer, parameter :: nx = 11
   integer :: i
   real :: pi, h, xi(nx), dxdt(nx)
   real, pointer :: x(:), m(:)
@@ -29,6 +29,8 @@ program test_solver_mmpde6
   s % dt = 1.e-5
   s % x0 = 0.
   s % x1 = 1.
+  s % calculate_monitor => calculate_monitor
+  s % initial => initial
   ! s % g => g
   ! s % calculate_monitor => calculate_monitor
 
@@ -37,45 +39,51 @@ program test_solver_mmpde6
 
   call s % init
 
-  call s % add(&
-       module_print_data(file_name = "data/test"),&
-       trigger_always(test_result = .true.),&
-       trigger_timed(dt=.01))
+  ! call s % add(&
+  !      module_print_data(file_name = "data/test"),&
+  !      trigger_always(test_result = .true.),&
+  !      trigger_timed(dt=.01))
 
-  ! initial point distribution suited for the initial data of the form
-  ! f(x) = x*(1-x)
-  xi = s % x
-  s % x = 0.5*(2.414213562373095 - 1.*sqrt(5.82842712474619 - \
-          7.656854249492381*xi))
-  forall(i = 1 : nx/2)
-     s % x(nx-(i-1)) = 1. - s % x(i)
-  end forall
+  ! ! initial point distribution suited for the initial data of the form
+  ! ! f(x) = x*(1-x)
+  ! xi = s % x
+  ! s % x = 0.5*(2.414213562373095 - 1.*sqrt(5.82842712474619 - \
+  !         7.656854249492381*xi))
+  ! forall(i = 1 : nx/2)
+  !    s % x(nx-(i-1)) = 1. - s % x(i)
+  ! end forall
 
+  ! ! call s % info
+  ! call s % calculate_dfdx(2)
+  ! call s % calculate_dfdx(1)
+  ! call s % calculate_monitor
 
-  s % f(:,1) = s%x*(1.-s%x)
+  ! x => s % x
+  ! m => s % monitor
 
-  ! call s % info
-  call s % calculate_dfdx(2)
-  call s % calculate_dfdx(1)
-  call s % calculate_monitor
+  ! forall( i = 2 : nx - 1 ) &
+  !      dxdt( i ) = 1.&
+  !      * ( ( m(i+1) + m(i) ) * ( x(i+1) - x(i) ) &
+  !      -   ( m(i) + m(i+1) ) * ( x(i) - x(i-1))) &
+  !      /(2.*h**2)
 
-  x => s % x
-  m => s % monitor
-
-  forall( i = 2 : nx - 1 ) &
-       dxdt( i ) = 1.&
-       * ( ( m(i+1) + m(i) ) * ( x(i+1) - x(i) ) &
-       -   ( m(i) + m(i+1) ) * ( x(i) - x(i-1))) &
-       /(2.*h**2)
-
-  do i = 1, nx
-     print *, x(i), dxdt(i), s % monitor(i)
-  end do
+  ! do i = 1, nx
+  !    print *, x(i), dxdt(i), s % monitor(i)
+  ! end do
 
 
   ! call s % solve
 
 contains
+
+  subroutine initial( x, f, params )
+    real, intent(in)   :: x(:)
+    real, intent(out)   :: f(:,:)
+    class(*), pointer  :: params
+
+    f(:,1) = x*(1.-x)
+  end subroutine initial
+
 
   subroutine my_rhs1( s )
     class(solver) :: s
@@ -108,12 +116,14 @@ contains
 
   subroutine calculate_monitor(s)
     class(solver_mmpde6) :: s
-    real, pointer ::  dxdxi(:,:,:)
+    real, pointer ::  dfdx(:,:,:)
 
-    dxdxi => s % physical % df
+    print *, "DEBUG: calculate_monitor"
+
+    dfdx => s % dfdx
 
     ! M(u) = |f_x| + sqrt(|f_xx|)
-    s % monitor(:) = abs(dxdxi(:,1,1)) + sqrt(abs(dxdxi(:,1,2)))
+    s % monitor(:) = abs(dfdx(:,1,1)) + sqrt(abs(dfdx(:,1,2)))
 
   end subroutine calculate_monitor
 

@@ -48,7 +48,7 @@ contains
     select case(i)
     case(1)
        ! first derivatives
-       if( i == 1 ) then
+       if( k == 1 ) then
           m%df(1,   j,i)=\
           ((f(2,j)*(x(1) - x(3))*(x(1) - x(4))*(x(1) - x(5))**2)/((x(1) - \
           x(2))*(x(2) - x(3))*(x(2) - x(4))*(x(2) - x(5))) + (f(3,j)*(x(1) - \
@@ -60,7 +60,7 @@ contains
           ((-1 + ((-2*x(1) + x(2) + x(3))*(-x(1) + x(4)))/((x(1) - x(2))*(-x(1) \
           + x(3))))*(-x(1) + x(5)))/(-x(1) + x(4))))/(-x(1) + x(5))
 
-       elseif( i == 2 ) then
+       elseif( k == 2 ) then
           m%df(2,   j,i)=\
           (-((f(1,j)*(x(2) - x(3))*(x(2) - x(4))*(x(2) - x(5))**2)/((x(1) - \
           x(2))*(x(1) - x(3))*(x(1) - x(4))*(x(1) - x(5)))) + (f(4,j)*(-x(1) + \
@@ -72,7 +72,7 @@ contains
           ((-1 - ((x(1) - 2*x(2) + x(3))*(x(2) - x(4)))/((x(1) - x(2))*(x(2) - \
           x(3))))*(-x(2) + x(5)))/(-x(2) + x(4))))/(-x(2) + x(5))
 
-       elseif( i == nx-1 ) then
+       elseif( k == nx-1 ) then
           m%df(nx-1,j,i)=\
           ((f(-4 + nx,j)*(x(-3 + nx) - x(-1 + nx))*(-x(-2 + nx) + x(-1 + \
           nx))*(x(-1 + nx) - x(nx))**2)/((x(-4 + nx) - x(-3 + nx))*(x(-4 + nx) \
@@ -93,7 +93,7 @@ contains
           3*x(nx)))))/((x(-3 + nx) - x(-1 + nx))*(-x(-2 + nx) + x(-1 + \
           nx))))/((x(-4 + nx) - x(-1 + nx))*(-x(-1 + nx) + x(nx)))
 
-       elseif( i == nx ) then
+       elseif( k == nx ) then
           m%df(nx  ,j,i)=\
           (-((f(-3 + nx,j)*(x(-4 + nx) - x(nx))**2*(x(-2 + nx) - x(nx))*(x(-1 + \
           nx) - x(nx)))/((x(-4 + nx) - x(-3 + nx))*(x(-3 + nx) - x(-2 + \
@@ -132,7 +132,7 @@ contains
 
     case(2)
        ! second derivatives
-       if( i == 1 ) then
+       if( k == 1 ) then
           m%df(1,   j,i) = \
           (-2*f(5,j)*(3*x(1)**2 + x(3)*x(4) + x(2)*(x(3) + x(4)) - 2*x(1)*(x(2) \
           + x(3) + x(4))))/((x(1) - x(5))*(-x(2) + x(5))*(-x(3) + x(5))*(-x(4) \
@@ -147,7 +147,7 @@ contains
           + x(4) + x(5)) - 3*x(1)*(x(2) + x(3) + x(4) + x(5))))/((x(1) - \
           x(2))*(x(1) - x(3))*(x(1) - x(4))*(x(1) - x(5)))
 
-       elseif( i == 2) then
+       elseif( k == 2) then
           m%df(2,   j,i) = \
           2*(-((f(5,j)*(3*x(2)**2 + x(3)*x(4) - 2*x(2)*(x(3) + x(4)) + \
           x(1)*(-2*x(2) + x(3) + x(4))))/((x(1) - x(5))*(-x(2) + x(5))*(-x(3) + \
@@ -162,7 +162,7 @@ contains
           - x(5)) - x(3)*x(5) - x(4)*x(5) + 3*x(2)*(x(3) + x(4) + \
           x(5))))/((x(1) - x(2))*(x(2) - x(3))*(x(2) - x(4))*(x(2) - x(5))))
 
-       elseif( i == nx - 1) then
+       elseif( k == nx - 1) then
           m%df(nx-1,j,i) = \
           (-2*f(nx,j)*(x(-3 + nx)*(x(-2 + nx) - 2*x(-1 + nx)) + x(-4 + \
           nx)*(x(-3 + nx) + x(-2 + nx) - 2*x(-1 + nx)) + x(-1 + nx)*(-2*x(-2 + \
@@ -185,7 +185,7 @@ contains
           x(nx))))/((x(-4 + nx) - x(-3 + nx))*(x(-4 + nx) - x(-2 + nx))*(x(-4 + \
           nx) - x(-1 + nx))*(x(-4 + nx) - x(nx)))
 
-       elseif( i == nx ) then
+       elseif( k == nx ) then
           m%df(nx  ,j,i) = \
           (-2*f(nx,j)*(x(-2 + nx)*x(-1 + nx) + x(-3 + nx)*(x(-2 + nx) + x(-1 + \
           nx) - 3*x(nx)) + x(-4 + nx)*(x(-3 + nx) + x(-2 + nx) + x(-1 + nx) - \

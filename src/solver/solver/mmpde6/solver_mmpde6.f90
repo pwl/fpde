@@ -24,13 +24,14 @@ module class_solver_mmpde6
   use class_module_print_data
   use class_trigger
   use class_trigger_timed
+  use class_trigger_always
 
   private
 
   type, public, extends(solver_standard) :: solver_mmpde6
      ! initialization parameters
      procedure(calculate_monitor_interface), pointer &
-          :: calculate_monitor=> null()
+          :: calculate_monitor => null()
      procedure(g_interface), pointer :: g => null()
      procedure(initial_interface), pointer, nopass &
           :: initial => null()
@@ -81,10 +82,17 @@ module class_solver_mmpde6
 
   public&
        calculate_monitor_interface, &
-       g_interface
+       g_interface, &
+       initial_interface
 
 contains
 
+  !>
+  !!
+  !! @param s
+  !!
+  !! @return
+  !!
   subroutine init(s)
     class(solver_mmpde6), target :: s
     integer :: nx,nf,rk,total_nf
@@ -182,10 +190,20 @@ contains
 
   end subroutine init
 
+  !>
+  !! tries to relax a mesh by solving an mmpde6 with constant monitor
+  !! function
+  !!
+  !! @param s
+  !!
+  !! @return
+  !!
   subroutine initialize_mesh(s)
-    class(solver_mmpde6) :: s
-    class(solver), pointer :: si
+    class(solver_mmpde6), target :: s
+    class(solver_simple), pointer :: si
     type(solver_simple_data) :: data
+    type(module_print_data) :: m
+    logical :: r
 
     data = solver_simple_data( &
          mesh_id = "sfd3pt",   &
@@ -202,13 +220,23 @@ contains
     data % rhs => initial_rhs
 
     si => data % generate_solver()
+    si % params => s
+
+    m = module_print_data(file_name = "mmpde/init")
+
     call si % add(&
-         module_print_data(file_name = "mmpde/init"), &
-         trigger_timed( dt = .01 ))
+         m, &
+         trigger_timed( dt = .01 ),&
+         trigger_always(test_result = .true.))
     si % f(:,1) = s % x
+    call si % sync_dfdt(si % dydt)
     call si % rhs
+    r = m % start()
+    r = m % step()
+    r = m % stop()
     ! forall()
-    ! call si % solve
+    stop
+    call si % solve
     call si % free
 
   end subroutine initialize_mesh
@@ -253,7 +281,15 @@ contains
 
   end subroutine initial_rhs
 
-
+  !>
+  !!
+  !! @param s
+  !! @param tau
+  !! @param y
+  !! @param dydt
+  !!
+  !! @return
+  !!
   subroutine set_pointers( s, tau, y, dydt )
     class(solver_mmpde6) :: s
     real, target, optional, intent(in) :: y(:), dydt(:)
@@ -299,15 +335,23 @@ contains
 
   end subroutine set_pointers
 
+
+  !>
+  !!
+  !! @param s
+  !! @param i
+  !!
+  !! @return
+  !!
   subroutine calculate_dfdx( s, i )
     class(solver_mmpde6) :: s
     integer :: i
     integer :: j
 
-    ! print *, "DEBUG: solver_mmpde6: calculate_dfdx"
+    print *, "DEBUG: solver_mmpde6: calculate_dfdx"
 
     do j = 1, i
-       call s % physical % calculate_derivatives( i )
+       call s % physical % calculate_derivatives( j )
     end do
 
   end subroutine calculate_dfdx
@@ -372,6 +416,7 @@ contains
     ! first calculate the values of the monitor function
     call s % calculate_monitor
 
+    call s % set_dxdt( dxdt )
 
     do i = 1, nx
        ! print n_format(size(dydt),"f10.5"), dydt
@@ -402,14 +447,20 @@ contains
 
   end subroutine solver_mmpde6_rhs_for_marcher
 
-
+  !>
+  !!
+  !! @param s
+  !! @param dxdt
+  !!
+  !! @return
+  !!
   subroutine set_dxdt(s, dxdt)
     class(solver_mmpde6) :: s
     real, intent(out) :: dxdt(:)
-    real, pointer :: m(:), x(:), h
+    real, pointer :: m(:), x(:)
+    real :: h
     integer :: nx, i
 
-    print *, "DEBUG: solver_mmpde6: set_dxdt"
     ! short names for convenience
     x => s % x
     m => s % monitor
@@ -422,7 +473,7 @@ contains
     ! according to pointer association in set_pointers
     forall( i = 2 : nx - 1 ) &
          dxdt( i ) = ( ( m(i+1) + m(i) ) * ( x(i+1) - x(i) ) &
-         -   ( m(i) + m(i+1) ) * ( x(i) - x(i-1))) &
+         -   ( m(i) + m(i-1) ) * ( x(i) - x(i-1))) &
          /(2.*h**2)
     ! the boundary conditions for the mesh are (theese are imposed by
     ! greens function multiplication above, but we emphasize them
@@ -433,6 +484,12 @@ contains
   end subroutine set_dxdt
 
 
+  !>
+  !!
+  !! @param g
+  !!
+  !! @return
+  !!
   ! this function was found to be giving best results, see Biernat and
   ! Bizon [2011]
   real function epsilon(g)
@@ -441,6 +498,13 @@ contains
 
   end function epsilon
 
+
+  !>
+  !!
+  !! @param s
+  !!
+  !! @return
+  !!
   subroutine solve( s )
     class(solver_mmpde6) :: s
 
@@ -490,6 +554,12 @@ contains
   end subroutine solve
 
 
+  !>
+  !!
+  !! @param s
+  !!
+  !! @return
+  !!
   ! @todo better free for solver_mmpde6
   subroutine free( s )
     class(solver_mmpde6) :: s
@@ -509,6 +579,13 @@ contains
 
   end subroutine free
 
+
+  !>
+  !!
+  !! @param s
+  !!
+  !! @return
+  !!
   subroutine info( s )
     class(solver_mmpde6) :: s
 
