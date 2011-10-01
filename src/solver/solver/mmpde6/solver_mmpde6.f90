@@ -5,7 +5,9 @@ module class_solver_mmpde6
   use class_solver_standard
   use class_solver_data
   use class_solver
+
   use class_mesh
+
   use class_ode_marcher
   use class_ode_stepper
   use class_ode_system
@@ -15,6 +17,14 @@ module class_solver_mmpde6
 
   use utils_greens
 
+  ! used to initialize mesh points
+  use class_solver_simple_data
+  use class_solver_simple
+  use class_module
+  use class_module_print_data
+  use class_trigger
+  use class_trigger_timed
+
   private
 
   type, public, extends(solver_standard) :: solver_mmpde6
@@ -22,6 +32,8 @@ module class_solver_mmpde6
      procedure(calculate_monitor_interface), pointer &
           :: calculate_monitor=> null()
      procedure(g_interface), pointer :: g => null()
+     procedure(initial_interface), pointer, nopass &
+          :: initial => null()
    ! end of initialization parameters
      real, pointer :: tau => null()
      ! physical mesh is used to calculate d/dx of f(:,:)
@@ -45,6 +57,8 @@ module class_solver_mmpde6
      procedure :: solve
      procedure :: free
      procedure :: info
+     procedure :: set_dxdt
+     procedure :: initialize_mesh
   end type solver_mmpde6
 
   abstract interface
@@ -57,6 +71,12 @@ module class_solver_mmpde6
        import :: solver_mmpde6
        class(solver_mmpde6) :: s
      end function g_interface
+
+     subroutine initial_interface(x, f, params)
+       real, intent(in)   :: x(:)
+       real, intent(out)   :: f(:,:)
+       class(*), pointer  :: params
+     end subroutine initial_interface
   end interface
 
   public&
@@ -69,6 +89,7 @@ contains
     class(solver_mmpde6), target :: s
     integer :: nx,nf,rk,total_nf
     real :: xmin,xmax,h
+    class(solver), pointer :: initial_solver
 
     if( trim(s%name) == "" ) then
        s % name = "solver_mmpde6"
@@ -80,9 +101,26 @@ contains
        s % rk = 2
     end if
 
-    if( .not. associated(s % rhs ) ) then
+    if( .not. associated( s % rhs ) ) then
        ! @todo report error
        print *, "ERROR: ", trim(s%name), ": rhs has not been set"
+    end if
+
+    if( .not. associated( s % g ) ) then
+       ! @todo report error
+       print *, "ERROR: ", trim(s%name), ": g has not been set"
+    end if
+
+    if( .not. associated( s % calculate_monitor ) ) then
+       ! @todo report error
+       print *, "ERROR: ", trim(s%name),&
+            ": calculate_monitor has not been set"
+    end if
+
+    if( .not. associated( s % initial ) ) then
+       ! @todo report error
+       print *, "ERROR: ", trim(s%name),&
+            ": initial has not been set"
     end if
 
     nx = s % nx
@@ -140,7 +178,79 @@ contains
 
     s % x = [(xmin + (xmax-xmin)*(i-1)*h, i = 1, nx)]
 
+    call s % initialize_mesh
+
   end subroutine init
+
+  subroutine initialize_mesh(s)
+    class(solver_mmpde6) :: s
+    class(solver), pointer :: si
+    type(solver_simple_data) :: data
+
+    data = solver_simple_data( &
+         mesh_id = "sfd3pt",   &
+         stepper_id = "rk4cs",    &
+         nx      = s % nx,         &
+         nf      = 1,          &
+         x0      = 0.,         &
+         x1      = 1.,         &
+         t0      = 0.,         &
+         t1      = 10.,         &
+         h0      = 1.e-4,      &
+         rhs     = null())           !what does it mean?
+    ! @todo any way to squeeze this into initialization expression?
+    data % rhs => initial_rhs
+
+    si => data % generate_solver()
+    call si % add(&
+         module_print_data(file_name = "mmpde/init"), &
+         trigger_timed( dt = .01 ))
+    si % f(:,1) = s % x
+    call si % solve
+    call si % free
+
+  end subroutine initialize_mesh
+
+
+  !> function calculating the rhs for mesh initialization solver
+  !!
+  !! @param s solver used to solve the initialization problem
+  !!
+  !! @return
+  !!
+  subroutine initial_rhs(s)
+    class(solver) :: s
+
+    ! some pointer juggling, we interprete s % params as
+    ! solver_mmpde6, so we can use a procedure associated with s %
+    ! initial
+    select type( s6 => s % params )
+    class is( solver_mmpde6 )
+       ! s6 % x should now point to the area inside s6 % y, so the
+       ! assignment below actually changes s6 % y
+       s6 % x = s % f(:,1)
+       ! this sets up the values of s % f using a user supplied
+       ! subroutine initial we pass s % f(:,1) as the points of the
+       ! mesh
+       !
+       ! important @bug: no parameters are passed, the call should be:
+       ! call s6 % initial( s % x, s % f, s6 % params )
+       ! but results in a compiler error
+       call s6 % initial( s6 % x, s6 % f, null() )
+       ! now s % f is set up, so we proceed to calculate the derivatives
+       call s6 % calculate_dfdx(2)
+       ! now monitor function is being calculated and its values
+       ! stored in s6 % monitor(:)
+       call s6 % calculate_monitor
+       ! we now
+       call s6 % set_dxdt( s % dfdt(:,1) )
+    class default
+       print *, "ERROR: solver_mmpde6: initial_rhs: ",&
+            "parameter type mismatch"
+    end select
+
+  end subroutine initial_rhs
+
 
   subroutine set_pointers( s, tau, y, dydt )
     class(solver_mmpde6) :: s
@@ -260,21 +370,7 @@ contains
     ! first calculate the values of the monitor function
     call s % calculate_monitor
 
-    ! than use a symmetric discretization of (m*x_xi)_xi from [Budd and
-    ! Williams 2009]
-    ! the forall loop should run over all d/dt of x(2:nx-1) values
-    ! according to pointer association in set_pointers
-    forall( i = 2 : nx - 1 ) &
-         dxdt( i ) = 1.e-10/epsilon(g)  &
-         * ( ( m(i+1) + m(i) ) * ( x(i+1) - x(i) ) &
-         -   ( m(i) + m(i+1) ) * ( x(i) - x(i-1))) &
-         /(2.*h**2)
 
-    ! the boundary conditions for the mesh are (theese are imposed by
-    ! greens function multiplication above, but we emphasize them
-    ! here)
-    dxdt(  1 ) = 0.
-    dxdt( nx ) = 0.
     do i = 1, nx
        ! print n_format(size(dydt),"f10.5"), dydt
        print *, dxdt(i), m(i)
@@ -290,7 +386,7 @@ contains
        dxdt_tmp(i) = dxdt_tmp(i) + sum(dxdt(:)*greens(i,:))
     end forall
 
-    dxdt = dxdt_tmp
+    dxdt = 1.e-10/epsilon(g) * dxdt_tmp
 
     ! @todo add -x_t*f_x to the rhs
     forall( i = 1 : nf )
@@ -303,6 +399,34 @@ contains
     dydt = g * dydt
 
   end subroutine solver_mmpde6_rhs_for_marcher
+
+
+  subroutine set_dxdt(s, dxdt)
+    class(solver_mmpde6) :: s
+    real, intent(out) :: dxdt(:)
+    real, pointer :: m(:), x(:), h
+    integer :: nx, i
+    ! short names for convenience
+    x => s % x
+    m => s % monitor
+    h  = s % h
+    nx = s % nx
+
+    ! than use a symmetric discretization of (m*x_xi)_xi from [Budd and
+    ! Williams 2009]
+    ! the forall loop should run over all d/dt of x(2:nx-1) values
+    ! according to pointer association in set_pointers
+    forall( i = 2 : nx - 1 ) &
+         dxdt( i ) = ( ( m(i+1) + m(i) ) * ( x(i+1) - x(i) ) &
+         -   ( m(i) + m(i+1) ) * ( x(i) - x(i-1))) &
+         /(2.*h**2)
+    ! the boundary conditions for the mesh are (theese are imposed by
+    ! greens function multiplication above, but we emphasize them
+    ! here)
+    dxdt(  1 ) = 0.
+    dxdt( nx ) = 0.
+
+  end subroutine set_dxdt
 
 
   ! this function was found to be giving best results, see Biernat and
@@ -388,10 +512,5 @@ contains
 
     print *, "DEBUG: solver_mmpde6: info"
   end subroutine info
-
-
-
-
-
 
 end module class_solver_mmpde6

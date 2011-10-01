@@ -29,8 +29,8 @@ program test_solver_mmpde6
   s % dt = 1.e-5
   s % x0 = 0.
   s % x1 = 1.
-  s % g => g
-  s % calculate_monitor => calculate_monitor
+  ! s % g => g
+  ! s % calculate_monitor => calculate_monitor
 
   pi = acos(-1.)
   h = (1.)/real(nx-1)
