@@ -49,7 +49,9 @@ contains
 
   subroutine info(this)
     class(trigger_bundle) :: this
-    call this % triggers % map(trigger_info)
+    if(associated(this % triggers)) then
+       call this % triggers % map(trigger_info)
+    end if
   end subroutine info
 
   subroutine start(this)

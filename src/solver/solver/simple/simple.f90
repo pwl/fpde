@@ -14,6 +14,7 @@ module class_solver_simple
   use class_ode_marcher
   use class_ode_stepper
   use class_ode_system
+  use class_ode_step_control
   use class_mesh
 
   use pretty_print
@@ -30,7 +31,7 @@ module class_solver_simple
      class(*), pointer :: data
      class(ode_system), pointer :: system
      class(ode_marcher), pointer :: marcher
-     ! class(control), pointer :: control
+     class(ode_step_control), pointer :: step_control
    contains
      ! procedure :: init
      procedure :: info
@@ -161,10 +162,11 @@ contains
        ! do while( i < 3 )
        call s % marcher % apply( &
             s   = s % stepper,   &
+            c   = s % step_control, &
             sys = s % system,    &
             t   = s % t,         &
             t1  = s % t1,        &
-            h   = s % h,         &
+            h   = s % dt,         &
             y   = s % y )
        ! @todo: neater error handling
 

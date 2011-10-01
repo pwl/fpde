@@ -29,7 +29,7 @@ program ode_system_test
 
    type(ode_system) :: myode
    type(ode_marcher) :: mymarcher
- 
+
    class(ode_stepper), pointer :: mystepper
    class(ode_step_control), pointer :: mycontrol
 
@@ -44,7 +44,7 @@ program ode_system_test
    myparams % a = a
    myparams % b = b
 
-   mystepper => stepper_new( "rk4cs" )
+   mystepper => stepper_new( "rkpd54" )
    mycontrol => control_new( "standard" )
 
    ! alokowanie wektora poczatkowego

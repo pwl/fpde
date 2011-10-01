@@ -85,7 +85,8 @@ contains
 
     write( file_handle, *)&
          "# ",&
-         "t = ", this % solver_data % t
+         "  t = ", this % solver_data % t, &
+         "  dt = ", this % solver_data % dt
 
     do i = 1, nx
        write( file_handle, *)&

@@ -8,28 +8,31 @@ module class_solver_simple_data
   use class_ode_stepper
   use class_ode_marcher
   use class_ode_system
+  use class_ode_step_control
 
   use mesh_factory
   use stepper_factory
   use solver_factory
+  use control_factory
 
   private
 
   type, public :: solver_simple_data
      character(len=30) :: mesh_id = "sfd3pt"
      character(len=30) :: stepper_id = "rk4cs"
-     character(len=30) :: control_id = ""
+     character(len=30) :: step_control_id = "standard"
      character(len=30) :: solver_id = "simple"
      integer :: nf=1, nx, rk=2
      real :: x0, x1
      real :: h0=1.e-3, t0=0., t1=1.e10
-     real :: abs_error = 1.e-8, rel_error = 1.e-8
+     real :: abs_error = 1.e-10, rel_error = 1.e-10
      class(*), pointer :: params => null()
      procedure(interface_rhs), pointer, nopass :: rhs
    contains
      procedure :: initialize_mesh
      procedure :: initialize_marcher
      procedure :: initialize_stepper
+     procedure :: initialize_step_control
      procedure :: initialize_t
      procedure :: initialize_ode_system
      procedure :: initialize_rhs
@@ -54,10 +57,13 @@ contains
     ! @todo add iterator
     s % name = "simple"
 
+    allocate( s % step_control )
+
     ! initialize mesh
     call this % initialize_mesh( s % mesh )
     ! initialize stepper
     call this % initialize_stepper( s % stepper )
+    call this % initialize_step_control( s % step_control )
     ! initialize time
     call this % initialize_t( s % t )
     ! initialize ode_system
@@ -77,7 +83,7 @@ contains
     s % nf     = nf
     s % rk     = this % rk
     s % t1     = this % t1
-    s % h      = this % h0
+    s % dt      = this % h0
 
     ! @todo is this needed? may be for the reinitialization purposes,
     ! i.e. to reset the solver without referring to data explicitely?
@@ -132,12 +138,32 @@ contains
     if( .not. associated( s )) then
        print *, data % stepper_id, "is not a valid stepper_id"
        ! @todo report error
-       stop
+       return
     end if
 
     call s % init( data % nx * data % nf )
 
   end subroutine initialize_stepper
+
+  subroutine initialize_step_control( data, c )
+    class(solver_simple_data), intent(in) :: data
+    class(ode_step_control), pointer :: c
+
+    c => control_new( data % step_control_id )
+
+    if( .not. associated( c ) ) then
+       print *, "ERROR: ", trim(data % step_control_id),&
+            ": is not a valid stepper_id"
+       return
+    end if
+
+    call c % init( &
+         eps_abs = data % abs_error,&
+         eps_rel = data % rel_error,&
+         a_y = 1.0, a_dydt = 1.0 )
+
+  end subroutine initialize_step_control
+
 
   subroutine initialize_t( data, t )
     class(solver_simple_data), intent(in) :: data
@@ -194,7 +220,7 @@ contains
 
     print *, "mesh_id: ", trim(data % mesh_id)
     print *, "stepper_id: ", trim(data % stepper_id)
-    print *, "control_id: ", trim(data % control_id)
+    print *, "step_control_id: ", trim(data % step_control_id)
     print *, "t0 = ", data % t0
     print *, "t1 = ", data % t1
     print *, "h0 = ", data % h0

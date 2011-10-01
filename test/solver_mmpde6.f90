@@ -13,7 +13,7 @@ program test_solver_mmpde6
   use class_trigger_timed
   use class_trigger_always
 
-  integer, parameter :: nx = 101
+  integer, parameter :: nx = 21
   integer :: i
   real :: pi, h, xi(nx), dxdt(nx)
   real, pointer :: x(:), m(:)
@@ -31,47 +31,18 @@ program test_solver_mmpde6
   s % x1 = 1.
   s % calculate_monitor => calculate_monitor
   s % initial => initial
-  ! s % g => g
-  ! s % calculate_monitor => calculate_monitor
+  s % g => g
 
   h = (1.)/real(nx-1)
 
   call s % init
 
-  ! call s % add(&
-  !      module_print_data(file_name = "data/test"),&
-  !      trigger_always(test_result = .true.),&
-  !      trigger_timed(dt=.01))
+  call s % add(&
+       module_print_data(file_name = "data/test"),&
+       trigger_always(test_result = .true.),&
+       trigger_timed(dt=.01))
 
-  ! ! initial point distribution suited for the initial data of the form
-  ! ! f(x) = x*(1-x)
-  ! xi = s % x
-  ! s % x = 0.5*(2.414213562373095 - 1.*sqrt(5.82842712474619 - \
-  !         7.656854249492381*xi))
-  ! forall(i = 1 : nx/2)
-  !    s % x(nx-(i-1)) = 1. - s % x(i)
-  ! end forall
-
-  ! ! call s % info
-  ! call s % calculate_dfdx(2)
-  ! call s % calculate_dfdx(1)
-  ! call s % calculate_monitor
-
-  ! x => s % x
-  ! m => s % monitor
-
-  ! forall( i = 2 : nx - 1 ) &
-  !      dxdt( i ) = 1.&
-  !      * ( ( m(i+1) + m(i) ) * ( x(i+1) - x(i) ) &
-  !      -   ( m(i) + m(i+1) ) * ( x(i) - x(i-1))) &
-  !      /(2.*h**2)
-
-  ! do i = 1, nx
-  !    print *, x(i), dxdt(i), s % monitor(i)
-  ! end do
-
-
-  ! call s % solve
+  call s % solve
 
 contains
 

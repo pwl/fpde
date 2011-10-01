@@ -19,8 +19,8 @@ module class_list
   private
 
   type, public :: list
-     class(*), pointer :: element
-     type(list), pointer :: next
+     class(*), pointer :: element => null()
+     type(list), pointer :: next => null()
    contains
      procedure :: map => map_subroutine_on_list
      procedure :: last

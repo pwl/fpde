@@ -10,6 +10,7 @@ module class_solver_data
 
   type, public :: solver_data
      real, pointer                     :: t => null()
+     real                              :: dt = 1.e-10
      real                              :: t0 = 0.,t1 = 0.
      real, contiguous, pointer         :: x    (:) => null()
      real, contiguous, pointer         :: f    (:,:) => null()

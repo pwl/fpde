@@ -27,7 +27,7 @@ module class_solver_standard
      ! initialization data
      character(len=30) :: stepper_id = ""
      character(len=30) :: step_control_id = ""
-     real :: dt = 0.
+     ! real :: dt = 0.
      ! end of initialization data
 
      ! initialization data used by the programmer of extended type

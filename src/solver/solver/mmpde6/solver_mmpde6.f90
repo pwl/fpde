@@ -205,12 +205,12 @@ contains
     class(solver_mmpde6), target :: s
     class(solver_simple), pointer :: si
     type(solver_simple_data) :: data
-    type(module_print_data) :: m
+    ! type(module_print_data) :: m
     logical :: r
 
     data = solver_simple_data( &
          mesh_id = "sfd3pt",   &
-         stepper_id = "rk4cs",    &
+         stepper_id = "rkf45",    &
          nx      = s % nx,         &
          nf      = 1,          &
          x0      = 0.,         &
@@ -225,33 +225,28 @@ contains
     si => data % generate_solver()
     si % params => s
 
-    m = module_print_data(file_name = "mmpde/init")
-
+    ! call si % info
     call si % add(&
-         m, &
-         trigger_timed( dt = 1.e-3 ))
+         module_print_data(file_name = "mmpde/init"), &
+         trigger_timed( dt = 1.e-2) )
     ! stop if stationary state reached
     call si % add(&
          module_solver_stop(),&
-         trigger_dfdt_norm( min = 1.e-13 ), &
-         trigger_timed( dt = 2.e-3 ) )
+         trigger_timed( dt = 2.e-2 ), &
+         trigger_dfdt_norm( min = 1.e-10 ) )
     ! stop if mesh points are out of control
     call si % add(&
          module_solver_stop(),&
+         trigger_timed( dt = 2.e-2 ), &
          trigger_f_control(&
          max = 2.*(s % x1 - s % x0),&
          center = .5*(s % x1 + s % x0)) )
 
     si % f(:,1) = s % x
     call si % sync_dfdt(si % dydt)
-    ! call si % rhs
-    ! r = m % start()
-    ! r = m % step()
-    ! r = m % stop()
-    ! forall()
-    ! stop
     call si % solve
     call si % free
+    s % x = si % f(:,1)
 
   end subroutine initialize_mesh
 

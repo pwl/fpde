@@ -127,7 +127,9 @@ contains
     select case(m % state)
     case( module_stopped, module_started )
        call m % info
-       call m % triggers % info
+       if(associated(m % triggers)) then
+          call m % triggers % info
+       end if
     case( module_error )
        print *, "info error"
        ! do nothing

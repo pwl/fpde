@@ -61,6 +61,8 @@ contains
        l2norm(i) = sum(dfdt(:,i)*dfdt(:,i)*dx(:))
     end forall
 
+    print *, l2norm
+
     if( min > 0. .and. any( l2norm < min ) ) then
        r = .true.
        return
