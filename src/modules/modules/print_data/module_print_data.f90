@@ -8,7 +8,7 @@ module class_module_print_data
   type, public, extends(module) :: module_print_data
      ! initialization parameters
      character(len=1000) :: file_name = ""
-     character(len=10)   :: extension = ""
+     character(len=10)   :: extension = ".dat"
      ! end of initialization parameters
      integer :: file_handle = 0
    contains

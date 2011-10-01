@@ -1,5 +1,7 @@
 module class_solver_mmpde6
 
+  use pretty_print
+
   use class_solver_standard
   use class_solver_data
   use class_solver
@@ -17,7 +19,10 @@ module class_solver_mmpde6
 
   type, public, extends(solver_standard) :: solver_mmpde6
      ! initialization parameters
-     ! end of initialization parameters
+     procedure(calculate_monitor_interface), pointer &
+          :: calculate_monitor=> null()
+     procedure(g_interface), pointer :: g => null()
+   ! end of initialization parameters
      real, pointer :: tau => null()
      ! physical mesh is used to calculate d/dx of f(:,:)
      class(mesh), pointer :: physical => null()
@@ -33,20 +38,37 @@ module class_solver_mmpde6
 
    contains
      procedure :: set_pointers
-     procedure :: g
-     procedure :: calculate_monitor
+     ! procedure :: g
+     ! procedure :: calculate_monitor
      procedure :: init
      procedure :: calculate_dfdx
      procedure :: solve
      procedure :: free
+     procedure :: info
   end type solver_mmpde6
+
+  abstract interface
+     subroutine calculate_monitor_interface(s)
+       import :: solver_mmpde6
+       class(solver_mmpde6) :: s
+     end subroutine calculate_monitor_interface
+
+     real function g_interface(s)
+       import :: solver_mmpde6
+       class(solver_mmpde6) :: s
+     end function g_interface
+  end interface
+
+  public&
+       calculate_monitor_interface, &
+       g_interface
 
 contains
 
   subroutine init(s)
     class(solver_mmpde6), target :: s
     integer :: nx,nf,rk,total_nf
-    real :: xmin,xmax
+    real :: xmin,xmax,h
 
     if( trim(s%name) == "" ) then
        s % name = "solver_mmpde6"
@@ -54,8 +76,13 @@ contains
 
 
     if( s % rk > 2) then
-       print *, trim(s%name), " this sovler works only for 0 < rk < 2, setting rk = 2"
+       print *, "ERROR: ", trim(s%name), ": this sovler works only for 0 < rk < 2, setting rk = 2"
        s % rk = 2
+    end if
+
+    if( .not. associated(s % rhs ) ) then
+       ! @todo report error
+       print *, "ERROR: ", trim(s%name), ": rhs has not been set"
     end if
 
     nx = s % nx
@@ -64,10 +91,12 @@ contains
     xmin = s % x0
     xmax = s % x1
     s % h = (s%x1-s%x0)/real(nx-1)
+    h = s % h
 
     ! the length of the y(:) vector, used to initialize
     ! sovler_standard
     s % ny =  nx * (nf + 1) + 1
+    s % param_solver => s
     call s % set_rhs_marcher( solver_mmpde6_rhs_for_marcher )
 
     call s % solver_standard % init
@@ -86,6 +115,8 @@ contains
 
     ! allocate the memory for computational time
     allocate( s % tau )
+    ! set the initial value of computational time
+    s % tau = 0.
 
     ! deallocate the memory allocated by meshes
     deallocate( s%physical%f,  s%physical%x )
@@ -102,22 +133,27 @@ contains
     call discrete_greens( s % greens, xmax - xmin )
 
     ! set the appropriate interface pointers to current values
-    call s % set_pointers( y = s % y )
+    call s % set_pointers( tau = s % tau, y = s % y )
+
+    ! after setting the pointers set time to t0
+    s % t = s % t0
+
+    s % x = [(xmin + (xmax-xmin)*(i-1)*h, i = 1, nx)]
 
   end subroutine init
 
-  subroutine set_pointers( s, t, y, dydt )
+  subroutine set_pointers( s, tau, y, dydt )
     class(solver_mmpde6) :: s
     real, target, optional, intent(in) :: y(:), dydt(:)
-    real, target, optional, intent(in) :: t
+    real, target, optional, intent(in) :: tau
     integer :: nx,nf,rk
     nx = s % nx
     nf = s % nf
     rk = s % rk
-    print *, "set_pointers"
+    ! print *, "DEBUG: solver_mmpde6: set_pointers"
 
-    if( present( t ) ) then
-       s % tau => t
+    if( present( tau ) ) then
+       s % tau => tau
     end if
 
     if( present( y ) ) then
@@ -156,7 +192,7 @@ contains
     integer :: i
     integer :: j
 
-    print *, "solver_mmpde6: calculate_dfdx"
+    ! print *, "DEBUG: solver_mmpde6: calculate_dfdx"
 
     do j = 1, i
        call s % physical % calculate_derivatives( i )
@@ -184,7 +220,7 @@ contains
     h  = s % h
 
     ! initial pointer setup
-    call s % set_pointers( t = t, y = y, dydt = dydt )
+    call s % set_pointers( tau = t, y = y, dydt = dydt )
 
     ! temporary pointers, introduced for convenience
     m => s % monitor
@@ -198,7 +234,7 @@ contains
     ! after setting pointers we calculate the required spatial
     ! derivatives
 
-    ! call s % calculate_dfdx( s % rk )
+    call s % calculate_dfdx( s % rk )
 
 
     !!!!!!!!!!! calculate d/dt of f and store it in the appropriate
@@ -229,10 +265,23 @@ contains
     ! the forall loop should run over all d/dt of x(2:nx-1) values
     ! according to pointer association in set_pointers
     forall( i = 2 : nx - 1 ) &
-         dxdt( i ) = - 1./epsilon(g)  &
+         dxdt( i ) = 1.e-10/epsilon(g)  &
          * ( ( m(i+1) + m(i) ) * ( x(i+1) - x(i) ) &
          -   ( m(i) + m(i+1) ) * ( x(i) - x(i-1))) &
          /(2.*h**2)
+
+    ! the boundary conditions for the mesh are (theese are imposed by
+    ! greens function multiplication above, but we emphasize them
+    ! here)
+    dxdt(  1 ) = 0.
+    dxdt( nx ) = 0.
+    do i = 1, nx
+       ! print n_format(size(dydt),"f10.5"), dydt
+       print *, dxdt(i), m(i)
+    end do
+    print *, ""
+    print *, ""
+    print *, ""
 
     ! multiply the dxdt by the greens function
     dxdt_tmp = 0.
@@ -241,17 +290,12 @@ contains
        dxdt_tmp(i) = dxdt_tmp(i) + sum(dxdt(:)*greens(i,:))
     end forall
 
-    ! the boundary conditions for the mesh are (theese are imposed by
-    ! greens function multiplication above, but we emphasize them
-    ! here)
-    dxdt(  1 ) = 0.
-    dxdt( nx ) = 0.
+    dxdt = dxdt_tmp
 
     ! @todo add -x_t*f_x to the rhs
     forall( i = 1 : nf )
        dfdt(:,i) = dfdt(:,i) - dxdt(:) * dfdx(:,i,1)
     end forall
-
 
     ! now the whole dydt vector should be set up to the almost
     ! appropriate values, all is left is to multiply it by the
@@ -261,20 +305,6 @@ contains
   end subroutine solver_mmpde6_rhs_for_marcher
 
 
-  real function g(s)
-    class(solver_mmpde6) :: s
-    real :: u_tx_0, u_x_0
-
-    ! use the previously calculated value of u_x(x=0)
-    u_x_0 = s % dfdx(1,1,1)
-    ! calculate u_xt(x=0)
-    u_tx_0 = s % physical2 % derivative( 1, 1, 1 )
-
-    ! the value of g is custom suited to the problem
-    g = (abs(u_x_0) + 1.)/(abs(u_tx_0) + 1.)
-
-  end function g
-
   ! this function was found to be giving best results, see Biernat and
   ! Bizon [2011]
   real function epsilon(g)
@@ -283,31 +313,27 @@ contains
 
   end function epsilon
 
-
-  subroutine calculate_monitor(s)
-    class(solver_mmpde6) :: s
-    real, pointer ::  dxdxi(:,:,:)
-
-    dxdxi => s % physical % df
-
-    ! M(u) = |u_r| + sqrt(|u_rr|)
-    s % monitor(:) = abs(dxdxi(:,1,1)) + sqrt(abs(dxdxi(:,1,2)))
-
-  end subroutine calculate_monitor
-
-
   subroutine solve( s )
     class(solver_mmpde6) :: s
 
+    ! sync pointers
+    call s % set_pointers( tau = s % tau, y = s % y )
+
     call s % start
 
-    do while( s%t < s%t1 )
-       ! do while( i < 3 )
+    ! call the modules
+    ! call s % step
+
+    ! do while( .true. )
+    do while( s % n_iter < 2 )
+       print *, ""
+       print *, "####iteration: ", s % n_iter
+       print *, s % tau
        call s % marcher % apply( &
             s   = s % stepper,   &
             sys = s % system,    &
-            t   = s % t,         &
-            t1  = s % t1,        &
+            t   = s % tau,         &
+            t1  = 1.e10,        & !@bug, constant value
             h   = s % dt,         &
             y   = s % y )
        ! @todo: neater error handling
@@ -322,7 +348,7 @@ contains
           s % n_iter = s % n_iter + 1
 
           ! sync pointers first
-          call s % set_pointers
+          call s % set_pointers( tau = s % t, y = s % y )
 
           ! @todo: extra calculation, probably not needed
           call s % rhs
@@ -354,6 +380,15 @@ contains
     ! deallocate( s % system, s % t, s % dfdt )
 
   end subroutine free
+
+  subroutine info( s )
+    class(solver_mmpde6) :: s
+
+    call s % solver_standard % info
+
+    print *, "DEBUG: solver_mmpde6: info"
+  end subroutine info
+
 
 
 

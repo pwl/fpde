@@ -131,7 +131,7 @@ contains
     class(solver) :: s
     integer :: i
 
-    print *, "solver: mam cie"
+    print *, "ERROR: solver: calculate_dfdx is not overloaded"
 
   end subroutine calculate_dfdx
 

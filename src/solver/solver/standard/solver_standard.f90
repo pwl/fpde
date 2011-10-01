@@ -28,13 +28,18 @@ module class_solver_standard
      character(len=30) :: stepper_id = ""
      character(len=30) :: step_control_id = ""
      real :: dt = 0.
+     ! end of initialization data
+
+     ! initialization data used by the programmer of extended type
      ! this is the length of the vector y(:), should be set only by
      ! classes inheriting from solver_standard
      integer :: ny = 0
      ! @todo rhs_for_marcher should be deleted from solver_data and
      ! considered as depreciatede
      procedure(fun_interface), pointer, nopass :: rhs_marcher => null()
-     ! end of initialization data
+     ! pointer used to initialize the system
+     class(solver), pointer           :: param_solver => null()
+     ! end of initialization data for extended type
 
      ! general vector containing all the data which is passed to
      ! marcher
@@ -45,6 +50,7 @@ module class_solver_standard
      class(ode_system), pointer       :: system       => null()
      class(ode_marcher), pointer      :: marcher      => null()
      class(ode_step_control), pointer :: step_control => null()
+
 
    contains
      procedure :: init
@@ -93,7 +99,7 @@ contains
          sys    = s % system,      &
          fun    = s % rhs_marcher, &
          dim    = ny,              &
-         params = s )
+         params = s % param_solver )
 
   end subroutine init
 
@@ -106,9 +112,9 @@ contains
     print *, "--- SOLVER_STANDARD --- "
     print *, "========================"
     print *, "stepper_id:       ", trim(s % stepper_id),&
-         ",   ready: ", associated(s % stepper)
+         ",   ready: ",            associated(s % stepper)
     print *, "step_control_id:  ", trim(s % step_control_id), &
-         ",   ready: ", associated(s % step_control)
+         ",   ready: ",            associated(s % step_control)
     print *, "ny:               ", s % ny
     print *, "associated(y(:)): ", associated( s%y )
 
