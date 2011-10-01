@@ -37,7 +37,7 @@ contains
     class(module_print_data) :: this
     logical :: r
     integer :: nx, nf, i,j
-    real, pointer :: x(:), f(:,:)
+    real, pointer :: x(:), f(:,:), dfdt(:,:)
     integer :: file_handle
     integer :: iostat
     character(len=1000) :: file_name
@@ -46,6 +46,7 @@ contains
 
     x => this % solver_data % x
     f => this % solver_data % f
+    dfdt => this % solver_data % dfdt
 
     nx = this % solver_data % nx
     nf = this % solver_data % nf
@@ -87,7 +88,7 @@ contains
 
     do i = 1, nx
        write( file_handle, *)&
-            x(i), (f(i,j), j=1,nf)
+            x(i), (f(i,j), j=1,nf), (dfdt(i,j), j=1,nf)
     end do
 
     write( file_handle, *) (new_line('a'), i=1,3)

@@ -206,7 +206,9 @@ contains
          module_print_data(file_name = "mmpde/init"), &
          trigger_timed( dt = .01 ))
     si % f(:,1) = s % x
-    call si % solve
+    call si % rhs
+    ! forall()
+    ! call si % solve
     call si % free
 
   end subroutine initialize_mesh
@@ -406,6 +408,8 @@ contains
     real, intent(out) :: dxdt(:)
     real, pointer :: m(:), x(:), h
     integer :: nx, i
+
+    print *, "DEBUG: solver_mmpde6: set_dxdt"
     ! short names for convenience
     x => s % x
     m => s % monitor
