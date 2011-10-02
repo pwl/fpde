@@ -6,8 +6,10 @@ module class_mesh_afd5pt
   private
 
   type, public, extends( mesh ) :: mesh_afd5pt
+     real, contiguous, pointer :: dx(:)
    contains
      ! overloaded procedures go here (if needed)
+     procedure :: integrate
      procedure :: init
      procedure :: derivative
      procedure :: calculate_derivatives
@@ -32,6 +34,9 @@ contains
     forall( i = 1:nx )&
          m % x(i) = (xmax-xmin)*(1.-cos(real(i-1)/real(nx-1)*pi))/2.+xmin
 
+    ! allocate memory for mesh spacing
+    allocate( m % dx(nx) )
+
   end subroutine init
 
   function derivative( m, k, j, i ) result(d)
@@ -49,7 +54,7 @@ contains
     case(1)
        ! first derivatives
        if( k == 1 ) then
-          m%df(1,   j,i)=\
+          d=\
           ((f(2,j)*(x(1) - x(3))*(x(1) - x(4))*(x(1) - x(5))**2)/((x(1) - \
           x(2))*(x(2) - x(3))*(x(2) - x(4))*(x(2) - x(5))) + (f(3,j)*(x(1) - \
           x(2))*(x(1) - x(4))*(x(1) - x(5))**2)/((x(1) - x(3))*(-x(2) + \
@@ -61,7 +66,7 @@ contains
           + x(3))))*(-x(1) + x(5)))/(-x(1) + x(4))))/(-x(1) + x(5))
 
        elseif( k == 2 ) then
-          m%df(2,   j,i)=\
+          d=\
           (-((f(1,j)*(x(2) - x(3))*(x(2) - x(4))*(x(2) - x(5))**2)/((x(1) - \
           x(2))*(x(1) - x(3))*(x(1) - x(4))*(x(1) - x(5)))) + (f(4,j)*(-x(1) + \
           x(2))*(x(2) - x(3))*(x(2) - x(5))**2)/((x(1) - x(4))*(-x(2) + \
@@ -73,7 +78,7 @@ contains
           x(3))))*(-x(2) + x(5)))/(-x(2) + x(4))))/(-x(2) + x(5))
 
        elseif( k == nx-1 ) then
-          m%df(nx-1,j,i)=\
+          d=\
           ((f(-4 + nx,j)*(x(-3 + nx) - x(-1 + nx))*(-x(-2 + nx) + x(-1 + \
           nx))*(x(-1 + nx) - x(nx))**2)/((x(-4 + nx) - x(-3 + nx))*(x(-4 + nx) \
           - x(-2 + nx))*(x(-4 + nx) - x(nx))) + (f(-3 + nx,j)*(x(-4 + nx) - \
@@ -94,7 +99,7 @@ contains
           nx))))/((x(-4 + nx) - x(-1 + nx))*(-x(-1 + nx) + x(nx)))
 
        elseif( k == nx ) then
-          m%df(nx  ,j,i)=\
+          d=\
           (-((f(-3 + nx,j)*(x(-4 + nx) - x(nx))**2*(x(-2 + nx) - x(nx))*(x(-1 + \
           nx) - x(nx)))/((x(-4 + nx) - x(-3 + nx))*(x(-3 + nx) - x(-2 + \
           nx))*(x(-3 + nx) - x(-1 + nx)))) + (f(-4 + nx,j)*(x(-3 + nx) - \
@@ -114,7 +119,7 @@ contains
           nx) - x(nx))*(-x(-4 + nx) + x(nx)))
 
        else
-          m%df(k,j,i) = \
+          d= \
           (f(k,j)*(-1 + ((x(k)*(3*x(k) - 2*x(1 + k)) + x(-1 + k)*(-2*x(k) + x(1 \
           + k)) + x(-2 + k)*(x(-1 + k) - 2*x(k) + x(1 + k)))*(x(k) - x(2 + \
           k)))/((x(-2 + k) - x(k))*(-x(-1 + k) + x(k))*(x(k) - x(1 + k)))) + \
@@ -133,7 +138,7 @@ contains
     case(2)
        ! second derivatives
        if( k == 1 ) then
-          m%df(1,   j,i) = \
+          d= \
           (-2*f(5,j)*(3*x(1)**2 + x(3)*x(4) + x(2)*(x(3) + x(4)) - 2*x(1)*(x(2) \
           + x(3) + x(4))))/((x(1) - x(5))*(-x(2) + x(5))*(-x(3) + x(5))*(-x(4) \
           + x(5))) - (2*f(4,j)*(3*x(1)**2 + x(3)*x(5) + x(2)*(x(3) + x(5)) - \
@@ -148,7 +153,7 @@ contains
           x(2))*(x(1) - x(3))*(x(1) - x(4))*(x(1) - x(5)))
 
        elseif( k == 2) then
-          m%df(2,   j,i) = \
+          d= \
           2*(-((f(5,j)*(3*x(2)**2 + x(3)*x(4) - 2*x(2)*(x(3) + x(4)) + \
           x(1)*(-2*x(2) + x(3) + x(4))))/((x(1) - x(5))*(-x(2) + x(5))*(-x(3) + \
           x(5))*(-x(4) + x(5)))) + (f(4,j)*(-3*x(2)**2 + x(1)*(2*x(2) - x(3) - \
@@ -163,7 +168,7 @@ contains
           x(5))))/((x(1) - x(2))*(x(2) - x(3))*(x(2) - x(4))*(x(2) - x(5))))
 
        elseif( k == nx - 1) then
-          m%df(nx-1,j,i) = \
+          d= \
           (-2*f(nx,j)*(x(-3 + nx)*(x(-2 + nx) - 2*x(-1 + nx)) + x(-4 + \
           nx)*(x(-3 + nx) + x(-2 + nx) - 2*x(-1 + nx)) + x(-1 + nx)*(-2*x(-2 + \
           nx) + 3*x(-1 + nx))))/((x(-4 + nx) - x(nx))*(-x(-3 + nx) + \
@@ -186,7 +191,7 @@ contains
           nx) - x(-1 + nx))*(x(-4 + nx) - x(nx)))
 
        elseif( k == nx ) then
-          m%df(nx  ,j,i) = \
+          d= \
           (-2*f(nx,j)*(x(-2 + nx)*x(-1 + nx) + x(-3 + nx)*(x(-2 + nx) + x(-1 + \
           nx) - 3*x(nx)) + x(-4 + nx)*(x(-3 + nx) + x(-2 + nx) + x(-1 + nx) - \
           3*x(nx)) - 3*x(-2 + nx)*x(nx) - 3*x(-1 + nx)*x(nx) + \
@@ -208,7 +213,7 @@ contains
           nx) - x(-2 + nx))*(x(-4 + nx) - x(-1 + nx))*(x(-4 + nx) - x(nx)))
 
        else
-          m%df(k,j,i) = \
+          d= \
           (-2*f(2 + k,j)*(x(k)*(3*x(k) - 2*x(1 + k)) + x(-1 + k)*(-2*x(k) + x(1 \
           + k)) + x(-2 + k)*(x(-1 + k) - 2*x(k) + x(1 + k))))/((x(-2 + k) - x(2 \
           + k))*(-x(-1 + k) + x(2 + k))*(-x(k) + x(2 + k))*(-x(1 + k) + x(2 + \
@@ -440,6 +445,28 @@ contains
 
 
   end subroutine calculate_derivatives
+
+  function integrate( m, f ) result(r)
+    class(mesh_afd5pt) :: m
+    real :: r
+    real, intent(in) :: f(:)
+    real, pointer :: dx(:), x(:)
+    integer :: nx
+
+    nx =  m % nx
+    dx => m % dx
+    x  => m % x
+
+    ! calculate mesh spacing
+    dx(2:nx-1) = (x(3:nx) - x(1:nx-2))/2.
+    dx(1) = (x(2)-x(1))/2.
+    dx(nx) = (x(nx)-x(nx-1))/2.
+
+    ! integrate f wrt measure dx
+    r = sum(f*dx)
+
+  end function integrate
+
 
 
 end module class_mesh_afd5pt

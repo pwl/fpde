@@ -24,6 +24,7 @@ module class_mesh
      procedure :: init
      procedure :: free
      procedure :: info
+     procedure :: integrate
 
      ! use only, not to be overloaded
      procedure, non_overridable :: print_by_index
@@ -238,6 +239,31 @@ contains
     end do
 
   end subroutine print_by_index
+
+  function integrate( m, f ) result(r)
+    class(mesh) :: m
+    real :: r
+    real, intent(in) :: f(:)
+    real, pointer :: dx(:), x(:)
+    integer :: nx
+
+    nx =  m % nx
+    x  => m % x
+
+    allocate(dx(nx))
+
+    ! calculate mesh spacing
+    dx(2:nx-1) = (x(3:nx) - x(1:nx-2))/2.
+    dx(1) = (x(2)-x(1))/2.
+    dx(nx) = (x(nx)-x(nx-1))/2.
+
+    ! integrate f wrt measure dx
+    r = sum(f*dx)
+
+    deallocate(dx)
+
+  end function integrate
+
 
 end module class_mesh
 
