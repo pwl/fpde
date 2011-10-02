@@ -46,6 +46,8 @@ module class_solver_mmpde6
      ! computational time and its increment (temporal step size)
      real, pointer :: tau => null()
      real, pointer :: dtau => null()
+     ! pointer to computational variable xi covering an interval [0:1]
+     real, pointer :: xi(:) => null()
      ! physical mesh is used to calculate d/dx of f(:,:)
      class(mesh), pointer :: physical => null()
      ! physical2 mesh is used to calculate d/dx of d/dt of f(:,:)
@@ -202,15 +204,17 @@ contains
     deallocate( s%physical2%f, s%physical2%x )
 
     ! allocate data block
-    allocate( s % data_block(nx,2) )
+    allocate( s % data_block(nx,3) )
 
     ! allocate memory for monitor(:)
-    ! allocate( s % monitor( nx ) )
     s % monitor => s % data_block(:,1)
 
     ! allocate temporary table
-    ! allocate( s % temporary( nx ) )
     s % temporary => s % data_block(:,2)
+
+    ! allocate a place for computational variable xi
+    s % xi => s % data_block(:,3)
+    s % xi = [((i-1)*h, i = 1, nx)]
 
     ! allocate and calculate the greens function
     allocate( s % greens( nx, nx ) )
