@@ -38,24 +38,30 @@ contains
     class(module_print_data) :: this
     logical :: r
     integer :: nx, nf, i,j
-    real, pointer :: x(:), f(:,:), dfdt(:,:)
+    real, pointer :: x(:), f(:,:), dfdt(:,:), data_block(:,:)
+    real, pointer :: data_scalars(:)
     integer :: file_handle
     integer :: iostat
     character(len=1000) :: file_name
+    class(solver_data), pointer :: s
 
     r = .true.
 
-    x => this % solver_data % x
-    f => this % solver_data % f
-    dfdt => this % solver_data % dfdt
+    s => this % solver_data
 
-    nx = this % solver_data % nx
-    nf = this % solver_data % nf
+    x => s % x
+    f => s % f
+    dfdt => s % dfdt
+    data_block => s % data_block
+    data_scalars => s % data_scalars
+
+    nx = s % nx
+    nf = s % nf
 
     ! set a new file name
     write(file_name, '(a,a,i20.20,a)')       &
          trim(this % file_name),             &
-         "_n=", this % solver_data % n_iter, &
+         "_n=", s % n_iter, &
          trim(this % extension)
 
     ! @todo write a timestamp
@@ -83,15 +89,34 @@ contains
     end if
 
 
-    write( file_handle, *)&
+    write( file_handle, * )&
          "# ",&
-         "  t = ", this % solver_data % t, &
-         "  dt = ", this % solver_data % dt
+         "  t = ", s % t, &
+         "  dt = ", s % dt
+    if( associated( data_scalars ) ) then
+       do i = 1, size(data_scalars,1)
+          write( file_handle, * )&
+               "# ", data_scalars(i)
+       end do
+    end if
 
-    do i = 1, nx
-       write( file_handle, *)&
-            x(i), (f(i,j), j=1,nf), (dfdt(i,j), j=1,nf)
-    end do
+
+    if( associated( s % data_block ) ) then
+       do i = 1, nx
+          write( file_handle, *)&
+               x(i),&
+               (f(i,j), j=1,nf),&
+               (dfdt(i,j), j=1,nf), &
+               (data_block(i,j), j=1,size(data_block,2))
+       end do
+    else
+       do i = 1, nx
+          write( file_handle, *)&
+               x(i),&
+               (f(i,j), j=1,nf),&
+               (dfdt(i,j), j=1,nf)
+       end do
+    end if
 
     write( file_handle, *) (new_line('a'), i=1,3)
 

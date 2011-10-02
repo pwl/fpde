@@ -19,14 +19,17 @@ module class_solver_standard
   use class_ode_step_control
 
   use stepper_factory
+  use control_factory
 
   private
 
   type, public, extends(solver) :: solver_standard
 
      ! initialization data
-     character(len=30) :: stepper_id = ""
-     character(len=30) :: step_control_id = ""
+     character(len=30) :: stepper_id = "rkf45"
+     character(len=30) :: step_control_id = "standard"
+     real :: abs_error = 1.e-10
+     real :: rel_error = 1.e-10
      ! real :: dt = 0.
      ! end of initialization data
 
@@ -86,12 +89,24 @@ contains
     ! create a stepper from stepper_id
     s % stepper => stepper_new( s % stepper_id )
     if( .not. associated( s % stepper )) then
-       print *, s % stepper_id, "is not a valid stepper_id"
+       print *, "ERROR: ", trim(s % stepper_id),&
+            "is not a valid stepper_id"
     else
        call s % stepper % init( ny )
     end if
 
     ! @todo create step_control from step_control_id
+    s % step_control => control_new( s % step_control_id )
+    if( .not. associated( s % step_control ) ) then
+       print *, "ERROR: ", trim(s % step_control_id),&
+            "is not a valid step_control_id"
+    else
+       call s % step_control % init( &
+            eps_abs = s % abs_error, &
+            eps_rel = s % rel_error, &
+            a_y = 1.0, a_dydt = 1.0 )
+    end if
+
 
     ! setup the ode_system
     allocate( s % system )

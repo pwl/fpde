@@ -16,6 +16,8 @@ module class_solver_data
      real, contiguous, pointer         :: f    (:,:) => null()
      real, contiguous, pointer         :: dfdt (:,:) => null()
      real, contiguous, pointer         :: dfdx (:,:,:) => null()
+     real, contiguous, pointer         :: data_block (:,:) => null()
+     real, contiguous, pointer         :: data_scalars (:) => null()
      real                              :: x0=0., x1=1.
      integer                           :: nx = 0, nf = 0, rk = 0
      integer                           :: n_iter = 0
@@ -54,40 +56,6 @@ contains
     print *, "pointwise_dfdx not defined for ", trim(s % name)
 
   end function pointwise_dfdx
-
-
-  ! ! this is a default wrapper for solver%rhs to work with marcher
-  ! ! architecture. It should do the right thing for a simple solver,
-  ! ! but should be rewritten in a more sophisticated solver
-  ! ! implementation
-  ! subroutine rhs_for_marcher( t, y, dydt, s, status )
-  !   real, intent(in) :: t
-  !   real, intent(in) :: y(:)
-  !   real, intent(out) :: dydt(:)
-  !   class(solver_data) :: s
-  !   integer, optional :: status
-  !   integer :: nx, nf, i, j
-
-  !   nx = s % nx
-  !   nf = s % nf
-
-  !   s % f = reshape( y, [ nx,nf ] )
-  !   s % t = t
-  !   ! s % y is a one dimensional view of s % f, so this assignment
-  !   ! changes s % f
-  !   ! s % y = y
-
-  !   ! calculate rhs (with s % f obtained from y)
-  !   call s % rhs
-
-  !   if( present(status) ) then
-  !      status = s % rhs_status
-  !   end if
-
-  !   dydt = reshape( s%dfdt, [nx*nf] )
-
-  ! end subroutine rhs_for_marcher
-
 
 
 end module class_solver_data

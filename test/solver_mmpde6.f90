@@ -9,9 +9,11 @@ program test_solver_mmpde6
 
   use class_module
   use class_module_print_data
+  use class_module_solver_stop
   use class_trigger
   use class_trigger_timed
   use class_trigger_always
+  use class_trigger_f_control
 
   integer, parameter :: nx = 21
   integer :: i
@@ -24,7 +26,6 @@ program test_solver_mmpde6
   s % nx = nx
   s % nf = 1
   s % rk = 2
-  s % stepper_id = "rk4cs"
   s % rhs => my_rhs1
   s % dt = 1.e-5
   s % x0 = 0.
@@ -32,15 +33,23 @@ program test_solver_mmpde6
   s % calculate_monitor => calculate_monitor
   s % initial => initial
   s % g => g
+  s % abs_error = 1.e-12
+  s % rel_error = 1.e-12
 
   h = (1.)/real(nx-1)
 
   call s % init
 
+  ! call s % add(&
+  !      module_print_data(file_name = "data/test"),&
+  !      trigger_always(test_result = .true.))
+
+  call s % add(&
+       module_solver_stop(),&
+       trigger_f_control( max = 2. ))
   call s % add(&
        module_print_data(file_name = "data/test"),&
-       trigger_always(test_result = .true.),&
-       trigger_timed(dt=.01))
+       trigger_timed( dt = 1.e-7))
 
   call s % solve
 
@@ -52,7 +61,7 @@ contains
     class(*), pointer  :: params
 
     pi = acos(-1.)
-    f(:,1) = sin(2*pi*x)**4
+    f(:,1) = sin(pi*x)
   end subroutine initial
 
 

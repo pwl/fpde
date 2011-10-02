@@ -57,12 +57,11 @@ contains
     ! @todo add iterator
     s % name = "simple"
 
-    allocate( s % step_control )
-
     ! initialize mesh
     call this % initialize_mesh( s % mesh )
     ! initialize stepper
     call this % initialize_stepper( s % stepper )
+    ! initialize step control
     call this % initialize_step_control( s % step_control )
     ! initialize time
     call this % initialize_t( s % t )

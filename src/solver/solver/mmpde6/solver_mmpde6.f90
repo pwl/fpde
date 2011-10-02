@@ -163,8 +163,9 @@ contains
     call s % physical2 % init( nx, nf, 1, xmin, xmax)
 
     ! allocate the memory for computational time
-    allocate( s % tau )
+    allocate( s % data_scalars(1) )
     ! set the initial value of computational time
+    s % tau => s % data_scalars(1)
     s % tau = 0.
 
     ! deallocate the memory allocated by meshes
@@ -173,6 +174,7 @@ contains
 
     ! allocate memory for monitor(:)
     allocate( s % monitor( nx ) )
+    s % data_block(1:nx,1:1) => s % monitor(1:nx)
 
     ! allocate temporary table
     allocate( s % temporary( nx ) )
@@ -247,6 +249,8 @@ contains
     call si % solve
     call si % free
     s % x = si % f(:,1)
+    ! @bug, see initial_rhs()
+    call s % initial( s % x, s % f, null() )
 
   end subroutine initialize_mesh
 
@@ -427,13 +431,6 @@ contains
 
     call s % set_dxdt( dxdt )
 
-    do i = 1, nx
-       ! print n_format(size(dydt),"f10.5"), dydt
-       print *, dxdt(i), m(i)
-    end do
-    print *, ""
-    print *, ""
-    print *, ""
 
     ! multiply the dxdt by the greens function
     dxdt_tmp = 0.
@@ -453,6 +450,15 @@ contains
     ! appropriate values, all is left is to multiply it by the
     ! dilation g()
     dydt = g * dydt
+
+    do i = 1, 2*nx+1
+       ! print n_format(size(dydt),"f10.5"), dydt
+       print *, y(i), dydt(i)
+    end do
+    print *, ""
+    print *, ""
+    print *, ""
+
 
   end subroutine solver_mmpde6_rhs_for_marcher
 
@@ -525,13 +531,14 @@ contains
     ! call the modules
     ! call s % step
 
-    ! do while( .true. )
-    do while( s % n_iter < 2 )
+    do while( .true. )
+    ! do while( s % n_iter < 2 )
        print *, ""
        print *, "####iteration: ", s % n_iter
        print *, s % tau
        call s % marcher % apply( &
             s   = s % stepper,   &
+            c   = s % step_control, &
             sys = s % system,    &
             t   = s % tau,         &
             t1  = 1.e10,        & !@bug, constant value
@@ -609,5 +616,6 @@ contains
 
     ! print *, "DEBUG: solver_mmpde6: info"
   end subroutine info
+
 
 end module class_solver_mmpde6
