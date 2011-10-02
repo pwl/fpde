@@ -16,7 +16,7 @@ program test_solver_mmpde6
   use class_trigger_f_control
   use class_trigger_every_n_iter
 
-  integer, parameter :: nx = 101
+  integer, parameter :: nx = 51
   integer :: i
   real :: pi, h, xi(nx), dxdt(nx)
   real, pointer :: x(:), m(:)

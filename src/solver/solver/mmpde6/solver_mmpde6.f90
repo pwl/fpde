@@ -455,7 +455,7 @@ contains
     g = s % g()
 
     ! we also set the value of d/datu of t to a trivial 1.
-    dydt( nx*nf + 1 ) = 1.
+    dydt( nx*(nf + 1) + 1 ) = 1.
 
 
     !!!!!!!!!!! proceed to calculating dx/dt
