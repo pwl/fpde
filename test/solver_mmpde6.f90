@@ -14,8 +14,9 @@ program test_solver_mmpde6
   use class_trigger_timed
   use class_trigger_always
   use class_trigger_f_control
+  use class_trigger_every_n_iter
 
-  integer, parameter :: nx = 21
+  integer, parameter :: nx = 41
   integer :: i
   real :: pi, h, xi(nx), dxdt(nx)
   real, pointer :: x(:), m(:)
@@ -27,14 +28,15 @@ program test_solver_mmpde6
   s % nf = 1
   s % rk = 2
   s % rhs => my_rhs1
-  s % dt = 1.e-5
   s % x0 = 0.
   s % x1 = 1.
   s % calculate_monitor => calculate_monitor
   s % initial => initial
   s % g => g
-  s % abs_error = 1.e-12
-  s % rel_error = 1.e-12
+  s % abs_error = 1.e-14
+  s % rel_error = 1.e-14
+  s % dt = 1.e-10
+  s % params => null()
 
   h = (1.)/real(nx-1)
 
@@ -44,12 +46,15 @@ program test_solver_mmpde6
   !      module_print_data(file_name = "data/test"),&
   !      trigger_always(test_result = .true.))
 
-  call s % add(&
-       module_solver_stop(),&
-       trigger_f_control( max = 2. ))
+  ! call s % add(&
+  !      module_solver_stop(),&
+  !      trigger_f_control( max = 2. ))
   call s % add(&
        module_print_data(file_name = "data/test"),&
-       trigger_timed( dt = 1.e-7))
+       trigger_every_n_iter(dn = 100))
+  ! call s % add(&
+  !      module_print_data(file_name = "data/test"),&
+  !      trigger_always( test_result = .true.))
 
   call s % solve
 
@@ -61,7 +66,9 @@ contains
     class(*), pointer  :: params
 
     pi = acos(-1.)
-    f(:,1) = sin(pi*x)
+    f(:,1) = 20.*sin(pi*x)
+    f(1,1) = 0.
+    f(nx,1) = 0.
   end subroutine initial
 
 
@@ -71,7 +78,7 @@ contains
 
     ! call s % calculate_dfdx( 2 )
 
-    s % dfdt(:,1) = s % dfdx(:,1,2)
+    s % dfdt(:,1) = s % dfdx(:,1,2) + (s % f(:,1))**2
     ! s % dfdt(:,2) = s % dfdx(:,1,2)
 
     s % dfdt(1,:) = 0.
@@ -90,20 +97,24 @@ contains
     ! u_tx_0 = s % physical2 % derivative( 1, 1, 1 )
 
     ! the value of g is custom suited to the problem
-    g = 1. ! (abs(u_x_0) + 1.)/(abs(u_tx_0) + 1.)
+    g = 1./ s%f(s%nx/2,1) ! (abs(u_x_0) + 1.)/(abs(u_tx_0) + 1.)
 
   end function g
 
   subroutine calculate_monitor(s)
     class(solver_mmpde6) :: s
-    real, pointer ::  dfdx(:,:,:)
+    real, pointer ::  dfdx(:,:,:), f(:,:)
 
     ! print *, "DEBUG: calculate_monitor"
 
     dfdx => s % dfdx
+    f => s % f
 
     ! M(u) = |f_x| + sqrt(|f_xx|)
-    s % monitor(:) = abs(dfdx(:,1,1)) + sqrt(abs(dfdx(:,1,2)))
+    ! s % monitor(:) = abs(dfdx(:,1,1)) + sqrt(abs(dfdx(:,1,2)))
+    ! s % monitor(:) = sqrt(1+dfdx(:,1,1)**2)
+    s % monitor(:) = f(:,1) + 1.
+    ! s % monitor = s % monitor/sum(s%monitor) + 1.
 
   end subroutine calculate_monitor
 

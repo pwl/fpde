@@ -29,6 +29,8 @@ contains
 
     call new_directory(this % file_name)
 
+    ! print data at the start of the run
+    r = this % step()
 
     ! @todo write a header
 

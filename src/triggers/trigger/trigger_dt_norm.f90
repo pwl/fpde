@@ -58,7 +58,7 @@ contains
     dx(nx) = (x(nx)-x(nx-1))/2.
 
     forall(i = 1:nf)
-       l2norm(i) = sum(dfdt(:,i)*dfdt(:,i)*dx(:))
+       l2norm(i) = sqrt(sum(dfdt(:,i)*dfdt(:,i)*dx(:)))
     end forall
 
     print *, l2norm

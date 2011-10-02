@@ -47,6 +47,8 @@ module class_solver_standard
      ! general vector containing all the data which is passed to
      ! marcher
      real, contiguous, pointer :: y(:) => null()
+     ! temporary storage for dydt
+     real, contiguous, pointer :: dydt(:) => null()
 
      ! marcher data
      class(ode_stepper), pointer      :: stepper      => null()
@@ -81,6 +83,9 @@ contains
 
     ! allocate the memory used to contain all of the sovler data
     allocate( s % y( ny ) )
+
+    ! allocate the memory used to contain all the time derivatives
+    allocate( s % dydt( ny ) )
 
     ! initialize marchers
     allocate( s % marcher )

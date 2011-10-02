@@ -28,6 +28,8 @@ module class_solver_mmpde6
   use class_trigger_always
   use class_trigger_dfdt_norm
   use class_trigger_f_control
+  use class_trigger_every_n_iter
+
 
   private
 
@@ -47,6 +49,7 @@ module class_solver_mmpde6
      real, contiguous, pointer :: monitor(:) => null()
      ! greens function for -D^2 ( so that G is positive definite )
      real, contiguous, pointer :: greens(:,:) => null()
+     real, pointer :: gval => null()
      ! integer :: total_nf
      ! spacing of the computational mesh
      real :: h = 0.
@@ -163,21 +166,27 @@ contains
     call s % physical2 % init( nx, nf, 1, xmin, xmax)
 
     ! allocate the memory for computational time
-    allocate( s % data_scalars(1) )
+    allocate( s % data_scalars(2) )
     ! set the initial value of computational time
     s % tau => s % data_scalars(1)
     s % tau = 0.
+    s % gval => s % data_scalars(2)
+    s % gval = 0.
 
     ! deallocate the memory allocated by meshes
     deallocate( s%physical%f,  s%physical%x )
     deallocate( s%physical2%f, s%physical2%x )
 
+    ! allocate data block
+    allocate( s % data_block(nx,2) )
+
     ! allocate memory for monitor(:)
-    allocate( s % monitor( nx ) )
-    s % data_block(1:nx,1:1) => s % monitor(1:nx)
+    ! allocate( s % monitor( nx ) )
+    s % monitor => s % data_block(:,1)
 
     ! allocate temporary table
-    allocate( s % temporary( nx ) )
+    ! allocate( s % temporary( nx ) )
+    s % temporary => s % data_block(:,2)
 
     ! allocate and calculate the greens function
     allocate( s % greens( nx, nx ) )
@@ -210,16 +219,20 @@ contains
     ! type(module_print_data) :: m
     logical :: r
 
+    print *, "INFOR: solver_mmpde6: initialize_mesh: start"
+
     data = solver_simple_data( &
          mesh_id = "sfd3pt",   &
-         stepper_id = "rkf45",    &
-         nx      = s % nx,         &
+         stepper_id = "rkf45", &
+         nx      = s % nx,     &
          nf      = 1,          &
          x0      = 0.,         &
          x1      = 1.,         &
          t0      = 0.,         &
-         t1      = 10.,         &
-         h0      = 1.e-4,      &
+         t1      = 10.,        &
+         h0      = 1.e-10,     &
+         rel_error = 1.e-14,   &
+         abs_error = 1.e-14,   &
          rhs     = null())           !what does it mean?
     ! @todo any way to squeeze this into initialization expression?
     data % rhs => initial_rhs
@@ -228,20 +241,20 @@ contains
     si % params => s
 
     ! call si % info
-    call si % add(&
+    call si % add(                                    &
          module_print_data(file_name = "mmpde/init"), &
          trigger_timed( dt = 1.e-2) )
     ! stop if stationary state reached
-    call si % add(&
-         module_solver_stop(),&
-         trigger_timed( dt = 2.e-2 ), &
-         trigger_dfdt_norm( min = 1.e-10 ) )
+    call si % add(                                    &
+         module_solver_stop(),                        &
+         trigger_every_n_iter(dn = 30),                 &
+         trigger_dfdt_norm( min = 1.e-9 ) )
     ! stop if mesh points are out of control
-    call si % add(&
-         module_solver_stop(),&
-         trigger_timed( dt = 2.e-2 ), &
-         trigger_f_control(&
-         max = 2.*(s % x1 - s % x0),&
+    call si % add(                                    &
+         module_solver_stop(),                        &
+         trigger_every_n_iter(dn = 30),                 &
+         trigger_f_control(                           &
+         max = 2.*(s % x1 - s % x0),                  &
          center = .5*(s % x1 + s % x0)) )
 
     si % f(:,1) = s % x
@@ -251,6 +264,9 @@ contains
     s % x = si % f(:,1)
     ! @bug, see initial_rhs()
     call s % initial( s % x, s % f, null() )
+
+    print *, "INFOR: solver_mmpde6: initialize_mesh: done!"
+
 
   end subroutine initialize_mesh
 
@@ -377,11 +393,11 @@ contains
     real, pointer, intent(in) :: y(:)    !input data vector
     real, pointer, intent(out) :: dydt(:) !output data vector
     real, pointer    :: m(:), x(:), dxdt(:), dxdt_tmp(:), greens(:,:)
-    real, pointer    :: dfdt(:,:), dfdx(:,:,:)
+    real, pointer    :: dfdt(:,:), dfdx(:,:,:), g
     class(solver_mmpde6) :: s
     integer, optional :: status
     integer :: nx, nf, i, j
-    real :: g, epsilon, h
+    real :: h
 
 
     nx = s % nx
@@ -392,6 +408,7 @@ contains
     call s % set_pointers( tau = t, y = y, dydt = dydt )
 
     ! temporary pointers, introduced for convenience
+    g => s % gval
     m => s % monitor
     x => y( nx * nf + 1 : nx * (nf + 1) )
     dxdt => dydt( nx * nf + 1 : nx * (nf + 1) )
@@ -435,11 +452,15 @@ contains
     ! multiply the dxdt by the greens function
     dxdt_tmp = 0.
 
-    forall( i = 1 : nx )
+    ! @bug: performance, use XBLAS!
+    ! forall( i = 1 : nx )
+    do i = 1, nx
        dxdt_tmp(i) = dxdt_tmp(i) + sum(dxdt(:)*greens(i,:))
-    end forall
+    end do
+    ! end forall
 
-    dxdt = 1.e-10/epsilon(g) * dxdt_tmp
+    ! dxdt = 0.* 1.e-15/epsilon(g) * dxdt_tmp
+    dxdt = 1./epsilon(g) * dxdt_tmp
 
     ! @todo add -x_t*f_x to the rhs
     forall( i = 1 : nf )
@@ -451,13 +472,13 @@ contains
     ! dilation g()
     dydt = g * dydt
 
-    do i = 1, 2*nx+1
-       ! print n_format(size(dydt),"f10.5"), dydt
-       print *, y(i), dydt(i)
-    end do
-    print *, ""
-    print *, ""
-    print *, ""
+    ! do i = 1, 2*nx+1
+    !    ! print n_format(size(dydt),"f10.5"), dydt
+    !    print *, y(i), dydt(i)
+    ! end do
+    ! print *, ""
+    ! print *, ""
+    ! print *, ""
 
 
   end subroutine solver_mmpde6_rhs_for_marcher
@@ -524,18 +545,19 @@ contains
     class(solver_mmpde6) :: s
 
     ! sync pointers
-    call s % set_pointers( tau = s % tau, y = s % y )
+    call s % set_pointers( tau = s % tau, y = s % y, dydt = s % dydt )
+    call s % rhs_marcher( s % tau, s % y, s % dydt, s )
 
     call s % start
 
     ! call the modules
-    ! call s % step
+    call s % step
 
     do while( .true. )
     ! do while( s % n_iter < 2 )
-       print *, ""
-       print *, "####iteration: ", s % n_iter
-       print *, s % tau
+       ! print *, ""
+       ! print *, "####iteration: ", s % n_iter
+       ! print *, s % tau
        call s % marcher % apply( &
             s   = s % stepper,   &
             c   = s % step_control, &
@@ -556,7 +578,8 @@ contains
           s % n_iter = s % n_iter + 1
 
           ! sync pointers first
-          call s % set_pointers( tau = s % t, y = s % y )
+          call s % set_pointers( tau = s % tau, &
+               y = s % y, dydt = s % dydt )
 
           ! @todo: extra calculation, probably not needed
           call s % rhs

@@ -156,6 +156,9 @@ contains
     class(solver_simple) :: s
     ! integer :: i = 0
 
+    call s % sync_f(s % y)
+    call s % sync_dfdt(s % dydt)
+    call s % rhs
     call s % start
 
     do while( s%t < s%t1)

@@ -8,6 +8,7 @@ module class_trigger_f_control
   type, public, extends(trigger) :: trigger_f_control
      real :: max = -1.
      real :: center = 0.
+     ! real, pointer :: f(:,:) => null()
    contains
      ! procedure :: info
      procedure :: test
@@ -25,6 +26,10 @@ contains
        this % name = "trigger_f_control"
     end if
 
+    ! if( .not. associated( this % f )) then
+    !    this % f => this % solver_data % f
+    ! end if
+
   end function init
 
   function test(t) result(r)
@@ -34,6 +39,7 @@ contains
     real :: max, center
     r = .false.
     f => t % solver_data % f
+    ! f => t % f
     max = t % max
     center = t % center
 
