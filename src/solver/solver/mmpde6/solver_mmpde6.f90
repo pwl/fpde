@@ -42,8 +42,10 @@ module class_solver_mmpde6
           :: initial => null()
      procedure(epsilon_interface), pointer, nopass &
           :: epsilon => null()
-   ! end of initialization parameters
+     ! end of initialization parameters
+     ! computational time and its increment (temporal step size)
      real, pointer :: tau => null()
+     real, pointer :: dtau => null()
      ! physical mesh is used to calculate d/dx of f(:,:)
      class(mesh), pointer :: physical => null()
      ! physical2 mesh is used to calculate d/dx of d/dt of f(:,:)
@@ -178,16 +180,21 @@ contains
     call s % physical2 % init( nx, nf, 1, xmin, xmax)
 
     ! allocate the memory for computational time
-    allocate( s % data_scalars(2) )
-    allocate( s % data_scalars_names(2) )
+    allocate( s % data_scalars(3) )
+    allocate( s % data_scalars_names(3) )
     ! set the initial value of computational time and name it
     s % tau => s % data_scalars(1)
     s % data_scalars_names(1) = "tau"
     s % tau = 0.
 
+    ! set the initial value of computational time step size
+    s % dtau => s % data_scalars(2)
+    s % data_scalars_names(2) = "dtau"
+    s % dtau = s % dt
+
     ! set initial value of g and name it
-    s % gval => s % data_scalars(2)
-    s % data_scalars_names(2) = "g"
+    s % gval => s % data_scalars(3)
+    s % data_scalars_names(3) = "g"
     s % gval = 0.
 
     ! deallocate the memory allocated by meshes
@@ -546,9 +553,13 @@ contains
   !!
   subroutine solve( s )
     class(solver_mmpde6) :: s
+    real, pointer :: tau
+
+    ! set tau to s % data_scalar(1)
+    tau => s % tau
 
     ! sync pointers
-    call s % set_pointers( tau = s % tau, y = s % y, dydt = s % dydt )
+    call s % set_pointers( tau = tau, y = s % y, dydt = s % dydt )
     call s % rhs_marcher( s % tau, s % y, s % dydt, s )
 
     call s % start
@@ -558,22 +569,24 @@ contains
 
     do while( .true. )
     ! do while( s % n_iter < 2 )
-       print *, ""
-       print *, "####iteration: ", s % n_iter
-       print *, s % tau
-       call s % marcher % apply( &
-            s   = s % stepper,   &
+       ! print *, ""
+       ! print *, "####iteration: ", s % n_iter
+       ! print *, tau
+       call s % marcher % apply(    &
+            s   = s % stepper,      &
             c   = s % step_control, &
-            sys = s % system,    &
-            t   = s % tau,         &
-            t1  = 1.e10,        & !@bug, constant value
-            h   = s % dt,         &
+            sys = s % system,       &
+            t   = tau,              & !tau references data_scalar(1)
+            t1  = 1.e10,            & !@bug, constant value
+            h   = s % dtau,         & !s % dtau shall not be
+                                      !reassigned to other memory
+                                      !location
             y   = s % y )
        ! @todo: neater error handling
-       print *, s % tau
 
        if ( s % marcher % status /= 1 ) then
-          print *, "marcher error, status=",  s % marcher % status
+          print *, "ERROR: solver_mmpde6: solve:, marcher status=",&
+               s % marcher % status
           ! @todo change exit to an error report
           return
        else
@@ -582,10 +595,13 @@ contains
           s % n_iter = s % n_iter + 1
 
           ! sync pointers first
-          print *, s % t
-          call s % set_pointers( tau = s % tau, &
+          ! set tau back to data_scalar(1)
+          call s % set_pointers( tau = tau, &
                y = s % y, dydt = s % dydt )
-          print *, s % t
+
+          ! set the physical time step size based on the computational
+          ! step size
+          s % dt = s % gval * s % dtau
 
           ! @todo: extra calculation, probably not needed
           call s % rhs

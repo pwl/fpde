@@ -18,6 +18,8 @@ def main(files, out, options):
         data_vars = get_vars(text)
 
         out.write('print "{0}/{1}"\n'.format(i,n))
+        out.write('set title "{0}"\n'.format(
+                options.plot_title.format(**data_vars)))
         out.write('set output "{0}.png"\n'.format(filename))
         out.write('plot "{0}" u {using} w {wit} t "{title}"'.\
                       format(filename,
@@ -57,13 +59,16 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(dest="dir", help="Data directory")
     parser.add_argument("-u", "--using", dest="using",
-                        help="Set using", default="1:2")
+                        help="Set using, can set several directives"
+                        " e.g. '1:2|1:3'", default="1:2")
     parser.add_argument("-w", "--with", dest="wit",
                         help="Set with", default="lp")
     parser.add_argument("-t", "--title", dest="title",
                         help="Set title", default='')
+    parser.add_argument("-T", "--plot-title", dest="plot_title",
+                        help="Set title", default='t={t}')
     parser.add_argument("-m", "--movie", dest="movie",
-                        help="Generate movie?", action="store_true")
+                        help="Generate movie", action="store_true")
 
 
     options = parser.parse_args()
