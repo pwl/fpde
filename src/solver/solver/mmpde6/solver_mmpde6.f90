@@ -40,6 +40,8 @@ module class_solver_mmpde6
      procedure(g_interface), pointer :: g => null()
      procedure(initial_interface), pointer, nopass &
           :: initial => null()
+     procedure(epsilon_interface), pointer, nopass &
+          :: epsilon => null()
    ! end of initialization parameters
      real, pointer :: tau => null()
      ! physical mesh is used to calculate d/dx of f(:,:)
@@ -84,6 +86,11 @@ module class_solver_mmpde6
        real, intent(out)   :: f(:,:)
        class(*), pointer  :: params
      end subroutine initial_interface
+
+     real function epsilon_interface(g)
+       real :: g
+     end function epsilon_interface
+
   end interface
 
   public&
@@ -123,6 +130,11 @@ contains
     if( .not. associated( s % g ) ) then
        ! @todo report error
        print *, "ERROR: ", trim(s%name), ": g has not been set"
+    end if
+
+    if( .not. associated( s % epsilon ) ) then
+       ! @todo report error
+       print *, "ERROR: ", trim(s%name), ": epsilon has not been set"
     end if
 
     if( .not. associated( s % calculate_monitor ) ) then
@@ -167,10 +179,15 @@ contains
 
     ! allocate the memory for computational time
     allocate( s % data_scalars(2) )
-    ! set the initial value of computational time
+    allocate( s % data_scalars_names(2) )
+    ! set the initial value of computational time and name it
     s % tau => s % data_scalars(1)
+    s % data_scalars_names(1) = "tau"
     s % tau = 0.
+
+    ! set initial value of g and name it
     s % gval => s % data_scalars(2)
+    s % data_scalars_names(2) = "g"
     s % gval = 0.
 
     ! deallocate the memory allocated by meshes
@@ -460,7 +477,7 @@ contains
     ! end forall
 
     ! dxdt = 0.* 1.e-15/epsilon(g) * dxdt_tmp
-    dxdt = 1./epsilon(g) * dxdt_tmp
+    dxdt = 1./ s % epsilon(g) * dxdt_tmp
 
     ! @todo add -x_t*f_x to the rhs
     forall( i = 1 : nf )
@@ -520,20 +537,6 @@ contains
   end subroutine set_dxdt
 
 
-  !>
-  !!
-  !! @param g
-  !!
-  !! @return
-  !!
-  ! this function was found to be giving best results, see Biernat and
-  ! Bizon [2011]
-  real function epsilon(g)
-    real :: g
-    epsilon = 100. * sqrt(g) + .05
-
-  end function epsilon
-
 
   !>
   !!
@@ -555,9 +558,9 @@ contains
 
     do while( .true. )
     ! do while( s % n_iter < 2 )
-       ! print *, ""
-       ! print *, "####iteration: ", s % n_iter
-       ! print *, s % tau
+       print *, ""
+       print *, "####iteration: ", s % n_iter
+       print *, s % tau
        call s % marcher % apply( &
             s   = s % stepper,   &
             c   = s % step_control, &
@@ -567,6 +570,7 @@ contains
             h   = s % dt,         &
             y   = s % y )
        ! @todo: neater error handling
+       print *, s % tau
 
        if ( s % marcher % status /= 1 ) then
           print *, "marcher error, status=",  s % marcher % status
@@ -578,8 +582,10 @@ contains
           s % n_iter = s % n_iter + 1
 
           ! sync pointers first
+          print *, s % t
           call s % set_pointers( tau = s % tau, &
                y = s % y, dydt = s % dydt )
+          print *, s % t
 
           ! @todo: extra calculation, probably not needed
           call s % rhs

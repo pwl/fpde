@@ -45,6 +45,8 @@ contains
     integer :: file_handle
     integer :: iostat
     character(len=1000) :: file_name
+    character(len=30)   :: name
+    character(len=30), pointer :: data_scalars_names(:)
     class(solver_data), pointer :: s
 
     r = .true.
@@ -56,6 +58,7 @@ contains
     dfdt => s % dfdt
     data_block => s % data_block
     data_scalars => s % data_scalars
+    data_scalars_names => s % data_scalars_names
 
     nx = s % nx
     nf = s % nf
@@ -92,13 +95,21 @@ contains
 
 
     write( file_handle, * )&
-         "# ",&
-         "  t = ", s % t, &
-         "  dt = ", s % dt
+         "#  t = ", s % t
+    write( file_handle, * )&
+         "# dt = ", s % dt
     if( associated( data_scalars ) ) then
        do i = 1, size(data_scalars,1)
+
+          if(associated( data_scalars_names)) then
+             name = data_scalars_names(i)
+          else
+             write(name, "(a,i1)") "x", i
+          end if
+
           write( file_handle, * )&
-               "# ", data_scalars(i)
+               "# ", name, &
+               " = ", data_scalars(i)
        end do
     end if
 
@@ -115,7 +126,7 @@ contains
        do i = 1, nx
           write( file_handle, *)&
                x(i),&
-               (f(i,j), j=1,nf),&
+               (f(i,j),    j=1,nf),&
                (dfdt(i,j), j=1,nf)
        end do
     end if

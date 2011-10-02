@@ -17,7 +17,9 @@ module class_solver_data
      real, contiguous, pointer         :: dfdt (:,:) => null()
      real, contiguous, pointer         :: dfdx (:,:,:) => null()
      real, contiguous, pointer         :: data_block (:,:) => null()
+     character(len=30), pointer        :: data_block_names (:) => null()
      real, contiguous, pointer         :: data_scalars (:) => null()
+     character(len=30), pointer        :: data_scalars_names (:) => null()
      real                              :: x0=0., x1=1.
      integer                           :: nx = 0, nf = 0, rk = 0
      integer                           :: n_iter = 0
