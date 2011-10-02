@@ -41,7 +41,8 @@ def main(files, out, options):
 
     # @todo set apropriate system path in CMakeList.txt
     if options.movie:
-        os.system("../fpde/scripts/make_movie.sh {0}".format(dir))
+        os.system("{scripts}/make_movie.sh {dir}".format(
+                dir=dir,scripts=options.scripts))
 
 def list_dat(dir, format=".dat"):
     return [os.path.join(dir, f) \
@@ -63,6 +64,9 @@ if __name__ == "__main__":
                         " e.g. '1:2|1:3'", default="1:2")
     parser.add_argument("-w", "--with", dest="wit",
                         help="Set with", default="lp")
+    parser.add_argument("-s", "--scripts", dest="scripts",
+                        help="Set path to fpde/scripts",
+                        default="../fpde/scripts")
     parser.add_argument("-t", "--title", dest="title",
                         help="Set title", default='')
     parser.add_argument("-T", "--plot-title", dest="plot_title",
@@ -70,8 +74,14 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--movie", dest="movie",
                         help="Generate movie", action="store_true")
 
-
     options = parser.parse_args()
+
+    if not os.path.exists(
+        os.path.join(
+            options.scripts,"make_movie.sh")):
+        print "'make_movie.sh' not found in '", options.scripts,"'"
+        print "Consider setting the correct path using '-s'"
+        sys.exit()
 
     options.using = options.using.split("|")
     titles = options.title.split("|")
