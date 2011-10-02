@@ -49,6 +49,7 @@ contains
     min = t % min
     max = t % max
 
+    ! @todo use mesh % integrate
     allocate(l2norm(nf))
     allocate(dx(nx))
 
@@ -61,7 +62,7 @@ contains
        l2norm(i) = sqrt(sum(dfdt(:,i)*dfdt(:,i)*dx(:)))
     end forall
 
-    print *, l2norm
+    print *, "DEBUG: trigger_dt_norm: test: l2norm = ", l2norm
 
     if( min > 0. .and. any( l2norm < min ) ) then
        r = .true.
@@ -72,6 +73,8 @@ contains
        r = .true.
        return
     end if
+
+    deallocate(l2norm, dx)
 
   end function test
 

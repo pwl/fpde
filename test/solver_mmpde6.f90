@@ -16,7 +16,7 @@ program test_solver_mmpde6
   use class_trigger_f_control
   use class_trigger_every_n_iter
 
-  integer, parameter :: nx = 41
+  integer, parameter :: nx = 101
   integer :: i
   real :: pi, h, xi(nx), dxdt(nx)
   real, pointer :: x(:), m(:)
@@ -33,6 +33,7 @@ program test_solver_mmpde6
   s % calculate_monitor => calculate_monitor
   s % initial => initial
   s % g => g
+  s % epsilon => epsilon
   s % abs_error = 1.e-14
   s % rel_error = 1.e-14
   s % dt = 1.e-10
@@ -104,6 +105,7 @@ contains
   subroutine calculate_monitor(s)
     class(solver_mmpde6) :: s
     real, pointer ::  dfdx(:,:,:), f(:,:)
+    real :: norm
 
     ! print *, "DEBUG: calculate_monitor"
 
@@ -113,10 +115,28 @@ contains
     ! M(u) = |f_x| + sqrt(|f_xx|)
     ! s % monitor(:) = abs(dfdx(:,1,1)) + sqrt(abs(dfdx(:,1,2)))
     ! s % monitor(:) = sqrt(1+dfdx(:,1,1)**2)
-    s % monitor(:) = f(:,1) + 1.
-    ! s % monitor = s % monitor/sum(s%monitor) + 1.
+    s % monitor(:) = f(:,1)
+    norm = s % physical % integrate(s%monitor)
+    s % monitor = s % monitor / norm + .1
 
   end subroutine calculate_monitor
+
+  !>
+  !!
+  !! @param g
+  !!
+  !! @return
+  !!
+  ! this function was found to be giving best results, see Biernat and
+  ! Bizon [2011]
+  real function epsilon(g)
+    real :: g
+    epsilon = 100. * sqrt(g) + .05
+    epsilon = 100. * sqrt(min(abs(g),1.e-4)) + .05
+    epsilon = .05
+
+  end function epsilon
+
 
 
 
