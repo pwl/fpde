@@ -62,7 +62,8 @@ contains
        l2norm(i) = sqrt(sum(dfdt(:,i)*dfdt(:,i)*dx(:)))
     end forall
 
-    print *, "DEBUG: trigger_dt_norm: test: l2norm = ", l2norm
+    print *, "DEBUG: trigger_dt_norm: test: l2norm = ", l2norm,&
+         "min = ", min
 
     if( min > 0. .and. any( l2norm < min ) ) then
        r = .true.

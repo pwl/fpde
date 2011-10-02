@@ -94,10 +94,24 @@ contains
     end if
 
 
+    ! @todo: write constant solver_data parameters to some file
+    write( file_handle, * )&
+         "#  solver_name = ", s % name
     write( file_handle, * )&
          "#  t = ", s % t
     write( file_handle, * )&
          "# dt = ", s % dt
+    write( file_handle, * )&
+         "# nx = ", s % nx
+    write( file_handle, * )&
+         "# nf = ", s % nf
+    write( file_handle, * )&
+         "# x0 = ", s % x0
+    write( file_handle, * )&
+         "# x1 = ", s % x1
+    write( file_handle, * )&
+         "# n_iter = ", s % n_iter
+
     if( associated( data_scalars ) ) then
        do i = 1, size(data_scalars,1)
 
