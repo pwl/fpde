@@ -26,7 +26,7 @@ module class_solver_standard
   type, public, extends(solver) :: solver_standard
 
      ! initialization data
-     character(len=30) :: stepper_id = "rkf45"
+     character(len=30) :: stepper_id = "rkpd54"
      character(len=30) :: step_control_id = "standard"
      real :: abs_error = 1.e-10
      real :: rel_error = 1.e-10

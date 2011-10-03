@@ -264,7 +264,7 @@ contains
 
     data = solver_simple_data( &
          mesh_id = "sfd3pt",   &
-         stepper_id = "rkf45", &
+         stepper_id = "rkpd54", &
          nx      = s % nx,     &
          nf      = 1,          &
          x0      = 0.,         &
