@@ -76,3 +76,7 @@ TODO
   `module_data_print`?
 
 - logical combinations of triggers, now only "and" is available
+
+- module to calculate convergence?
+
+- include `module_print_data` in `solver`? It is needed almost always

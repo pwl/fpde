@@ -16,46 +16,38 @@ program test_solver_mmpde6
   use class_trigger_f_control
   use class_trigger_every_n_iter
 
-  integer, parameter :: nx = 51
+  integer, parameter :: nx = 41
   integer :: i
   real :: pi, h, xi(nx), dxdt(nx)
   real, pointer :: x(:), m(:)
   type(solver_mmpde6) :: s
 
-  s % t0 = 0.
-  s % t1 = 1.
+  s % t0 = 0.  !this is the initial physical time
+  s % t1 = 1.e10 !this is the maximal computational time
   s % nx = nx
   s % nf = 1
   s % rk = 2
   s % rhs => my_rhs1
-  s % x0 = 0.
+  s % x0 = 0.  !physical domain specifiers
   s % x1 = 1.
+  ! functions ruling the mmpde6 method, user defined
   s % calculate_monitor => calculate_monitor
   s % initial => initial
   s % g => g
   s % epsilon => epsilon
+  ! marcher parameters
   s % abs_error = 1.e-14
   s % rel_error = 1.e-14
-  s % dt = 1.e-10
-  s % params => null()
+  s % dt = 1.e-10  !this is used to initialize dtau, but after running
+                   !the solver it is rewritten with dt := g*dtau
 
   h = (1.)/real(nx-1)
 
   call s % init
 
-  ! call s % add(&
-  !      module_print_data(file_name = "data/test"),&
-  !      trigger_always(test_result = .true.))
-
-  ! call s % add(&
-  !      module_solver_stop(),&
-  !      trigger_f_control( max = 2. ))
   call s % add(&
        module_print_data(file_name = "data/test"),&
        trigger_every_n_iter(dn = 100))
-  ! call s % add(&
-  !      module_print_data(file_name = "data/test"),&
-  !      trigger_always( test_result = .true.))
 
   call s % solve
 
@@ -67,7 +59,7 @@ contains
     class(*), pointer  :: params
 
     pi = acos(-1.)
-    f(:,1) = 20.*sin(pi*x)
+    f(:,1) = 100.*sin(pi*x) * x
     f(1,1) = 0.
     f(nx,1) = 0.
   end subroutine initial
@@ -98,7 +90,7 @@ contains
     ! u_tx_0 = s % physical2 % derivative( 1, 1, 1 )
 
     ! the value of g is custom suited to the problem
-    g = 1./ s%f(s%nx/2,1) ! (abs(u_x_0) + 1.)/(abs(u_tx_0) + 1.)
+    g = 1./ maxval(abs(s%f(:,1))) ! (abs(u_x_0) + 1.)/(abs(u_tx_0) + 1.)
 
   end function g
 
@@ -131,9 +123,10 @@ contains
   ! Bizon [2011]
   real function epsilon(g)
     real :: g
-    epsilon = 100. * sqrt(g) + .05
-    epsilon = 100. * sqrt(min(abs(g),1.e-4)) + .05
-    epsilon = .05
+    ! epsilon = 100. * sqrt(g) + .05
+    ! ! epsilon = 100. * sqrt(min(abs(g),1.e-4)) + .05
+    epsilon = 6.*sqrt(g) + .05
+    ! epsilon = .5
 
   end function epsilon
 

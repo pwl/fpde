@@ -37,9 +37,22 @@ module class_solver_mmpde6
      ! initialization parameters
      procedure(calculate_monitor_interface), pointer &
           :: calculate_monitor => null()
+     !< g is the sundman transfrom, should be chosen to be
+     ! proportional to (T-t)
      procedure(g_interface), pointer :: g => null()
+     !< initial is a functional form of initial data passed to the
+     ! solver, used by the initialize_mesh function to generate rhs
      procedure(initial_interface), pointer, nopass &
           :: initial => null()
+     !< epsilon governs the relative time scale of the mesh equation,
+     ! large epsilon means a slower moving mesh and large forces the
+     ! mesh to move faster. If epsilon is too large it will cause the
+     ! mesh to freeze before reaching the area of interest, if epsilon
+     ! is too small the mesh movement will be too quick and might
+     ! result in a non-realistic solutions or a very stiff system,
+     ! thus epsilon has to be carefully tailored to the problem at
+     ! hand and to a particular initial data. The reasonable initial
+     ! guess is to set epsilon ~ 1.e-2
      procedure(epsilon_interface), pointer, nopass &
           :: epsilon => null()
      ! end of initialization parameters
@@ -571,7 +584,7 @@ contains
     ! call the modules
     call s % step
 
-    do while( .true. )
+    do while( tau < s % t1 )
     ! do while( s % n_iter < 2 )
        ! print *, ""
        ! print *, "####iteration: ", s % n_iter

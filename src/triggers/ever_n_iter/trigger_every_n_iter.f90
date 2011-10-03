@@ -36,11 +36,12 @@ contains
 
     n_iter => t % n_iter
     dn => t % dn
-    n_iter = n_iter + 1
 
     if ( mod( n_iter, dn ) == 0 ) then
        r = .true.
     end if
+
+    n_iter = n_iter + 1
 
   end function test
 
