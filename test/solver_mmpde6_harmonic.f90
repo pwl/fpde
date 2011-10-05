@@ -44,6 +44,10 @@ program test_solver_mmpde6
   s % rel_error = 1.e-15
   s % dt = 1.e-12  !this is used to initialize dtau, but after running
                    !the solver it is rewritten with dt := g*dtau
+  allocate( s % user_data_scalars( 2 ) )
+  allocate( s % user_data_scalars_names( 2 ) )
+  s % user_data_scalars_names(1) = "u_x_0"
+  s % user_data_scalars_names(2) = "u_tx_0"
 
   h = (1.)/real(nx-1)
 
@@ -104,9 +108,12 @@ contains
     u_x_0 = s % physical % df(1,1,1)
     ! calculate u_xt(x=0)
     u_tx_0 = s % physical2 % derivative( 1, 1, 1 )
+    s % user_data_scalars(1) = u_x_0
+    s % user_data_scalars(2) = u_tx_0
 
     ! the value of g is custom suited to the problem
-    g = 0.5*(abs(u_x_0) + .1)/(abs(u_tx_0) + .1)
+    g = 0.5*(abs(u_x_0) + 1.)/(abs(u_tx_0) + 1.)
+    g = u_x_0**-2
     ! g = 1.! 0.5*(abs(u_x_0))/(abs(u_tx_0))
 
   end function g
@@ -129,9 +136,9 @@ contains
     ! M(u) = |f_x| + sqrt(|f_xx|)
     m = abs(df) + sqrt(abs(d2f))
     ! convolution:
-    m(2:nx-1) = (m(1:nx-2) + m(3:nx) + 2.*m(2:nx-1))/4.
-    norm = s % physical % integrate(s%monitor)
-    s % monitor = s % monitor / norm !+ .1
+    ! m(2:nx-1) = (m(1:nx-2) + m(3:nx) + 2.*m(2:nx-1))/4.
+    ! norm = s % physical % integrate(s%monitor)
+    ! s % monitor = s % monitor / norm !+ .1
 
   end subroutine calculate_monitor
 

@@ -112,20 +112,13 @@ contains
     write( file_handle, * )&
          "# n_iter = ", s % n_iter
 
-    if( associated( data_scalars ) ) then
-       do i = 1, size(data_scalars,1)
+    call print_scalars( file_handle, &
+         data_scalars, &
+         data_scalars_names )
 
-          if(associated( data_scalars_names)) then
-             name = data_scalars_names(i)
-          else
-             write(name, "(a,i1)") "x", i
-          end if
-
-          write( file_handle, * )&
-               "# ", name, &
-               " = ", data_scalars(i)
-       end do
-    end if
+    call print_scalars( file_handle,&
+         s % user_data_scalars,&
+         s % user_data_scalars_names )
 
 
     if( associated( s % data_block ) ) then
@@ -190,6 +183,39 @@ contains
 
   end function init
 
+
+  subroutine print_scalars( file_handle, data_scalars, data_names )
+    integer :: file_handle
+    real, pointer :: data_scalars(:)
+    character(len=30), pointer :: data_names(:)
+    character(len=30) :: name
+    integer :: ls, ln, i
+
+    if( .not. associated( data_scalars )) then
+       return
+    else
+       ls = size(data_scalars)
+    end if
+
+    if( associated( data_names) ) then
+       ln = size(data_names)
+    else
+       ln = 0
+    end if
+
+    do i = 1, ls
+       if( i <= ln ) then
+          name = data_names(i)
+       else
+          write(name, "(a,i1)") "x", i - ln + 1
+       end if
+
+       write( file_handle, * )&
+            "# ", name, &
+            " = ", data_scalars(i)
+    end do
+
+  end subroutine print_scalars
 
 
 end module class_module_print_data

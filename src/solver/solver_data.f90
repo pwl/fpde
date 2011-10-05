@@ -20,6 +20,8 @@ module class_solver_data
      character(len=30), pointer        :: data_block_names (:) => null()
      real, contiguous, pointer         :: data_scalars (:) => null()
      character(len=30), pointer        :: data_scalars_names (:) => null()
+     real, contiguous, pointer         :: user_data_scalars (:) => null()
+     character(len=30), pointer        :: user_data_scalars_names (:) => null()
      real                              :: x0=0., x1=1.
      integer                           :: nx = 0, nf = 0, rk = 0
      integer                           :: n_iter = 0
