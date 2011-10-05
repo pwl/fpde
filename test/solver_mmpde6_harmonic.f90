@@ -15,6 +15,7 @@ program test_solver_mmpde6
   use class_trigger_always
   use class_trigger_f_control
   use class_trigger_every_n_iter
+  use class_trigger_non_monotonic
 
   integer, parameter :: nx = 41
   integer :: i
@@ -58,6 +59,12 @@ program test_solver_mmpde6
        trigger_every_n_iter(dn = 100),&
        trigger_f_control(max=pi/2.+.01, center=pi/2.))
 
+  ! problems arise when
+  call s % add(&
+       module_solver_stop(),&
+       trigger_every_n_iter(dn = 100),&
+       trigger_non_monotonic( i = 1, increasing = .true.))
+
   call s % solve
 
 contains
@@ -68,8 +75,7 @@ contains
     class(*), pointer  :: params
 
     f(:,1) = sin(x) + x
-    f(1,1) = 0.
-    f(nx,1) = pi
+
   end subroutine initial
 
 
@@ -94,13 +100,14 @@ contains
     real :: u_tx_0, u_x_0
 
     ! @todo physical2 % derivative is not working
-    ! ! use the previously calculated value of u_x(x=0)
+    ! use the previously calculated value of u_x(x=0)
     u_x_0 = s % physical % df(1,1,1)
-    ! ! calculate u_xt(x=0)
+    ! calculate u_xt(x=0)
     u_tx_0 = s % physical2 % derivative( 1, 1, 1 )
 
     ! the value of g is custom suited to the problem
-    g = 0.5*(abs(u_x_0) + 1.)/(abs(u_tx_0) + 1.)
+    g = 0.5*(abs(u_x_0) + .1)/(abs(u_tx_0) + .1)
+    ! g = 1.! 0.5*(abs(u_x_0))/(abs(u_tx_0))
 
   end function g
 
@@ -122,10 +129,9 @@ contains
     ! M(u) = |f_x| + sqrt(|f_xx|)
     m = abs(df) + sqrt(abs(d2f))
     ! convolution:
-    m(2:nx-1) = m(1:nx-2) + m(3:nx) + 2.*m(2:nx-1)
-    m(1) = m(2)
-    ! norm = s % physical % integrate(s%monitor)
-    ! s % monitor = s % monitor / norm + .1
+    m(2:nx-1) = (m(1:nx-2) + m(3:nx) + 2.*m(2:nx-1))/4.
+    norm = s % physical % integrate(s%monitor)
+    s % monitor = s % monitor / norm !+ .1
 
   end subroutine calculate_monitor
 
@@ -139,8 +145,8 @@ contains
   ! Bizon [2011]
   real function epsilon(g)
     real :: g
-    ! epsilon = 0.1*sqrt(g) + .0005
-    epsilon = 5.e-2
+    epsilon = 0.1*sqrt(g) + .05
+    ! epsilon = 5.e-2
 
   end function epsilon
 
