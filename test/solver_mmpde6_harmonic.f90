@@ -21,6 +21,9 @@ program test_solver_mmpde6
   real :: pi, h, xi(nx), dxdt(nx)
   real, pointer :: x(:), m(:)
   type(solver_mmpde6) :: s
+  pi = acos(-1.)
+  print *, pi
+
 
   s % t0 = 0.  !this is the initial physical time
   s % t1 = 1.e10 !this is the maximal computational time
@@ -29,16 +32,16 @@ program test_solver_mmpde6
   s % rk = 2
   s % rhs => my_rhs1
   s % x0 = 0.  !physical domain specifiers
-  s % x1 = 1.
+  s % x1 = pi
   ! functions ruling the mmpde6 method, user defined
   s % calculate_monitor => calculate_monitor
   s % initial => initial
   s % g => g
   s % epsilon => epsilon
   ! marcher parameters
-  s % abs_error = 1.e-14
-  s % rel_error = 1.e-14
-  s % dt = 1.e-10  !this is used to initialize dtau, but after running
+  s % abs_error = 1.e-15
+  s % rel_error = 1.e-15
+  s % dt = 1.e-12  !this is used to initialize dtau, but after running
                    !the solver it is rewritten with dt := g*dtau
 
   h = (1.)/real(nx-1)
@@ -49,6 +52,12 @@ program test_solver_mmpde6
        module_print_data(file_name = "data/test"),&
        trigger_every_n_iter(dn = 100))
 
+  ! problems arise when
+  call s % add(&
+       module_solver_stop(),&
+       trigger_every_n_iter(dn = 100),&
+       trigger_f_control(max=pi/2.+.01, center=pi/2.))
+
   call s % solve
 
 contains
@@ -58,21 +67,22 @@ contains
     real, intent(out)   :: f(:,:)
     class(*), pointer  :: params
 
-    pi = acos(-1.)
-    f(:,1) = 100.*sin(pi*x) * x
+    f(:,1) = sin(x) + x
     f(1,1) = 0.
-    f(nx,1) = 0.
+    f(nx,1) = pi
   end subroutine initial
 
 
   subroutine my_rhs1( s )
     class(solver) :: s
     integer :: i
+    real, pointer :: x(:), f(:), df(:), d2f(:)
+    x   => s%x
+    f   => s%f(:,1)
+    df  => s%dfdx(:,1,1)
+    d2f => s%dfdx(:,1,2)
 
-    ! call s % calculate_dfdx( 2 )
-
-    s % dfdt(:,1) = s % dfdx(:,1,2) + (s % f(:,1))**2
-    ! s % dfdt(:,2) = s % dfdx(:,1,2)
+    s % dfdt(:,1) = d2f + 2.*df/x - sin(2.*f)/x**2
 
     s % dfdt(1,:) = 0.
     s % dfdt(s%nx,:) = 0.
@@ -85,31 +95,37 @@ contains
 
     ! @todo physical2 % derivative is not working
     ! ! use the previously calculated value of u_x(x=0)
-    ! u_x_0 = s % dfdx(1,1,1)
+    u_x_0 = s % physical % df(1,1,1)
     ! ! calculate u_xt(x=0)
-    ! u_tx_0 = s % physical2 % derivative( 1, 1, 1 )
+    u_tx_0 = s % physical2 % derivative( 1, 1, 1 )
 
     ! the value of g is custom suited to the problem
-    g = 1./ maxval(abs(s%f(:,1))) ! (abs(u_x_0) + 1.)/(abs(u_tx_0) + 1.)
+    g = 0.5*(abs(u_x_0) + 1.)/(abs(u_tx_0) + 1.)
 
   end function g
 
   subroutine calculate_monitor(s)
     class(solver_mmpde6) :: s
-    real, pointer ::  dfdx(:,:,:), f(:,:)
+    ! real, pointer ::  dfdx(:,:,:), f(:,:)
+    integer :: nx
     real :: norm
+    real, pointer :: x(:), f(:), df(:), d2f(:), m(:)
+    nx = s % nx
+    x   => s%x
+    ! f   => s%f(:,1)
+    df  => s%dfdx(:,1,1)
+    d2f => s%dfdx(:,1,2)
+    m   => s%monitor
 
     ! print *, "DEBUG: calculate_monitor"
 
-    dfdx => s % dfdx
-    f => s % f
-
     ! M(u) = |f_x| + sqrt(|f_xx|)
-    ! s % monitor(:) = abs(dfdx(:,1,1)) + sqrt(abs(dfdx(:,1,2)))
-    ! s % monitor(:) = sqrt(1+dfdx(:,1,1)**2)
-    s % monitor(:) = f(:,1)
-    norm = s % physical % integrate(s%monitor)
-    s % monitor = s % monitor / norm + .1
+    m = abs(df) + sqrt(abs(d2f))
+    ! convolution:
+    m(2:nx-1) = m(1:nx-2) + m(3:nx) + 2.*m(2:nx-1)
+    m(1) = m(2)
+    ! norm = s % physical % integrate(s%monitor)
+    ! s % monitor = s % monitor / norm + .1
 
   end subroutine calculate_monitor
 
@@ -123,10 +139,8 @@ contains
   ! Bizon [2011]
   real function epsilon(g)
     real :: g
-    ! epsilon = 100. * sqrt(g) + .05
-    ! ! epsilon = 100. * sqrt(min(abs(g),1.e-4)) + .05
-    epsilon = 6.*sqrt(g) + .05
-    ! epsilon = .5
+    ! epsilon = 0.1*sqrt(g) + .0005
+    epsilon = 5.e-2
 
   end function epsilon
 

@@ -45,6 +45,8 @@ contains
 
     if( max > 0. .and. any( abs(f - center) > max) ) then
        r = .true.
+       print *, "DEBUG: trigger_f_control: test = .true."
+       print *, max, center
        return
     end if
 

@@ -239,7 +239,7 @@ contains
     ! after setting the pointers set time to t0
     s % t = s % t0
 
-    s % x = [(xmin + (xmax-xmin)*(i-1)*h, i = 1, nx)]
+    s % x = [(xmin + (i-1)*h, i = 1, nx)]
 
     call s % initialize_mesh
 
@@ -270,7 +270,7 @@ contains
          x0      = 0.,         &
          x1      = 1.,         &
          t0      = 0.,         &
-         t1      = 10.,        &
+         t1      = 1.e10,      &
          h0      = 1.e-10,     &
          rel_error = 1.e-14,   &
          abs_error = 1.e-14,   &
@@ -284,7 +284,8 @@ contains
     ! call si % info
     call si % add(                                    &
          module_print_data(file_name = "mmpde/init"), &
-         trigger_timed( dt = 1.e-2) )
+         trigger_every_n_iter(dn = 30))
+
     ! stop if stationary state reached
     call si % add(                                    &
          module_solver_stop(),                        &
