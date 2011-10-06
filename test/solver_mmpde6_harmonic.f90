@@ -94,12 +94,13 @@ contains
     class(solver) :: s
     integer :: i
     real, pointer :: x(:), f(:), df(:), d2f(:)
+    real, parameter :: d = 7.
     x   => s%x
     f   => s%f(:,1)
     df  => s%dfdx(:,1,1)
     d2f => s%dfdx(:,1,2)
 
-    s % dfdt(:,1) = d2f + 2.*df/x - sin(2.*f)/x**2
+    s % dfdt(:,1) = d2f + (d-1.)*df/x - (d-1)/2.*sin(2.*f)/x**2
 
     s % dfdt(1,:) = 0.
     s % dfdt(s%nx,:) = 0.
