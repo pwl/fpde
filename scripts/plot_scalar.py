@@ -28,4 +28,4 @@ if __name__ == "__main__":
 
     generate_plot_cmd(out, options, dict)
 
-    os.system("gnuplot -p {0}".format(options.out))
+    os.system("gnuplot -persist {0}".format(options.out))
