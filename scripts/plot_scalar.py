@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--title", dest="title",
                         help="Set title", default='')
     parser.add_argument("-T", "--plot-title", dest="plot_title",
-                        help="Set title", default='t={t}')
+                        help="Set title", default='')
 
 
     options = parser.parse_args()

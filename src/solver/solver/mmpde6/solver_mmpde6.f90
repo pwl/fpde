@@ -69,6 +69,7 @@ module class_solver_mmpde6
      ! greens function for -D^2 ( so that G is positive definite )
      real, contiguous, pointer :: greens(:,:) => null()
      real, pointer :: gval => null()
+     real, pointer :: epsilon_val => null()
      ! integer :: total_nf
      ! spacing of the computational mesh
      real :: h = 0.
@@ -195,8 +196,8 @@ contains
     call s % physical2 % init( nx, nf, 1, xmin, xmax)
 
     ! allocate the memory for computational time
-    allocate( s % data_scalars(3) )
-    allocate( s % data_scalars_names(3) )
+    allocate( s % data_scalars(4) )
+    allocate( s % data_scalars_names(4) )
     ! set the initial value of computational time and name it
     s % tau => s % data_scalars(1)
     s % data_scalars_names(1) = "tau"
@@ -211,6 +212,11 @@ contains
     s % gval => s % data_scalars(3)
     s % data_scalars_names(3) = "g"
     s % gval = 0.
+
+    ! set initial value of epsilon and name it
+    s % epsilon_val => s % data_scalars(4)
+    s % data_scalars_names(4) = "eps"
+    s % epsilon_val = s % epsilon(s%gval)
 
     ! deallocate the memory allocated by meshes
     deallocate( s%physical%f,  s%physical%x )
@@ -444,7 +450,7 @@ contains
     real, pointer, intent(in) :: y(:)    !input data vector
     real, pointer, intent(out) :: dydt(:) !output data vector
     real, pointer    :: m(:), x(:), dxdt(:), dxdt_tmp(:), greens(:,:)
-    real, pointer    :: dfdt(:,:), dfdx(:,:,:), g
+    real, pointer    :: dfdt(:,:), dfdx(:,:,:), g, epsilon
     class(solver_mmpde6) :: s
     integer, optional :: status
     integer :: nx, nf, i, j
@@ -467,6 +473,7 @@ contains
     greens => s % greens
     dfdt => s % dfdt
     dfdx => s % dfdx
+    epsilon => s % epsilon_val
 
     ! after setting pointers we calculate the required spatial
     ! derivatives
@@ -509,11 +516,13 @@ contains
     end forall
 
     ! dxdt = 0.* 1.e-15/epsilon(g) * dxdt_tmp
-    dxdt = 0./ s % epsilon(g) * dxdt_tmp
+    ! save the value of epsilon
+    epsilon = s % epsilon(g)
+    dxdt = 1./ epsilon * dxdt_tmp
 
     ! @todo add -x_t*f_x to the rhs
     forall( i = 1 : nf )
-       dfdt(:,i) = dfdt(:,i) - dxdt(:) * dfdx(:,i,1)
+       dfdt(:,i) = dfdt(:,i) + dxdt(:) * dfdx(:,i,1)
     end forall
 
     ! now the whole dydt vector should be set up to the almost

@@ -7,6 +7,7 @@ program test_afd5pt
   real :: x(nx), f(nx), df(nx,1,2)
 
   x=[(real(i-1)/real(nx-1),i=1,nx)]
+  ! x = x**2                      !non-uniform mesh
 
   f(:) = sin(x)
 
@@ -29,12 +30,14 @@ program test_afd5pt
      print *, m % integrate( df(:,1,i) - m % df(:,1,i) )
   end do
 
-  ! this is the l2 norm of (D_n-d)f
+  print *, abs(df(:,1,1)-cos(x))
 
-  print *, "L1 norm of df-cos(x)"
-  print *,m % integrate( df(:,1,1) - cos(x) )
-  print *, "L1 norm of d2f+sin(x)"
-  print *,m % integrate( df(:,1,2) + sin(x) )
+  print *, "L1 norm of |df-cos(x)|"
+  print *,m % integrate( abs(df(:,1,1) - cos(x)) )
+  print *,maxloc(abs(df(:,1,1) - cos(x)) )
+  print *, "L1 norm of |d2f+sin(x)|"
+  print *,m % integrate( abs(df(:,1,2) + sin(x)) )
+  print *,maxloc(abs(df(:,1,1) - cos(x)) )
   print *, "L2 norm of df-cos(x)"
   print *,m % integrate( (df(:,1,1) - cos(x))**2 )
   print *, "L2 norm of d2f+sin(x)"

@@ -9,6 +9,7 @@ program test_solver_mmpde6
 
   use class_module
   use class_module_print_data
+  use class_module_print_scalar_data
   use class_module_solver_stop
   use class_trigger
   use class_trigger_timed
@@ -26,6 +27,7 @@ program test_solver_mmpde6
   print *, pi
 
 
+  s % stepper_id = "rkpd54"
   s % t0 = 0.  !this is the initial physical time
   s % t1 = 1.e10 !this is the maximal computational time
   s % nx = nx
@@ -44,10 +46,11 @@ program test_solver_mmpde6
   s % rel_error = 1.e-15
   s % dt = 1.e-12  !this is used to initialize dtau, but after running
                    !the solver it is rewritten with dt := g*dtau
-  allocate( s % user_data_scalars( 2 ) )
-  allocate( s % user_data_scalars_names( 2 ) )
+  allocate( s % user_data_scalars( 3 ) )
+  allocate( s % user_data_scalars_names( 3 ) )
   s % user_data_scalars_names(1) = "u_x_0"
   s % user_data_scalars_names(2) = "u_tx_0"
+  s % user_data_scalars_names(3) = "x0"
 
   h = (1.)/real(nx-1)
 
@@ -57,11 +60,15 @@ program test_solver_mmpde6
        module_print_data(file_name = "data/test"),&
        trigger_every_n_iter(dn = 100))
 
-  ! problems arise when
   call s % add(&
-       module_solver_stop(),&
-       trigger_every_n_iter(dn = 100),&
-       trigger_f_control(max=pi/2.+.01, center=pi/2.))
+       module_print_scalar_data(file_name = "scalar_data/test"),&
+       trigger_every_n_iter(dn = 100))
+
+  ! problems arise when
+  ! call s % add(&
+  !      module_solver_stop(),&
+  !      trigger_every_n_iter(dn = 100),&
+  !      trigger_f_control(max=pi/2.+.01, center=pi/2.))
 
   ! problems arise when
   call s % add(&
@@ -78,7 +85,7 @@ contains
     real, intent(out)   :: f(:,:)
     class(*), pointer  :: params
 
-    f(:,1) = sin(x) + x
+    f(:,1) = x + sin(x)
 
   end subroutine initial
 
@@ -110,8 +117,10 @@ contains
     u_tx_0 = s % physical2 % derivative( 1, 1, 1 )
     s % user_data_scalars(1) = u_x_0
     s % user_data_scalars(2) = u_tx_0
+    s % user_data_scalars(3) = s % x(1)
 
     ! the value of g is custom suited to the problem
+    ! u_x_0 = abs(s%f(2,1)-s%f(1,1))/(s%x(2)-s%x(1))
     g = 0.5*(abs(u_x_0) + 1.)/(abs(u_tx_0) + 1.)
     g = u_x_0**-2
     ! g = 1.! 0.5*(abs(u_x_0))/(abs(u_tx_0))
@@ -152,7 +161,7 @@ contains
   ! Bizon [2011]
   real function epsilon(g)
     real :: g
-    epsilon = 0.1*sqrt(g) + .05
+    epsilon = 0.1*sqrt(g) + .01
     ! epsilon = 5.e-2
 
   end function epsilon
