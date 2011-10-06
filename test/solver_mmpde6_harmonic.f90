@@ -50,7 +50,7 @@ program test_solver_mmpde6
   allocate( s % user_data_scalars_names( 3 ) )
   s % user_data_scalars_names(1) = "u_x_0"
   s % user_data_scalars_names(2) = "u_tx_0"
-  s % user_data_scalars_names(3) = "x0"
+  s % user_data_scalars_names(3) = "x1"
 
   h = (1.)/real(nx-1)
 
@@ -118,7 +118,7 @@ contains
     u_tx_0 = s % physical2 % derivative( 1, 1, 1 )
     s % user_data_scalars(1) = u_x_0
     s % user_data_scalars(2) = u_tx_0
-    s % user_data_scalars(3) = s % x(1)
+    s % user_data_scalars(3) = s % x(2)
 
     ! the value of g is custom suited to the problem
     ! u_x_0 = abs(s%f(2,1)-s%f(1,1))/(s%x(2)-s%x(1))
