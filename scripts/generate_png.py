@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 import sys
+import fpde
 
 # @todo plot several functions
 def main(files, out, options):
@@ -15,7 +16,7 @@ def main(files, out, options):
 
     for i, filename in enumerate(files):
         text = open(filename).read()
-        data_vars = get_vars(text)
+        data_vars = fpde.get_vars(text)
 
         out.write('print "{0}/{1}"\n'.format(i,n))
         out.write('set title "{0}"\n'.format(
@@ -43,18 +44,6 @@ def main(files, out, options):
     if options.movie:
         os.system("{scripts}/make_movie.sh {dir}".format(
                 dir=dir,scripts=options.scripts))
-
-def list_dat(dir, format=".dat"):
-    return [os.path.join(dir, f) \
-                for f in os.listdir(dir) if f.endswith(format)]
-
-def get_vars(text):
-    vars = {}
-    for match in re.finditer(
-        r"#\s*(?P<name>\w+)\s*=\s*(?P<value>\S*)", text):
-        vars[match.group('name')] = match.group('value')
-
-    return vars
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -89,9 +78,9 @@ if __name__ == "__main__":
     options.title[:len(titles)] = titles
 
     dir = options.dir
-    [os.remove(f) for f in list_dat(dir,".png")]
+    [os.remove(f) for f in fpde.list_dat(dir,".png")]
 
     out_filename = "plot.gp"
     out = open(out_filename, 'w')
 
-    main(list_dat(dir), out, options)
+    main(fpde.list_dat(dir), out, options)
