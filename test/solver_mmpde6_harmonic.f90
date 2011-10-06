@@ -18,7 +18,7 @@ program test_solver_mmpde6
   use class_trigger_every_n_iter
   use class_trigger_non_monotonic
 
-  integer, parameter :: nx = 41
+  integer, parameter :: nx = 81
   integer :: i
   real :: pi, h, xi(nx), dxdt(nx)
   real, pointer :: x(:), m(:)
@@ -145,9 +145,9 @@ contains
     ! M(u) = |f_x| + sqrt(|f_xx|)
     m = abs(df) + sqrt(abs(d2f))
     ! convolution:
-    ! m(2:nx-1) = (m(1:nx-2) + m(3:nx) + 2.*m(2:nx-1))/4.
-    ! norm = s % physical % integrate(s%monitor)
-    ! s % monitor = s % monitor / norm !+ .1
+    m(2:nx-1) = (m(1:nx-2) + m(3:nx) + 2.*m(2:nx-1))/4.
+    norm = s % physical % integrate(s%monitor)
+    s % monitor = s % monitor / norm !+ .1
 
   end subroutine calculate_monitor
 
