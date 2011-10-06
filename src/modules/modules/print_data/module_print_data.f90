@@ -75,7 +75,7 @@ contains
          form    = 'formatted', &
          action  = 'write', &
          ! access = 'direct', &
-         recl    = 1000, &
+         recl    = 10000, &
          iostat = iostat, &
          status  = 'replace')
 

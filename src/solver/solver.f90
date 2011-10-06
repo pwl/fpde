@@ -115,6 +115,9 @@ contains
 
   subroutine start(s)
     class(solver) :: s
+
+    call s % solver_data % start
+
     if( associated( s % modules ) ) then
        call s % modules % start
        s % status = solver_started

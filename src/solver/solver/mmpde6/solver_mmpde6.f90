@@ -321,6 +321,9 @@ contains
   !!
   subroutine initial_rhs(s)
     class(solver) :: s
+    real, pointer :: dxdt_tmp(:), greens(:,:)
+    integer :: i, nx
+    nx = s % nx
 
     ! some pointer juggling, we interprete s % params as
     ! solver_mmpde6, so we can use a procedure associated with s %
@@ -343,8 +346,14 @@ contains
        ! now monitor function is being calculated and its values
        ! stored in s6 % monitor(:)
        call s6 % calculate_monitor
-       ! we now
+       ! we now set the values of the time derivatives
        call s6 % set_dxdt( s % dfdt(:,1) )
+       greens => s6 % greens
+       dxdt_tmp => s6 % temporary
+       do i = 1, nx
+          dxdt_tmp(i) = sum(s % dfdt(:,1)*greens(i,:))
+       end do
+       s % dfdt(:,1) = dxdt_tmp
     class default
        print *, "ERROR: solver_mmpde6: initial_rhs: ",&
             "parameter type mismatch"
@@ -495,14 +504,12 @@ contains
     dxdt_tmp = 0.
 
     ! @bug: performance, use XBLAS!
-    ! forall( i = 1 : nx )
-    do i = 1, nx
-       dxdt_tmp(i) = dxdt_tmp(i) + sum(dxdt(:)*greens(i,:))
-    end do
-    ! end forall
+    forall( i = 1 : nx )
+       dxdt_tmp(i) = sum(dxdt(:)*greens(i,:))
+    end forall
 
     ! dxdt = 0.* 1.e-15/epsilon(g) * dxdt_tmp
-    dxdt = 1./ s % epsilon(g) * dxdt_tmp
+    dxdt = 0./ s % epsilon(g) * dxdt_tmp
 
     ! @todo add -x_t*f_x to the rhs
     forall( i = 1 : nf )
@@ -513,15 +520,6 @@ contains
     ! appropriate values, all is left is to multiply it by the
     ! dilation g()
     dydt = g * dydt
-
-    ! do i = 1, 2*nx+1
-    !    ! print n_format(size(dydt),"f10.5"), dydt
-    !    print *, y(i), dydt(i)
-    ! end do
-    ! print *, ""
-    ! print *, ""
-    ! print *, ""
-
 
   end subroutine solver_mmpde6_rhs_for_marcher
 
