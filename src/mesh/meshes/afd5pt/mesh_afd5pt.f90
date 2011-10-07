@@ -6,10 +6,8 @@ module class_mesh_afd5pt
   private
 
   type, public, extends( mesh ) :: mesh_afd5pt
-     real, contiguous, pointer :: dx(:)
    contains
      ! overloaded procedures go here (if needed)
-     procedure :: integrate
      procedure :: init
      procedure :: derivative
      procedure :: calculate_derivatives
@@ -34,8 +32,6 @@ contains
     forall( i = 1:nx )&
          m % x(i) = (xmax-xmin)*(1.-cos(real(i-1)/real(nx-1)*pi))/2.+xmin
 
-    ! allocate memory for mesh spacing
-    allocate( m % dx(nx) )
 
   end subroutine init
 
@@ -445,28 +441,6 @@ contains
 
 
   end subroutine calculate_derivatives
-
-  function integrate( m, f ) result(r)
-    class(mesh_afd5pt) :: m
-    real :: r
-    real, intent(in) :: f(:)
-    real, pointer :: dx(:), x(:)
-    integer :: nx
-
-    nx =  m % nx
-    dx => m % dx
-    x  => m % x
-
-    ! calculate mesh spacing
-    dx(2:nx-1) = (x(3:nx) - x(1:nx-2))/2.
-    dx(1) = (x(2)-x(1))/2.
-    dx(nx) = (x(nx)-x(nx-1))/2.
-
-    ! integrate f wrt measure dx
-    r = sum(f*dx)
-
-  end function integrate
-
 
 
 end module class_mesh_afd5pt

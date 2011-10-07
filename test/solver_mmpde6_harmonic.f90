@@ -18,7 +18,7 @@ program test_solver_mmpde6
   use class_trigger_every_n_iter
   use class_trigger_non_monotonic
 
-  integer, parameter :: nx = 81
+  integer, parameter :: nx = 61
   integer :: i
   real :: pi, h, xi(nx), dxdt(nx)
   real, pointer :: x(:), m(:)
@@ -57,11 +57,11 @@ program test_solver_mmpde6
   call s % init
 
   call s % add(&
-       module_print_data(file_name = "data/test"),&
+       module_print_data(),&
        trigger_every_n_iter(dn = 100))
 
   call s % add(&
-       module_print_scalar_data(file_name = "scalar_data/test"),&
+       module_print_scalar_data(),&
        trigger_every_n_iter(dn = 100))
 
   ! problems arise when
@@ -123,7 +123,7 @@ contains
     ! the value of g is custom suited to the problem
     ! u_x_0 = abs(s%f(2,1)-s%f(1,1))/(s%x(2)-s%x(1))
     g = 0.5*(abs(u_x_0) + 1.)/(abs(u_tx_0) + 1.)
-    g = u_x_0**-2
+    ! g = u_x_0**-2
     ! g = 1.! 0.5*(abs(u_x_0))/(abs(u_tx_0))
 
   end function g
@@ -133,9 +133,10 @@ contains
     ! real, pointer ::  dfdx(:,:,:), f(:,:)
     integer :: nx
     real :: norm
-    real, pointer :: x(:), f(:), df(:), d2f(:), m(:)
+    real, pointer :: x(:), f(:), df(:), d2f(:), m(:), dx(:)
     nx = s % nx
     x   => s%x
+    dx  => s%physical%dx
     ! f   => s%f(:,1)
     df  => s%dfdx(:,1,1)
     d2f => s%dfdx(:,1,2)
@@ -144,9 +145,17 @@ contains
     ! print *, "DEBUG: calculate_monitor"
 
     ! M(u) = |f_x| + sqrt(|f_xx|)
-    m = abs(df) + sqrt(abs(d2f))
+    m = 3.*abs(df) + sqrt(abs(d2f))
     ! convolution:
-    m(2:nx-1) = (m(1:nx-2) + m(3:nx) + 2.*m(2:nx-1))/4.
+    ! m(2:nx-1) = (m(1:nx-2) + m(3:nx) + 2.*m(2:nx-1))/4.
+
+    ! weighted convolution:
+    call s % physical % calculate_spacings
+    m(2:nx-1) = (&
+         m(1:nx-2)*dx(1:nx-2)&
+         + m(3:nx)*dx(3:nx) &
+         + 2.*m(2:nx-1)*dx(2:nx-1))/4.
+
     norm = s % physical % integrate(s%monitor)
     s % monitor = s % monitor / norm !+ .1
 
@@ -162,7 +171,7 @@ contains
   ! Bizon [2011]
   real function epsilon(g)
     real :: g
-    epsilon = 0.1*sqrt(g) + .01
+    epsilon = 0.1*sqrt(g) + .001
     ! epsilon = 5.e-2
 
   end function epsilon

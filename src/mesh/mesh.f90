@@ -14,6 +14,7 @@ module class_mesh
      real, contiguous, pointer         :: x(:)
      real, contiguous, pointer         :: f(:,:)
      real, contiguous, pointer         :: df(:,:,:)
+     real, contiguous, pointer         :: dx(:)
      logical, private, contiguous, pointer :: df_calculated(:)
    contains
      ! obligatory
@@ -37,15 +38,8 @@ module class_mesh
      procedure :: to_vector
      procedure :: from_vector
      procedure :: fill_for_debug
+     procedure :: calculate_spacings
   end type mesh
-
-  ! interface
-  !    subroutine free( m )
-  !      import :: mesh
-  !      class(mesh), intent(inout) :: m
-  !    end subroutine free
-  ! end interface
-
 
 contains
 
@@ -66,6 +60,9 @@ contains
     allocate( m % x( nx ) )
     allocate( m % f( nx, nf ) )
     allocate( m % df( nx, nf, maxrk ) )
+    ! allocate memory for mesh spacing
+    allocate( m % dx(nx) )
+
   end subroutine init
 
   subroutine info(m)
@@ -94,6 +91,10 @@ contains
 
     if( associated( m % df_calculated ) ) then
        deallocate( m % df_calculated )
+    end if
+
+    if( associated( m % dx ) ) then
+       deallocate( m % dx )
     end if
 
   end subroutine free
@@ -247,22 +248,28 @@ contains
     real, pointer :: dx(:), x(:)
     integer :: nx
 
-    nx =  m % nx
-    x  => m % x
+    dx => m % dx
 
-    allocate(dx(nx))
+
+    call m % calculate_spacings
+    ! integrate f wrt measure dx
+    r = sum(f*dx)
+
+  end function integrate
+
+  subroutine calculate_spacings(m)
+    class(mesh) :: m
+    real, pointer :: dx(:), x(:)
+    integer :: nx
+    dx => m % dx
+    x  => m % x
+    nx = m % nx
 
     ! calculate mesh spacing
     dx(2:nx-1) = (x(3:nx) - x(1:nx-2))/2.
     dx(1) = (x(2)-x(1))/2.
     dx(nx) = (x(nx)-x(nx-1))/2.
-
-    ! integrate f wrt measure dx
-    r = sum(f*dx)
-
-    deallocate(dx)
-
-  end function integrate
+  end subroutine calculate_spacings
 
 
 end module class_mesh

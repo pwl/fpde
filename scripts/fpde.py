@@ -27,8 +27,7 @@ def options_fix_using(options):
     options.title = [""] * len(options.using)
     options.title[:len(titles)] = titles
 
-def generate_plot_cmd(out, options, dict):
-    file = options.file
+def generate_plot_cmd(out, options, dict, file):
     wit = options.wit
 
     options_fix_using(options)
