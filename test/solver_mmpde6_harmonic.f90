@@ -18,14 +18,20 @@ program test_solver_mmpde6
   use class_trigger_every_n_iter
   use class_trigger_non_monotonic
 
-  integer, parameter :: nx = 61
-  integer :: i
-  real :: pi, h, xi(nx), dxdt(nx)
+  integer :: i, nx
+  real :: pi, h
   real, pointer :: x(:), m(:)
   type(solver_mmpde6) :: s
+  character(len=100) :: buffer
+  real :: eps0
   pi = acos(-1.)
   print *, pi
 
+  ! read eps0 as an argument
+  call get_command_argument(1,buffer)
+  read(buffer, *) eps0
+  call get_command_argument(2,buffer)
+  read(buffer, *) nx
 
   s % stepper_id = "rkpd54"
   s % t0 = 0.  !this is the initial physical time
@@ -46,11 +52,14 @@ program test_solver_mmpde6
   s % rel_error = 1.e-15
   s % dt = 1.e-12  !this is used to initialize dtau, but after running
                    !the solver it is rewritten with dt := g*dtau
-  allocate( s % user_data_scalars( 3 ) )
-  allocate( s % user_data_scalars_names( 3 ) )
+  allocate( s % user_data_scalars( 4 ) )
+  allocate( s % user_data_scalars_names( 4 ) )
   s % user_data_scalars_names(1) = "u_x_0"
   s % user_data_scalars_names(2) = "u_tx_0"
   s % user_data_scalars_names(3) = "x1"
+  s % user_data_scalars_names(4) = "eps0"
+
+  s % user_data_scalars(4) = eps0
 
   h = (1.)/real(nx-1)
 
@@ -145,16 +154,16 @@ contains
     ! print *, "DEBUG: calculate_monitor"
 
     ! M(u) = |f_x| + sqrt(|f_xx|)
-    m = 3.*abs(df) + sqrt(abs(d2f))
+    m = 5.*abs(df) + sqrt(abs(d2f))
     ! convolution:
     ! m(2:nx-1) = (m(1:nx-2) + m(3:nx) + 2.*m(2:nx-1))/4.
 
     ! weighted convolution:
-    call s % physical % calculate_spacings
-    m(2:nx-1) = (&
-         m(1:nx-2)*dx(1:nx-2)&
-         + m(3:nx)*dx(3:nx) &
-         + 2.*m(2:nx-1)*dx(2:nx-1))/4.
+    ! call s % physical % calculate_spacings
+    ! m(2:nx-1) = (&
+    !      m(1:nx-2)*dx(1:nx-2)&
+    !      + m(3:nx)*dx(3:nx) &
+    !      + 2.*m(2:nx-1)*dx(2:nx-1))/4.
 
     norm = s % physical % integrate(s%monitor)
     s % monitor = s % monitor / norm !+ .1
@@ -171,7 +180,9 @@ contains
   ! Bizon [2011]
   real function epsilon(g)
     real :: g
-    epsilon = 0.1*sqrt(g) + .001
+    real :: eps0
+    eps0 = s % user_data_scalars(4)
+    epsilon = 0.1*sqrt(g) + eps0
     ! epsilon = 5.e-2
 
   end function epsilon
