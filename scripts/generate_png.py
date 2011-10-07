@@ -3,7 +3,7 @@ import os
 import re
 import shutil
 import sys
-import fpde
+from fpde import *
 
 # @todo plot several functions
 def main(files, out, options):
@@ -15,27 +15,7 @@ def main(files, out, options):
     print "Files to process: {0}".format(n)
 
     for i, filename in enumerate(files):
-        text = open(filename).read()
-        data_vars = fpde.get_vars(text)
-
-        out.write('print "{0}/{1}"\n'.format(i,n))
-        out.write('set title "{0}"\n'.format(
-                options.plot_title.format(**data_vars)))
-        out.write('set output "{0}.png"\n'.format(filename))
-        out.write('plot "{0}" u {using} w {wit} t "{title}"'.\
-                      format(filename,
-                             using=using[0].format(**data_vars),
-                             wit=wit,
-                             title=title[0].format(**data_vars)))
-
-        for u, t in zip(using[1:],title[1:]):
-            u = u.format(**data_vars)
-            t = t.format(**data_vars)
-            out.write(', "" u {using} w {wit} t "{title}"'.\
-                          format(using=u,
-                                 wit=wit,
-                                 title=t))
-        out.write('\n')
+        generate_plot_cmd(out, options, dict, filename)
 
     out.close()
     os.system("gnuplot {0}".format(out_filename))
@@ -47,21 +27,22 @@ def main(files, out, options):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument(dest="dir", help="Data directory")
-    parser.add_argument("-u", "--using", dest="using",
-                        help="Set using, can set several directives"
-                        " e.g. '1:2|1:3'", default="1:2")
-    parser.add_argument("-w", "--with", dest="wit",
-                        help="Set with", default="lp")
+
+    add_default_arguments(parser)
+
     parser.add_argument("-s", "--scripts", dest="scripts",
                         help="Set path to fpde/scripts",
                         default="../fpde/scripts")
-    parser.add_argument("-t", "--title", dest="title",
-                        help="Set title", default='')
-    parser.add_argument("-T", "--plot-title", dest="plot_title",
-                        help="Set title", default='t={t}')
     parser.add_argument("-m", "--movie", dest="movie",
                         help="Generate movie", action="store_true")
+    parser.add_argument("-r", "--recreate", dest="recreate",
+                        help="Force recreation of png files"
+                        " and movie.avi", action="store_true", default = False)
+    parser.add_argument("-e", "--every", dest="every",
+                        help="Take only every N-th file",
+                        default = 1, type=int, metavar='N')
+
+    parser.set_defaults(plot_title = "t={t}")
 
     options = parser.parse_args()
 
@@ -72,15 +53,55 @@ if __name__ == "__main__":
         print "Consider setting the correct path using '-s'"
         sys.exit()
 
-    options.using = options.using.split("|")
-    titles = options.title.split("|")
-    options.title = [""] * len(options.using)
-    options.title[:len(titles)] = titles
+    if(options.file == ""):
+        file = find_latest_data_dir(options.dir)
+        file = os.path.join(file,"module_print_data")
+    else:
+        file = options.file
 
-    dir = options.dir
-    [os.remove(f) for f in fpde.list_dat(dir,".png")]
+    if(options.recreate):
+        [os.remove(f) for f in list_dat(file,".png")]
 
-    out_filename = "plot.gp"
-    out = open(out_filename, 'w')
+    out = open(options.out, 'w')
 
-    main(fpde.list_dat(dir), out, options)
+    files = list_dat(file)[::options.every]
+    n = len(files)
+    print "Files to process: {0}".format(n)
+
+    options_fix_using(options)
+
+    out.write("set terminal png\n")
+
+    for i, filename in enumerate(files):
+        png_filename = filename +  ".png"
+        if not os.path.exists(png_filename) \
+                or options.recreate:
+            # this will forece the recreation of movie.avi if there
+            # are new png files
+            options.recreate = True
+            data_file = open(filename, 'r')
+            dict = get_vars(data_file.read())
+            out.write('print "generating {0}/{1} : {name}"\n'.\
+                      format(i,n, name=png_filename))
+            out.write('set output "{0}"\n'.format(png_filename))
+            generate_plot_cmd(out, options, dict, filename)
+            data_file.close()
+
+    out.close()
+
+    os.system("gnuplot {0}".format(options.out))
+
+    if options.movie:
+        movie_file = os.path.join(file,"movie.avi")
+        # play a movie if it does not exist
+        if os.path.exists(movie_file) and not options.recreate:
+            os.system("mplayer -loop 0 {file}".\
+                          format(file=movie_file))
+        # else generate a movie
+        else:
+            os.system("{scripts}/make_movie.sh {dir}".format(
+                    dir=file,scripts=options.scripts))
+
+
+
+    # main(list_dat(dir), out, options)
