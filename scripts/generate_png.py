@@ -5,26 +5,6 @@ import shutil
 import sys
 from fpde import *
 
-# @todo plot several functions
-def main(files, out, options):
-    out.write("set terminal png\n")
-    using = options.using
-    wit   = options.wit
-    title = options.title
-    n = len(files)
-    print "Files to process: {0}".format(n)
-
-    for i, filename in enumerate(files):
-        generate_plot_cmd(out, options, dict, filename)
-
-    out.close()
-    os.system("gnuplot {0}".format(out_filename))
-
-    # @todo set apropriate system path in CMakeList.txt
-    if options.movie:
-        os.system("{scripts}/make_movie.sh {dir}".format(
-                dir=dir,scripts=options.scripts))
-
 if __name__ == "__main__":
     parser = ArgumentParser()
 
@@ -101,7 +81,3 @@ if __name__ == "__main__":
         else:
             os.system("{scripts}/make_movie.sh {dir}".format(
                     dir=file,scripts=options.scripts))
-
-
-
-    # main(list_dat(dir), out, options)
