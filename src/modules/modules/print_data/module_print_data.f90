@@ -148,7 +148,7 @@ contains
     class(module_print_data) :: this
     logical :: r
 
-    r = .true.
+    r = this % step()
   end function stop
 
   function init(this) result(r)
