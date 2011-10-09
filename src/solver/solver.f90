@@ -49,13 +49,13 @@ contains
 
   subroutine init(s)
     class(solver), target :: s
-    character(len=10) :: date, time
+
+    call s % solver_data % init
 
     allocate( s % modules )
     call s % modules % init
 
-    call date_and_time(date=date, time=time)
-    write(s % time_started, *) trim(date), "-", trim(time)
+
   end subroutine init
 
   subroutine add_module(s, m, t1, t2, t3)
@@ -111,6 +111,7 @@ contains
 
   subroutine free (s)
     class(solver) :: s
+    call s % solver_data % free
   end subroutine free
 
   subroutine start(s)

@@ -1,6 +1,7 @@
 module class_solver_data
 
   use utils_array_operations
+  use system_functions
 
   character(len=30), public, parameter :: &
        solver_started = "started",     &
@@ -36,14 +37,64 @@ module class_solver_data
      ! interface supported by any solver
      integer                           :: rhs_status = 0
      character(len=30)                 :: status = "stopped"
+     integer                           :: info_file
    contains
+     procedure                         :: init
+     procedure                         :: info
      procedure                         :: calculate_dfdx
      procedure                         :: pointwise_dfdx
      procedure                         :: start
      procedure                         :: set_data_lengths
+     procedure                         :: free
   end type solver_data
 
 contains
+
+  subroutine init(s)
+    class(solver_data), target :: s
+    character(len=1000) :: name
+    character(len=10) :: date, time
+    integer :: iostat
+
+    call date_and_time(date=date, time=time)
+    write(s % time_started, *) trim(date), "-", trim(time)
+    write(name, *) trim(s%time_started), "/solver_data"
+
+    call new_directory(name)
+
+    open(newunit = s%info_file,&
+         file    = name,  &
+         form    = 'formatted', &
+         action  = 'write', &
+         ! access = 'direct', &
+         ! recl    = 10000, &
+         iostat = iostat, &
+         status  = 'new',&
+         access = 'stream')
+
+    if( iostat /= 0  ) then
+       ! @todo report error
+       print *, "ERROR: solver_data: init: ioostat /= 0"
+       return
+    end if
+
+    if( s%info_file == 0) then
+       ! @todo report error
+       print *, "ERROR: solver_data: init: info_file == 0"
+       return
+    end if
+
+    call s % info
+
+  end subroutine init
+
+  subroutine free(s)
+    class(solver_data) :: s
+
+    close(s%info_file)
+
+  end subroutine free
+
 
   subroutine calculate_dfdx( s, i )
     class(solver_data) :: s
@@ -154,6 +205,18 @@ contains
     end do
 
   end subroutine fill_data_names
+
+  subroutine info(s)
+    class(solver_data) :: s
+    integer :: f
+    f = s % info_file
+
+    write(f,*) "kind = ", kind(s%dt)
+    write(f,*) "nx = ", s % nx
+    write(f,*) "nf = ", s % nf
+    write(f,*) "solver = ", s%name
+
+  end subroutine info
 
 
 
