@@ -592,7 +592,7 @@ contains
     ! call the modules
     call s % step
 
-    do while( tau < s % t1 )
+    do while( tau < s % t1 .and. trim(s % status) == "started")
     ! do while( s % n_iter < 2 )
        ! print *, ""
        ! print *, "####iteration: ", s % n_iter
@@ -632,12 +632,6 @@ contains
           call s % rhs
 
           call s % step
-
-          ! check the status after running triggers
-          if( trim(s % status) == "stopped" .or. &
-               trim(s % status) == "error" ) then
-             return
-          end if
 
        endif
     end do
