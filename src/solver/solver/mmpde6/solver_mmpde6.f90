@@ -86,6 +86,7 @@ module class_solver_mmpde6
      procedure :: info
      procedure :: set_dxdt
      procedure :: initialize_mesh
+     procedure :: start
   end type solver_mmpde6
 
   abstract interface
@@ -680,7 +681,18 @@ contains
     call s % solver_standard % info
 
     ! print *, "DEBUG: solver_mmpde6: info"
+
   end subroutine info
+
+  subroutine start(s)
+    class(solver_mmpde6) :: s
+
+    call s % solver_standard % start
+
+    call s % info
+
+  end subroutine start
+
 
 
 end module class_solver_mmpde6

@@ -80,3 +80,6 @@ TODO
 - module to calculate convergence?
 
 - include `module_print_data` in `solver`? It is needed almost always
+
+- better solver output directory choice, now its date and time of run,
+  and it cannot be changed by user

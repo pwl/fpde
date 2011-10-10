@@ -125,18 +125,20 @@ contains
 
   subroutine info( s )
     class(solver_standard) :: s
+    integer :: f
+    f = s % info_file
 
     call s % solver % info
 
-    print *, "========================"
-    print *, "--- SOLVER_STANDARD --- "
-    print *, "========================"
-    print *, "stepper_id:       ", trim(s % stepper_id),&
-         ",   ready: ",            associated(s % stepper)
-    print *, "step_control_id:  ", trim(s % step_control_id), &
-         ",   ready: ",            associated(s % step_control)
-    print *, "ny:               ", s % ny
-    print *, "associated(y(:)): ", associated( s%y )
+    ! write(f,*) "#------------------------"
+    ! write(f,*) "#--- SOLVER_STANDARD --- "
+    ! write(f,*) "#------------------------"
+    write(f,*) "# stepper_id      =    ", trim(s % stepper_id),&
+         ",   # ready: ",               associated(s % stepper)
+    write(f,*) "# step_control_id =    ", trim(s % step_control_id), &
+         ",   # ready: ",               associated(s % step_control)
+    write(f,*) "# ny              =    ", s % ny
+    write(f,*) "# associated(y(:)): ", associated( s%y )
 
   end subroutine info
 

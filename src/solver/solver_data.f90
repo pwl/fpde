@@ -213,10 +213,10 @@ contains
     integer :: f
     f = s % info_file
 
-    write(f,*) "kind = ", kind(s%dt)
-    write(f,*) "nx = ", s % nx
-    write(f,*) "nf = ", s % nf
-    write(f,*) "solver = ", s%name
+    write(f,*) "# kind = ", kind(s%dt)
+    write(f,*) "# nx = ", s % nx
+    write(f,*) "# nf = ", s % nf
+    write(f,*) "# name = ", s%name
 
   end subroutine info
 

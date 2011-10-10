@@ -48,9 +48,9 @@ program test_solver_mmpde6
   s % g => g
   s % epsilon => epsilon
   ! marcher parameters
-  s % abs_error = 1.e-15
-  s % rel_error = 1.e-15
-  s % dt = 1.e-12  !this is used to initialize dtau, but after running
+  s % abs_error = 1.e-25
+  s % rel_error = 1.e-25
+  s % dt = 1.e-20  !this is used to initialize dtau, but after running
                    !the solver it is rewritten with dt := g*dtau
   allocate( s % user_data_scalars( 4 ) )
   allocate( s % user_data_scalars_names( 4 ) )
