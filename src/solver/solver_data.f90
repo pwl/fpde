@@ -52,39 +52,6 @@ contains
 
   subroutine init(s)
     class(solver_data), target :: s
-    character(len=1000) :: name
-    character(len=10) :: date, time
-    integer :: iostat
-
-    call date_and_time(date=date, time=time)
-    write(s % time_started, *) trim(date), "-", trim(time)
-    write(name, *) trim(s%time_started), "/solver_data"
-
-    call new_directory(name)
-
-    open(newunit = s%info_file,&
-         file    = name,  &
-         form    = 'formatted', &
-         action  = 'write', &
-         ! access = 'direct', &
-         ! recl    = 10000, &
-         iostat = iostat, &
-         status  = 'new',&
-         access = 'stream')
-
-    if( iostat /= 0  ) then
-       ! @todo report error
-       print *, "ERROR: solver_data: init: ioostat /= 0"
-       return
-    end if
-
-    if( s%info_file == 0) then
-       ! @todo report error
-       print *, "ERROR: solver_data: init: info_file == 0"
-       return
-    end if
-
-    call s % info
 
   end subroutine init
 
@@ -120,10 +87,45 @@ contains
   !! @return
   subroutine start(s)
     class(solver_data) :: s
+    character(len=1000) :: name
+    character(len=8) :: date
+    character(len=10) :: time
+    integer :: iostat
 
     ! we name the unnamed data_scalars and user_data_scalars using the
     ! names s1,s2, ... and u1,u2, ... respectively
     call fill_data_names(s, var="s", user_var="u")
+
+    call date_and_time(date=date, time=time)
+    write(s % time_started, *) trim(date), "-", trim(time)
+    write(name, *) trim(s%time_started), "/solver_data"
+
+    call new_directory(name)
+
+    open(newunit = s%info_file,&
+         file    = name,  &
+         form    = 'formatted', &
+         action  = 'write', &
+         ! access = 'direct', &
+         ! recl    = 10000, &
+         iostat = iostat, &
+         status  = 'new',&
+         access = 'stream')
+
+    if( iostat /= 0  ) then
+       ! @todo report error
+       print *, "ERROR: solver_data: init: ioostat /= 0"
+       return
+    end if
+
+    if( s%info_file == 0) then
+       ! @todo report error
+       print *, "ERROR: solver_data: init: info_file == 0"
+       return
+    end if
+
+    call s % info
+
 
   end subroutine start
 

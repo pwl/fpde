@@ -19,7 +19,7 @@ contains
     write(cmd, *) &
          "a=", &
          trim(adjustl(file_name)), &
-         '; mkdir -p ${a%/*}'
+         '; mkdir -vp ${a%/*}'
 
     call system(cmd)
 

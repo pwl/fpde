@@ -27,6 +27,22 @@ contains
 
     r = .true.
 
+
+       ! if no file_name has been specified, one is generated
+       if( trim(this%file_name) == "" ) then
+          ! should generate file name automatically as follows
+          ! [date]/[solver%name]/[module_print_data%name + some unique
+          ! module%id]/
+          write(this%file_name, *) &
+               ! solver run time
+               trim(this%solver_data%time_started), "/", &
+               "modules/",&
+               ! module name
+               trim(this%name), "/", &
+               ! actual file name
+               "data"
+       end if
+
     call new_directory(this % file_name)
 
     ! print data at the start of the run
@@ -161,22 +177,6 @@ contains
 
        if( .not. this % named() ) then
           this % name = "module_print_data"
-       end if
-
-       ! if no file_name has been specified, one is generated
-       if( trim(this%file_name) == "" ) then
-       !    ! should generate file name automatically as follows
-       !    ! [date]/[solver%name]/[module_print_data%name + some unique
-       !    ! module%id]/
-          write(this%file_name, *) &
-               ! solver run time
-               trim(this%solver_data%time_started), "/", &
-               ! solver name
-               trim(this%solver_data%name), "/",&
-               ! module name
-               trim(this%name), "/", &
-               ! actual file name
-               "data"
        end if
 
     end if

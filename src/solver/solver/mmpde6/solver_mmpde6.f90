@@ -285,11 +285,12 @@ contains
     data % rhs => initial_rhs
 
     si => data % generate_solver()
+    si % name = "mesh_init"
     si % params => s
 
     ! call si % info
     call si % add(                                    &
-         module_print_data(file_name = "mmpde/init"), &
+         module_print_data(), &
          trigger_every_n_iter(dn = 30))
 
     ! stop if stationary state reached
