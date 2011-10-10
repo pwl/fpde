@@ -79,7 +79,7 @@ def find_latest_data_dir(dir):
                       if os.path.isdir(os.path.join(dir,d)) \
                       and re.match("\d{8}-\d{6}\.\d{3}",d))[-1]
     file = os.path.join(dir, file)
-    file = os.path.join(file, os.listdir(file)[0])
+    file = os.path.join(file, "modules")
     return file
 
 
