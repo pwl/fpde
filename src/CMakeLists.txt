@@ -20,4 +20,7 @@ set_source_files_properties(${fpde_src}
 add_library(fpde SHARED ${fpde_src})
 target_link_libraries(fpde blas lapack)
 
-install(TARGETS fpde DESTINATION lib)
+install(
+  TARGETS fpde
+  DESTINATION lib
+  EXPORT fpde.cmake)

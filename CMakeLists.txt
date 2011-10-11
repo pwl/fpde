@@ -6,7 +6,7 @@ project( fpde Fortran )
 # variables used in out of source build
 set( LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/lib )
 set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake )
-set( CMAKE_INSTALL_PREFIX "/")
+set( CMAKE_INSTALL_PREFIX "/usr/local/" )
 
 # .mod files output directory (fortran specific)
 set( CMAKE_Fortran_MODULE_DIRECTORY ${LIBRARY_OUTPUT_PATH}/mod)
@@ -103,8 +103,31 @@ install(
   DESTINATION "lib/fortran/${CMAKE_Fortran_COMPILER_ID}/fpde" )
 
 # install the scripts
-file(GLOB scripts "scripts/*.py")
+file(GLOB scripts "${CMAKE_CURRENT_SOURCE_DIR}/scripts/*.py")
 install(
   FILES ${scripts}
   DESTINATION bin
   )
+
+# install the ifort config files
+file(GLOB scripts "${CMAKE_CURRENT_SOURCE_DIR}/config/*")
+install(
+  FILES ${scripts}
+  DESTINATION share/fpde
+  )
+
+# install the fpde.cmake file used to set all the libraries and
+# include paths
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/misc/fpde.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/misc/fpde.cmake"
+  @ONLY)
+
+message("${CMAKE_CURRENT_BINARY_DIR}/misc/fpde.cmake")
+
+install(
+  FILES "${CMAKE_CURRENT_BINARY_DIR}/misc/fpde.cmake"
+  DESTINATION share/fpde
+  )
+
+export(PACKAGE fpde)

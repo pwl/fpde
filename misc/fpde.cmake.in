@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 2.8)
+
+set( fpde_prefix "@CMAKE_INSTALL_PREFIX@" )
+set( fpde_mod    "${fpde_prefix}lib/fortran/Intel/fpde/mod" )
+set( fpde_lib    "${fpde_prefix}lib" )
+set( fpde_cfg    "${fpde_prefix}share/fpde" )
+set( fpde_flags  "@${fpde_prefix}share/fpde/ifort.cfg @${fpde_prefix}share/fpde/ifort_precision.cfg")
+set( fpde_libs   @libs@)
+include_directories( ${fpde_mod} )
+link_directories( ${fpde_lib} )
