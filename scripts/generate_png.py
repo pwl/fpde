@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     parser.add_argument("-s", "--scripts", dest="scripts",
                         help="Set path to fpde/scripts",
-                        default="../fpde/scripts")
+                        default="/usr/local/bin")
     parser.add_argument("-m", "--movie", dest="movie",
                         help="Generate movie", action="store_true")
     parser.add_argument("-r", "--recreate", dest="recreate",
