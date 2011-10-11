@@ -6,8 +6,13 @@ project( fpde Fortran )
 # variables used in out of source build
 set( LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/lib )
 set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake )
+set( CMAKE_INSTALL_PREFIX "/")
+
 # .mod files output directory (fortran specific)
-set( CMAKE_Fortran_MODULE_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+set( CMAKE_Fortran_MODULE_DIRECTORY ${LIBRARY_OUTPUT_PATH}/mod)
+# install ( CODE
+#   "EXECUTE_PROCESS (COMMAND \"${CMAKE_COMMAND}\" -E copy_directory \"${CMAKE_Fortran_MODULE_DIRECTORY}/\" \"${CMAKE_INSTALL_PREFIX}/fortran\")"
+# )
 # add the above path to include path
 include_directories( ${LIBRARY_OUTPUT_PATH} )
 
@@ -46,6 +51,7 @@ if( ${comp} STREQUAL ${ifort})
   # set(CMAKE_SHARED_LINKER_FLAGS ${lflags})
   # set(CMAKE_EXE_LINKER_FLAGS ${lflags})
   # END OF MKL LINKING FLAGS
+  # set(comp_short "ifort")
 endif()
 
 # GFORTRAN COMPILER
@@ -59,7 +65,9 @@ set(suffix "f90")
 set(suffix_f77 "f")
 
 # set(libs "-llapack -lblas")
-set(libs "-L$MKLROOT/lib/ia32  -lmkl_blas95 -lmkl_lapack95 -lmkl_intel -lmkl_intel_thread -lmkl_core -openmp -lpthread")
+# set(libs "-openmp")
+# set(libs "-L$(MKLROOT)/lib/ia32 -lmkl_intel -lmkl_intel_thread -lmkl_core -openmp -lpthread -threads")
+# set(libs "-L$MKLROOT/lib/ia32  -lmkl_blas95 -lmkl_lapack95 -lmkl_intel -lmkl_intel_thread -lmkl_core -openmp -lpthread")
 
 # add a subdirectory with a test library
 add_subdirectory( src )
@@ -88,3 +96,15 @@ foreach(bin ${bin_list})
   # link to the helper libraries
   target_link_libraries(${bin} fpde ${libs})
 endforeach(bin)
+
+# install the module files
+install(
+  DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}
+  DESTINATION "lib/fortran/${CMAKE_Fortran_COMPILER_ID}/fpde" )
+
+# install the scripts
+file(GLOB scripts "scripts/*.py")
+install(
+  FILES ${scripts}
+  DESTINATION bin
+  )
