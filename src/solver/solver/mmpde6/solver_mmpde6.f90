@@ -278,9 +278,9 @@ contains
          x1      = 1.,         &
          t0      = 0.,         &
          t1      = 1.e10,      &
-         h0      = 1.e-10,     &
-         rel_error = 1.e-14,   &
-         abs_error = 1.e-14,   &
+         h0      = .1**int(1.8*kind(1.)),     &
+         rel_error = .1**int(1.3*kind(1.)),   &
+         abs_error = .1**int(1.3*kind(1.)),   &
          rhs     = null())           !what does it mean?
     ! @todo any way to squeeze this into initialization expression?
     data % rhs => initial_rhs
@@ -298,7 +298,7 @@ contains
     call si % add(                                    &
          module_solver_stop(),                        &
          trigger_every_n_iter(dn = 30),                 &
-         trigger_dfdt_norm( min = 1.e-9 ) )
+         trigger_dfdt_norm( min = .1**int(1.1*kind(1.))))
     ! stop if mesh points are out of control
     call si % add(                                    &
          module_solver_stop(),                        &
