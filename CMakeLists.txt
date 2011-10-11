@@ -103,9 +103,9 @@ install(
   DESTINATION "lib/fortran/${CMAKE_Fortran_COMPILER_ID}/fpde" )
 
 # install the scripts
-file(GLOB scripts "${CMAKE_CURRENT_SOURCE_DIR}/scripts/*.py")
+file(GLOB scripts "${CMAKE_CURRENT_SOURCE_DIR}/scripts/*.[sp][hy]")
 install(
-  FILES ${scripts}
+  PROGRAMS ${scripts}
   DESTINATION bin
   )
 
