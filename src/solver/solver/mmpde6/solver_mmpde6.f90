@@ -53,7 +53,7 @@ module class_solver_mmpde6
      ! thus epsilon has to be carefully tailored to the problem at
      ! hand and to a particular initial data. The reasonable initial
      ! guess is to set epsilon ~ 1.e-2
-     procedure(epsilon_interface), pointer, nopass &
+     procedure(epsilon_interface), pointer &
           :: epsilon => null()
      ! end of initialization parameters
      ! computational time and its increment (temporal step size)
@@ -106,7 +106,9 @@ module class_solver_mmpde6
        class(*), pointer  :: params
      end subroutine initial_interface
 
-     real function epsilon_interface(g)
+     real function epsilon_interface(s,g)
+       import :: solver_mmpde6
+       class(solver_mmpde6) :: s
        real :: g
      end function epsilon_interface
 
@@ -278,9 +280,12 @@ contains
          x1      = 1.,         &
          t0      = 0.,         &
          t1      = 1.e10,      &
-         h0      = .1**int(1.8*kind(1.)),     &
-         rel_error = .1**int(1.3*kind(1.)),   &
-         abs_error = .1**int(1.3*kind(1.)),   &
+         ! h0      = .1**int(1.8*kind(1.)),     &
+         ! rel_error = .1**int(1.6*kind(1.)),   &
+         ! abs_error = .1**int(1.6*kind(1.)),   &
+         h0      = 1.e-10,     &
+         rel_error = 1.e-13,   &
+         abs_error = 1.e-13,   &
          rhs     = null())           !what does it mean?
     ! @todo any way to squeeze this into initialization expression?
     data % rhs => initial_rhs
@@ -298,7 +303,8 @@ contains
     call si % add(                                    &
          module_solver_stop(),                        &
          trigger_every_n_iter(dn = 30),                 &
-         trigger_dfdt_norm( min = .1**int(1.1*kind(1.))))
+         ! trigger_dfdt_norm( min = .1**int(1.1*kind(1.))))
+         trigger_dfdt_norm( min = 1.e-9))
     ! stop if mesh points are out of control
     call si % add(                                    &
          module_solver_stop(),                        &

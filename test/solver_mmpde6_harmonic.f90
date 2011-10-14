@@ -178,7 +178,8 @@ contains
   !!
   ! this function was found to be giving best results, see Biernat and
   ! Bizon [2011]
-  real function epsilon(g)
+  real function epsilon(s,g)
+    class(solver_mmpde6) :: s
     real :: g
     real :: eps0
     eps0 = s % user_data_scalars(4)

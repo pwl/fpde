@@ -210,13 +210,33 @@ contains
 
   subroutine info(s)
     class(solver_data) :: s
-    integer :: f
-    f = s % info_file
+    integer :: f, i, lds, luds
+    character(len=30), pointer :: dsn(:), udsn(:)
+    real, pointer :: ds(:), uds(:)
 
+    f = s % info_file
+    ds => s % data_scalars
+    dsn => s % data_scalars_names
+    uds => s % user_data_scalars
+    udsn => s % user_data_scalars_names
+
+
+    write(f,*) "# t = ", s%t
+    write(f,*) "# dt = ", s%dt
+    write(f,*) "# name = ", s%name
     write(f,*) "# kind = ", kind(s%dt)
     write(f,*) "# nx = ", s % nx
     write(f,*) "# nf = ", s % nf
-    write(f,*) "# name = ", s%name
+
+    call s % set_data_lengths(lds=lds,luds=luds)
+
+    ! write the initial line
+    do i = 1, lds
+       write(f,*) "# ", trim(dsn(i)), " = ", ds(i)
+    end do
+    do i = 1, luds
+       write(f,*) "# ", trim(udsn(i)), " = ", uds(i)
+    end do
 
   end subroutine info
 

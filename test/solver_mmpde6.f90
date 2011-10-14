@@ -121,7 +121,8 @@ contains
   !!
   ! this function was found to be giving best results, see Biernat and
   ! Bizon [2011]
-  real function epsilon(g)
+  real function epsilon(s,g)
+    class(solver_mmpde6) :: s
     real :: g
     ! epsilon = 100. * sqrt(g) + .05
     ! ! epsilon = 100. * sqrt(min(abs(g),1.e-4)) + .05

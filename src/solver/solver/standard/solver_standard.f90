@@ -133,10 +133,12 @@ contains
     ! write(f,*) "#------------------------"
     ! write(f,*) "#--- SOLVER_STANDARD --- "
     ! write(f,*) "#------------------------"
-    write(f,*) "# stepper_id      =    ", trim(s % stepper_id),&
-         ",   # ready: ",               associated(s % stepper)
-    write(f,*) "# step_control_id =    ", trim(s % step_control_id), &
-         ",   # ready: ",               associated(s % step_control)
+    write(f,*) "# stepper_id      =    ", trim(s % stepper_id)
+    write(f,*) "# ready: ",               associated(s % stepper)
+    write(f,*) "# step_control_id =    ", trim(s % step_control_id)
+    write(f,*) "# ready: ",               associated(s % step_control)
+    write(f,*) "# abs_error =    ", s % abs_error
+    write(f,*) "# rel_error =    ", s % rel_error
     write(f,*) "# ny              =    ", s % ny
     write(f,*) "# associated(y(:)): ", associated( s%y )
 
