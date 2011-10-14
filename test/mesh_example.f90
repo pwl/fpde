@@ -14,7 +14,12 @@ program mesh_example_test
        status = 'replace')
 
 
-  call m%init(5,2,2,0.,1.)
+  m % nx = 5
+  m % nf = 2
+  m % rk = 2
+  m % x0 = 0.
+  m % x1 = 1.
+  call m%init
 
   m%f(:,1)=0.
   forall(i=1:5) m%f(i,2) = sin(i/5.)

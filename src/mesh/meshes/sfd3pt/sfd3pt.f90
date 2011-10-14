@@ -1,11 +1,12 @@
 module class_mesh_sfd3pt
   use class_mesh
+  use pretty_print
 
   ! everything except the type should be private
   private
 
   type, public, extends( mesh ) :: mesh_sfd3pt
-     real :: h
+     real :: h = 0.
    contains
      ! overloaded procedures go here (if needed)
      procedure :: init
@@ -15,21 +16,20 @@ module class_mesh_sfd3pt
 
 contains
 
-  subroutine init(m, nx, nf, maxrk, xmin, xmax)
+  subroutine init( m )
     class(mesh_sfd3pt), intent(inout) :: m
-    integer, intent(in) :: nx,nf,maxrk
-    real, intent(in) :: xmin, xmax
     integer :: i,j
 
-    call m % mesh % init( nx, nf, maxrk, xmin, xmax)
+    call m % mesh % init
 
-    m % name = "sfd3pt"
+    call set_string_if_empty( m % name, "sfd3pt")
 
-    m % h = (xmax-xmin)/(nx-1)
+    m % h = (m % x1 - m % x0)/(m % nx - 1)
 
     ! setup a uniform grid
-    forall( i = 1:nx )&
-         m % x(i) = xmin + (i-1) * m % h
+    forall( i = 1 : m % nx )
+       m % x(i) = m % x1 + (i-1) * m % h
+    end forall
 
   end subroutine init
 

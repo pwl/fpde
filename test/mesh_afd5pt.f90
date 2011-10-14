@@ -1,4 +1,5 @@
 program test_afd5pt
+  use class_mesh
   use class_mesh_afd5pt
 
   type(mesh_afd5pt) :: m
@@ -11,7 +12,8 @@ program test_afd5pt
 
   f(:) = sin(x)
 
-  call m % init(nx,1,2,0.,1.)
+  m = mesh_afd5pt(nx = nx, rk = 2, x1 = 1.)
+  call m % init
 
   m % x = x
   m % f(:,1) = f

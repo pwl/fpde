@@ -27,7 +27,8 @@ program mesh_sfd3pt_test
        status = 'replace')
 
   ! initialize mesh
-  call m % init(100,2,rk,xmin,xmax)
+  m = mesh_sfd3pt( nx = 100, nf = 2, rk = rk, x0 = xmin, x1 = xmax )
+  call m % init
   ! print a mesh
   call m % info
   ! write and read data to and from vector v

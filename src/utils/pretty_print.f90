@@ -43,4 +43,15 @@ contains
     end do
   end function get_unit
 
+  subroutine set_string_if_empty( str1, str2 )
+    character(len=*), intent(inout) :: str1
+    character(len=*), intent(in) :: str2
+
+    if( trim(str1) == "" ) then
+       str1 = str2
+    end if
+
+  end subroutine set_string_if_empty
+
+
 end module pretty_print

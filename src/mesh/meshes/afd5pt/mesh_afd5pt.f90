@@ -1,6 +1,7 @@
 module class_mesh_afd5pt
   use class_mesh
   use utils_random_seed
+  use pretty_print
 
   ! everything except the type should be private
   private
@@ -15,23 +16,21 @@ module class_mesh_afd5pt
 
 contains
 
-  subroutine init(m, nx, nf, maxrk, xmin, xmax)
+  subroutine init( m )
     class(mesh_afd5pt), intent(inout) :: m
-    integer, intent(in) :: nx,nf,maxrk
-    real, intent(in) :: xmin, xmax
     integer :: i,j
     real :: pi
 
     pi = acos(-1.)
 
-    call m % mesh % init( nx, nf, maxrk, xmin, xmax)
+    call m % mesh % init
 
-    m % name = "mesh_afd5pt"
+    call set_string_if_empty( m % name, "mesh_afd5pt" )
 
     ! setup a sample non uniform grid
-    forall( i = 1:nx )&
-         m % x(i) = (xmax-xmin)*(1.-cos(real(i-1)/real(nx-1)*pi))/2.+xmin
-
+    forall( i = 1: m % nx )
+       m % x(i) = (m % x1 - m % x0)*(1.-cos(real(i-1)/real(m % nx-1)*pi))/2.+ m % x0
+    end forall
 
   end subroutine init
 
