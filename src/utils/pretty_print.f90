@@ -2,6 +2,7 @@ module pretty_print
 
   ! default format for reals
   character(len=*), parameter :: real_format = "f"
+  integer :: stdout_file = 6
 
 contains
 

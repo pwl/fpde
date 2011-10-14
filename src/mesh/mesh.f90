@@ -18,6 +18,9 @@ module class_mesh
      real, contiguous, pointer             :: df(:,:,:) => null()
      real, contiguous, pointer             :: dx(:) => null()
      logical, private, contiguous, pointer :: df_calculated(:) => null()
+     character(len=30)                     :: boundary_left = "fixed"
+     character(len=30)                     :: boundary_right = "fixed"
+     integer, pointer                      :: info_file => null()
    contains
      ! obligatory
      procedure                  :: derivative
@@ -59,6 +62,11 @@ contains
        print *, "ERROR: mesh: init: x1 <= x0"
     end if
 
+    if( .not. associated(m % info_file) ) then
+       allocate( m % info_file )
+       m % info_file = stdout_file
+    end if
+
     ! m % rk does not have to be >0, mesh can be used to
     ! integration (@todo or to interpolation in later versions). In
     ! the case rk = 0, the following allocation won't fail
@@ -73,11 +81,16 @@ contains
   end subroutine init
 
   subroutine info(m)
-  class(mesh), intent(inout) :: m
-  print*,' *** General info ***'
-  print*,'Mesh type: ',m % name
-  print*,'Mesh size: ',m % nx
-  print*,'Number of functions: ', m%nf
+    class(mesh), intent(inout) :: m
+    integer :: f
+    f = m % info_file
+
+    write(f,*)' *** General info ***'
+    write(f,*)'Mesh type: ',m % name
+    write(f,*)'Mesh size: ',m % nx
+    write(f,*)'Number of functions: ', m%nf
+    write(f,*)'Boundary [left, right]: [ ',&
+         trim(m % boundary_left), ", ", trim(m % boundary_right), ' ]'
   end subroutine info
 
 
@@ -197,12 +210,6 @@ contains
 
   end subroutine fill_for_debug
 
-
-  ! subroutine print_01( m, i )
-  !   class(mesh), intent(inout) :: m
-  !   integer :: i
-
-  ! end subroutine print_01
 
   ! form is an optional argument
   subroutine print_by_index( m, f_select, file_desc, form )
