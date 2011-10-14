@@ -3,6 +3,11 @@ module class_mesh_afd5pt
   use utils_random_seed
   use pretty_print
 
+  character(len=30), private, target :: &
+       bd_left(2) = [mesh_boundary_fixed, mesh_boundary_von_neumann]
+  character(len=30), private, target :: &
+       bd_right(1) = [character(len=30) :: mesh_boundary_fixed]
+
   ! everything except the type should be private
   private
 
@@ -18,16 +23,22 @@ contains
 
   subroutine init( m )
     class(mesh_afd5pt), intent(inout) :: m
-    integer :: i,j
+    integer :: i
     real :: pi
-
     pi = acos(-1.)
 
+    ! first set the allowable boundary conditions, so the init from
+    ! type mesh can verifie the ones supplied by the user
+    m % allowable_boundary_left => bd_left
+    m % allowable_boundary_right => bd_right
+
+    ! initialize parent
     call m % mesh % init
 
+    ! set the new name if empty
     call set_string_if_empty( m % name, "mesh_afd5pt" )
 
-    ! setup a sample non uniform grid
+    ! setup a sample non uniform grid, @todo remove
     forall( i = 1: m % nx )
        m % x(i) = (m % x1 - m % x0)*(1.-cos(real(i-1)/real(m % nx-1)*pi))/2.+ m % x0
     end forall
@@ -49,16 +60,34 @@ contains
     case(1)
        ! first derivatives
        if( k == 1 ) then
-          d=\
-          ((f(2,j)*(x(1) - x(3))*(x(1) - x(4))*(x(1) - x(5))**2)/((x(1) - \
-          x(2))*(x(2) - x(3))*(x(2) - x(4))*(x(2) - x(5))) + (f(3,j)*(x(1) - \
-          x(2))*(x(1) - x(4))*(x(1) - x(5))**2)/((x(1) - x(3))*(-x(2) + \
-          x(3))*(x(3) - x(4))*(x(3) - x(5))) + (f(4,j)*(x(1) - x(2))*(x(1) - \
-          x(3))*(x(1) - x(5))**2)/((x(1) - x(4))*(-x(2) + x(4))*(-x(3) + \
-          x(4))*(x(4) - x(5))) + (f(5,j)*(x(1) - x(2))*(x(1) - x(3))*(x(1) - \
-          x(4)))/((-x(2) + x(5))*(-x(3) + x(5))*(-x(4) + x(5))) + f(1,j)*(-1 + \
-          ((-1 + ((-2*x(1) + x(2) + x(3))*(-x(1) + x(4)))/((x(1) - x(2))*(-x(1) \
-          + x(3))))*(-x(1) + x(5)))/(-x(1) + x(4))))/(-x(1) + x(5))
+          ! various method of calculating derivetives depending on the
+          ! boundary conditions
+          select case(m % boundary_left)
+
+             ! "fixed" boundary conditions
+          case(mesh_boundary_fixed)
+             d=\
+             ((f(2,j)*(x(1) - x(3))*(x(1) - x(4))*(x(1) - x(5))**2)/((x(1) - \
+             x(2))*(x(2) - x(3))*(x(2) - x(4))*(x(2) - x(5))) + (f(3,j)*(x(1) - \
+             x(2))*(x(1) - x(4))*(x(1) - x(5))**2)/((x(1) - x(3))*(-x(2) + \
+             x(3))*(x(3) - x(4))*(x(3) - x(5))) + (f(4,j)*(x(1) - x(2))*(x(1) - \
+             x(3))*(x(1) - x(5))**2)/((x(1) - x(4))*(-x(2) + x(4))*(-x(3) + \
+             x(4))*(x(4) - x(5))) + (f(5,j)*(x(1) - x(2))*(x(1) - x(3))*(x(1) - \
+             x(4)))/((-x(2) + x(5))*(-x(3) + x(5))*(-x(4) + x(5))) + f(1,j)*(-1 + \
+             ((-1 + ((-2*x(1) + x(2) + x(3))*(-x(1) + x(4)))/((x(1) - x(2))*(-x(1) \
+             + x(3))))*(-x(1) + x(5)))/(-x(1) + x(4))))/(-x(1) + x(5))
+
+             ! "von_neumann" boundary conditions
+          case(mesh_boundary_von_neumann)
+             ! function is symmetric, first derivative is set to 0.
+             d = 0.
+
+             ! undefined behavior brake the calculations
+          case default
+             d = sqrt(-1.)
+
+          end select
+
 
        elseif( k == 2 ) then
           d=\

@@ -3,6 +3,10 @@ module class_mesh
   use pretty_print
   ! use omp_lib
 
+  character(len=30), public, parameter ::&
+       mesh_boundary_fixed = "fixed",&
+       mesh_boundary_von_neumann = "von_neumann"
+
   private
 
   ! general mesh class to be inherited by user-defined meshes
@@ -12,15 +16,20 @@ module class_mesh
      character(len=300)                    :: name = ""
      integer                               :: nx = 0, nf = 1, rk = 0
      real                                  :: x0 = 0., x1 = 0.
+     character(len=30)                     :: boundary_left = "fixed"
+     character(len=30)                     :: boundary_right = "fixed"
+     integer, pointer                      :: info_file => null()
      ! end of initialization parameters
+     character(len=30), pointer            :: &
+          allowable_boundary_left(:) => null()
+     character(len=30), pointer            :: &
+          allowable_boundary_right(:) => null()
      real, contiguous, pointer             :: x(:) => null()
      real, contiguous, pointer             :: f(:,:) => null()
      real, contiguous, pointer             :: df(:,:,:) => null()
      real, contiguous, pointer             :: dx(:) => null()
+     ! @todo obsolate, delete
      logical, private, contiguous, pointer :: df_calculated(:) => null()
-     character(len=30)                     :: boundary_left = "fixed"
-     character(len=30)                     :: boundary_right = "fixed"
-     integer, pointer                      :: info_file => null()
    contains
      ! obligatory
      procedure                  :: derivative
@@ -48,7 +57,11 @@ contains
 
   subroutine init(m)
     class(mesh), intent(inout) :: m
-    integer :: i
+
+    if( .not. associated(m % info_file) ) then
+       allocate( m % info_file )
+       m % info_file = stdout_file
+    end if
 
     if( m % nx == 0 ) then
        print *, "ERROR: mesh: init: nx = 0"
@@ -62,9 +75,16 @@ contains
        print *, "ERROR: mesh: init: x1 <= x0"
     end if
 
-    if( .not. associated(m % info_file) ) then
-       allocate( m % info_file )
-       m % info_file = stdout_file
+    if( associated(m % allowable_boundary_left) .and. &
+         associated(m % allowable_boundary_right) ) then
+       if( .not. any(m % allowable_boundary_left == m % boundary_left) ) then
+          print *, "ERROR: mesh: init: [left] boundary conditions do not match the mesh"
+       end if
+       if( .not. any(m % allowable_boundary_right == m % boundary_right) ) then
+          print *, "ERROR: mesh: init: [right] boundary conditions do not match the mesh"
+       end if
+    else
+       print *, "INFOR: mesh: init: allowable boundary conditions are not defined for this mesh"
     end if
 
     ! m % rk does not have to be >0, mesh can be used to
@@ -86,9 +106,11 @@ contains
     f = m % info_file
 
     write(f,*)' *** General info ***'
-    write(f,*)'Mesh type: ',m % name
-    write(f,*)'Mesh size: ',m % nx
+    write(f,*)'Mesh name: ',m % name
+    write(f,*)'N. of points: ',m % nx
     write(f,*)'Number of functions: ', m%nf
+    write(f,*)'Rank: ', m % rk
+    write(f,*)'Range: [', m % x0, ", ", m % x1, "]"
     write(f,*)'Boundary [left, right]: [ ',&
          trim(m % boundary_left), ", ", trim(m % boundary_right), ' ]'
   end subroutine info
