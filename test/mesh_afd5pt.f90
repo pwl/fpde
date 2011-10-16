@@ -45,6 +45,37 @@ program test_afd5pt
   print *, "L2 norm of d2f+sin(x)"
   print *,m % integrate( (df(:,1,2) + sin(x))**2 )
 
+  ! check the von_neumann boundary conditions
+  m % boundary_left = mesh_boundary_von_neumann
+  m % f(:,1) = cos(x)
+
+  call m % calculate_derivatives(1)
+  call m % calculate_derivatives(2)
+
+  do i = 1, nx
+     df(i,1,1) = m % derivative(i,1,1)
+     df(i,1,2) = m % derivative(i,1,2)
+  end do
+
+  print *,"Two numbers below should be zero"
+  do i = 1, 2
+     print *, m % integrate( df(:,1,i) - m % df(:,1,i) )
+  end do
+
+  print *, abs(df(:,1,1)-cos(x))
+
+  print *, "L1 norm of |df+sin(x)|"
+  print *,m % integrate( abs(df(:,1,1) + sin(x)) )
+  print *,maxloc(abs(df(:,1,1) + sin(x)) )
+  print *, "L1 norm of |d2f+cos(x)|"
+  print *,m % integrate( abs(df(:,1,2) + cos(x)) )
+  print *,maxloc(abs(df(:,1,1) - cos(x)) )
+  print *, "L2 norm of df+sin(x)"
+  print *,m % integrate( (df(:,1,1) + sin(x))**2 )
+  print *, "L2 norm of d2f+cos(x)"
+  print *,m % integrate( (df(:,1,2) + cos(x))**2 )
+
+
   call m % free
 
 
