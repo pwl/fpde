@@ -59,7 +59,8 @@ set(suffix "f90")
 set(suffix_f77 "f")
 
 # set(libs "-llapack -lblas")
-set(libs "-L$MKLROOT/lib/ia32  -lmkl_blas95 -lmkl_lapack95 -lmkl_intel -lmkl_intel_thread -lmkl_core -openmp -lpthread")
+#set(libs "-L$MKLROOT/lib/ia32  -lmkl_blas95 -lmkl_lapack95 -lmkl_intel -lmkl_intel_thread -lmkl_core -openmp -lpthread")
+set(libs "-L$MKLROOT/lib/intel64  -lmkl_blas95_lp64 -lmkl_lapack95_lp64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread")
 
 # add a subdirectory with a test library
 add_subdirectory( src )
