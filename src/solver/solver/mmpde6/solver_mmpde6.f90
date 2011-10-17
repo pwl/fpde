@@ -307,7 +307,7 @@ contains
     ! call si % info
     call si % add(                                    &
          module_print_data(), &
-         trigger_every_n_iter(dn = 30))
+         trigger_every_n_iter(dn = 1))
 
     ! stop if stationary state reached
     call si % add(                                    &
@@ -326,8 +326,8 @@ contains
     si % f(:,1) = s % x
     call si % sync_dfdt(si % dydt)
     call si % solve
-    call si % free
     s % x = si % f(:,1)
+    call si % free
     ! @bug, see initial_rhs()
     call s % initial( s % x, s % f, null() )
 
