@@ -6,6 +6,8 @@ program test_afd5pt
   integer, parameter :: nx = 101
   integer :: i
   real :: x(nx), f(nx), df(nx,1,2)
+  character(len=30), target :: fixed(1) = [mesh_boundary_fixed]
+  character(len=30), target :: von_neumann(1) = [mesh_boundary_von_neumann]
 
   x=[(real(i-1)/real(nx-1),i=1,nx)]
   ! x = x**2                      !non-uniform mesh
@@ -46,7 +48,7 @@ program test_afd5pt
   print *,m % integrate( (df(:,1,2) + sin(x))**2 )
 
   ! check the von_neumann boundary conditions
-  m % boundary_left = mesh_boundary_von_neumann
+  m % boundary_left => von_neumann
   m % f(:,1) = cos(x)
 
   call m % calculate_derivatives(1)
@@ -66,7 +68,7 @@ program test_afd5pt
   print *,m % integrate( (df(:,1,2) + cos(x))**2 )
 
   ! step function check
-  m % boundary_left = mesh_boundary_fixed
+  m % boundary_left => fixed
   m % f(1:nx/2,1) = 0.
   m % f(nx/2+1:nx,1) = 1.
 
