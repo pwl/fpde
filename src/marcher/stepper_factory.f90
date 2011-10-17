@@ -6,6 +6,8 @@ module stepper_factory
   use class_ode_stepper_rkf45
   use class_ode_stepper_rkm43
 
+  use class_ode_stepper_rkimp2
+
 contains
 
   function stepper_new(id) result(s)
@@ -21,6 +23,8 @@ contains
        allocate( ode_stepper_rkf45 :: s )
     case( "rkm43" )
        allocate( ode_stepper_rkm43 :: s )
+    case( "rkimp2" )
+       allocate( ode_stepper_rkimp2 :: s )
     case default
        print *, "stepper_new: invalid id"
        nullify( s )

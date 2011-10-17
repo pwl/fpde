@@ -76,11 +76,11 @@ program ode_system_test
 
       ! Drukuje roznice pomiedzy rozwiazaniem znalezionym
       ! numerycznie a znanym analitycznnie
-      print *, 't=',t , 'h=', h
-      print *, ''
-      print *, 'yerr=',y(1)-(b + a*cos(sqrt(a)*t)- b*cos(sqrt(a)*t))/a, &
-           'dydterr=', y(2)-((-a + b)*sin(sqrt(a)*t))/sqrt(a)
-      print *, ''
+      print '(A,I)', 'step: ', mymarcher % count
+      print 22, 't:     ',t , ', h:       ', h
+      print 22, 'y_err: ',y(1)-(b + a*cos(sqrt(a)*t)- b*cos(sqrt(a)*t))/a, &
+           ', dydt_err: ', y(2)-((-a + b)*sin(sqrt(a)*t))/sqrt(a)
+22    FORMAT(A,E,A,E)
 
    end do
 
