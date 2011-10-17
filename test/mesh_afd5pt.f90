@@ -3,7 +3,7 @@ program test_afd5pt
   use class_mesh_afd5pt
 
   type(mesh_afd5pt) :: m
-  integer, parameter :: nx = 50
+  integer, parameter :: nx = 101
   integer :: i
   real :: x(nx), f(nx), df(nx,1,2)
 
@@ -52,16 +52,6 @@ program test_afd5pt
   call m % calculate_derivatives(1)
   call m % calculate_derivatives(2)
 
-  do i = 1, nx
-     df(i,1,1) = m % derivative(i,1,1)
-     df(i,1,2) = m % derivative(i,1,2)
-  end do
-
-  print *,"Two numbers below should be zero"
-  do i = 1, 2
-     print *, m % integrate( df(:,1,i) - m % df(:,1,i) )
-  end do
-
   print *, abs(df(:,1,1)-cos(x))
 
   print *, "L1 norm of |df+sin(x)|"
@@ -74,6 +64,31 @@ program test_afd5pt
   print *,m % integrate( (df(:,1,1) + sin(x))**2 )
   print *, "L2 norm of d2f+cos(x)"
   print *,m % integrate( (df(:,1,2) + cos(x))**2 )
+
+  ! step function check
+  m % boundary_left = mesh_boundary_fixed
+  m % f(1:nx/2,1) = 0.
+  m % f(nx/2+1:nx,1) = 1.
+
+  do i = 1, nx
+     df(i,1,1) = m % derivative(i,1,1)
+     df(i,1,2) = m % derivative(i,1,2)
+  end do
+
+
+  print *, abs(df(:,1,1))
+
+  print *, "L1 norm of |df|"
+  print *,m % integrate( abs(df(:,1,1)) )
+  print *,maxloc(abs(df(:,1,1)))
+  print *, "L1 norm of |d2f|"
+  print *,m % integrate( abs(df(:,1,2)) )
+  print *,maxloc(abs(df(:,1,1)) )
+  print *, "L2 norm of df"
+  print *,m % integrate( (df(:,1,1))**2 )
+  print *, "L2 norm of d2f"
+  print *,m % integrate( (df(:,1,2))**2 )
+
 
 
   call m % free
