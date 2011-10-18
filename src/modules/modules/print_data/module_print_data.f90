@@ -8,7 +8,7 @@ module class_module_print_data
 
   type, public, extends(module) :: module_print_data
      ! initialization parameters
-     character(len=1000) :: file_name = ""
+     character(len=1000) :: dir_name = ""
      character(len=10)   :: extension = ".dat"
      ! end of initialization parameters
      integer :: file_handle = 0
@@ -28,22 +28,21 @@ contains
     r = .true.
 
 
-       ! if no file_name has been specified, one is generated
-       if( trim(this%file_name) == "" ) then
+       ! if no dir_name has been specified, one is generated
+       if( trim(this%dir_name) == "" ) then
           ! should generate file name automatically as follows
           ! [date]/[solver%name]/[module_print_data%name + some unique
           ! module%id]/
-          write(this%file_name, *) &
+          write(this%dir_name, *) &
                ! solver run time
-               trim(this%solver_data%time_started), "/", &
-               "modules/",&
+               trim(this%solver_data%data_dir), "/", &
                ! module name
                trim(this%name), "/", &
                ! actual file name
                "data"
        end if
 
-    call new_directory(this % file_name)
+    call new_directory(this % dir_name)
 
     ! print data at the start of the run
     r = this % step()
@@ -63,6 +62,7 @@ contains
     character(len=1000) :: file_name
     character(len=30)   :: name
     character(len=30), pointer :: data_scalars_names(:)
+    character(len=255)  :: iomsg
     class(solver_data), pointer :: s
 
     r = .true.
@@ -81,8 +81,8 @@ contains
 
     ! set a new file name
     write(file_name, '(a,a,i20.20,a)')       &
-         trim(this % file_name),             &
-         "_n=", s % n_iter, &
+         trim(this % dir_name),             &
+         "/", s % n_iter, &
          trim(this % extension)
 
     ! @todo write a timestamp
@@ -93,11 +93,13 @@ contains
          ! access = 'direct', &
          recl    = 10000, &
          iostat = iostat, &
-         status  = 'replace')
+         status  = 'replace',&
+         iomsg = iomsg)
 
     if( iostat /= 0  ) then
        ! @todo report error
        print *, "error in module_print_data ioostat /= 0"
+       print *, iomsg
        r = .false.
        return
     end if
