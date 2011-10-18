@@ -44,7 +44,7 @@ program solver_simple_program
 
   call s % add(                   &
        module_print_data(         &
-       file_name = "data/test",   &
+       dir_name = "module_print_test",   &
        extension = ".dat" ),      &
        trigger_timed( dt = .01 ) )
 

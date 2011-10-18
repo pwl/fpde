@@ -31,12 +31,13 @@ module class_solver_data
      integer                           :: nx = 0, nf = 0, rk = 0
      integer                           :: n_iter = 0
      class(*), pointer                 :: params => null()
-     character(len=20)                 :: time_started = ""
+     character(len=19)                 :: time_started = ""
      ! solver name
      character(len=30)                 :: name = ""
      ! interface supported by any solver
      integer                           :: rhs_status = 0
      character(len=30)                 :: status = "stopped"
+     character(len=1000)               :: data_dir = ""
      integer                           :: info_file
    contains
      procedure                         :: init
@@ -97,10 +98,23 @@ contains
     call fill_data_names(s, var="s", user_var="u")
 
     call date_and_time(date=date, time=time)
-    write(s % time_started, *) trim(date), "-", trim(time)
-    write(name, *) trim(s%time_started), "/solver_data"
+    write(s % time_started, "(8a,1a,10a)") date, "-", time
 
-    call new_directory(name)
+    if( trim(s%name) == "" ) then
+       write(s%name, *) "unnamed_solver"
+    end if
+
+    if( trim(s%data_dir) == "" ) then
+       write(s%data_dir, *) "./data/", trim(s%name),"/", trim(s%time_started)
+    end if
+
+    write(name, *) trim(s%data_dir), "/solver_data"
+
+    print *, name
+    print *, s%data_dir
+
+    call new_directory(s%data_dir)
+    call symlink(s%data_dir,trim(s%name))
 
     open(newunit = s%info_file,&
          file    = name,  &

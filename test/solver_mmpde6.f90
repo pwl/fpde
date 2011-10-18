@@ -46,7 +46,7 @@ program test_solver_mmpde6
   call s % init
 
   call s % add(&
-       module_print_data(file_name = "data/test"),&
+       module_print_data(dir_name = "test"),&
        trigger_every_n_iter(dn = 100))
 
   call s % solve

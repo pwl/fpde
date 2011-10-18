@@ -40,15 +40,14 @@ contains
        ! unique module%id]/
        write(this%file_name, *) &
             ! solver run time
-            trim(this%solver_data%time_started), "/", &
-            "modules/",&
+            trim(this%solver_data%data_dir), "/", &
             ! module name
             trim(this%name), "/", &
             ! actual file name
             "data"
     end if
 
-    call new_directory(this % file_name)
+    call new_file(this % file_name)
 
 
     ! open the file and erase its contents
