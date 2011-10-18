@@ -9,7 +9,7 @@ module class_ode_stepper_rkpd54
 
    type, public, extends( ode_stepper ) :: ode_stepper_rkpd54
       ! workspace
-      real, pointer, contiguous :: k1(:), k2(:), k3(:), k4(:), k5(:), k6(:), k7(:), y0(:), ytmp(:)
+      real, pointer, contiguous :: k1(:), k2(:), k3(:), k4(:), k5(:), k6(:), k7(:), y0(:), ytmp(:), yerr1(:)
       !
       real :: c(7) = (/ 0.0, 1.0/5.0, 3.0/10.0, 4.0/5.0, 8.0/9.0, 1.0, 1.0 /)
 
@@ -23,6 +23,13 @@ module class_ode_stepper_rkpd54
       real :: b(7) = (/ 35.0/384.0, 0.0, 500.0/1113.0, 125.0/192.0, -2187.0/6784.0, 11.0/84.0, 0.0 /)
 
       real :: ec(7) = (/  -71.0/57600.0, 0.0, 71.0/16695.0, -71.0/1920.0, 17253.0/339200.0, -22.0/525.0, 1.0/40.0 /)
+
+      ! automatic stiff detection constants
+      real :: d(6) = (/ -0.08536, 0.088, -0.0096, 0.0052, 0.00576, -0.004 /)
+      real :: r0 = 3.3, t1_tol = 1.0, t2_tol = 0.7
+      real :: stiff_t1, stiff_t2
+      integer :: stiff_n
+      logical :: stiff_last
 
    contains
       procedure :: init
@@ -45,6 +52,11 @@ contains
       s % name = "rkpd54"
       s % status = 1
 
+      s % test_for_stiffness = .false. ! by default do not detect stiffness
+      s % stiff_status = .false. ! by default, at start, IVP is not stiff
+      s % stiff_n = 0
+      s % stiff_last = .false.
+
       ! allocate workspace vectors
       allocate( s % k1( dim ) )
       allocate( s % k2( dim ) )
@@ -55,6 +67,7 @@ contains
       allocate( s % k7( dim ) )
       allocate( s % y0( dim ) )
       allocate( s % ytmp( dim ) )
+      allocate( s % yerr1( dim ) )
    end subroutine init
 
    subroutine apply( s, dim, t, h, y, yerr, dydt_in, dydt_out, sys, status )
@@ -170,7 +183,7 @@ contains
          call sys % fun( t+h, y, dydt_out, sys % params, sys % status )
          if ( sys % status /= 1 ) then
             s % status = sys % status
-
+            
             ! poniewaz wektor y zostal juz nadpisany
             ! musimy go odzyskac z kopi zrobionej na
             ! poczaktu subrutyny
@@ -183,6 +196,38 @@ contains
       yerr = h * ( s%ec(1) * s%k1 + s%ec(2) * s%k2 + s%ec(3) * s%k3 &
            + s%ec(4) * s%k4 + s%ec(5) * s%k5 + s%ec(6) * s%k6 + s%ec(7) * s%k7)
 
+      ! if the user wants to detect stiffness
+      if ( s % test_for_stiffness ) then
+         s % yerr1 = h * ( s%d(1) * s%k1 + s%d(2) * s%k2 + s%d(3) * s%k3 &
+              + s%d(4) * s%k4 + s%d(5) * s%k5 + s%d(6) * s%k6 )
+         
+         s % stiff_t1 = norm2( s % yerr1 ) / norm2( yerr )
+
+         s % yerr1 = h * ( (s%a7(1)-s%a6(1))*s%k1 + (s%a7(2)-s%a6(2))*s%k2 + &
+              (s%a7(3)-s%a6(3))*s%k3 + (s%a7(4)-s%a6(4))*s%k4 + &
+              (s%a7(5)-s%a6(5))*s%k5 + s%a7(6)*s%k6 )
+
+         s % stiff_t2 = h * norm2( s % k7 - s % k6 )/norm2( s % yerr1 )/s % r0
+
+         ! print '(E13.6,E13.6,E13.6,E13.6)', t, s % stiff_t1, s % stiff_t2
+
+         ! test if stiff_t1 and stiff_t2 are out of the bounds
+         if ( s % stiff_t1 .lt. s % t1_tol .and. s % stiff_t2 .gt. s % t2_tol ) then
+            ! the problem is expected to be stiff
+            if ( s % stiff_last ) then
+               s % stiff_n = s % stiff_n + 1
+            else
+               s % stiff_n = 1
+               s % stiff_last = .true.
+            end if
+
+            if ( s % stiff_n .ge. 16 ) then
+               ! the problem is classified as stiff
+               s % stiff_status = .true.
+            end if
+         end if
+
+      end if
       ! pomyslnie zakonczono subrutyne
       s % status = 1
 
@@ -200,6 +245,12 @@ contains
       s % k7 = 0.0
       s % y0 = 0.0
       s % ytmp = 0.0
+      s % yerr1 = 0.0
+
+      s % stiff_status = .false.
+      s % stiff_n = 0
+      s % stiff_last = .false.
+
       s % status = 1
    end subroutine reset
 
@@ -215,6 +266,7 @@ contains
       deallocate( s % k7 )
       deallocate( s % y0 )
       deallocate( s % ytmp )
+      deallocate( s % yerr1 )
    end subroutine free
 
 end module class_ode_stepper_rkpd54

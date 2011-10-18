@@ -10,7 +10,11 @@ module class_ode_stepper
       logical :: can_use_dydt_in
       logical :: gives_exact_dydt_out
       logical :: gives_estimated_yerr
-      integer :: method_order ! min(p,pb) for embedded RK
+      logical :: test_for_stiffness ! even if the method can do this
+                              ! this option should be always set to .false.
+                              ! due to overhead
+      logical :: stiff_status
+      integer :: method_order ! min(p,pb) for embedded RK - this is not always true
       character(len=20) :: name ! @todo length of this variable
       integer :: status
    contains
