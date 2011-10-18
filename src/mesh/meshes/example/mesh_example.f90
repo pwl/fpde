@@ -18,16 +18,14 @@ module class_mesh_example
 contains
 
   ! overloaded init
-  subroutine init( m, nx, nf, maxrk, xmin, xmax )
+  subroutine init( m )
     class(mesh_example), intent(inout) :: m
-    integer :: nx,nf,maxrk
-    real, intent(in) :: xmin, xmax
 
     ! first init the parent class, this is necessary
-    call m % mesh % init( nx, nf, maxrk, xmin, xmax )
+    call m % mesh % init
 
     ! then init user data
-    allocate( m % test( nx ) )
+    allocate( m % test( m % nx ) )
 
   end subroutine Init
 

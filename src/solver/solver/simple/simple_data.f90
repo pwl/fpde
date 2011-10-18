@@ -121,9 +121,13 @@ contains
        stop
     end if
 
-    call m % init(                 &
-         data % nx, data % nf, data % rk, &
-         data % x0, data % x1 )
+    m % nx = data % nx
+    m % nf = data % nf
+    m % rk = data % rk
+    m % x0 = data % x0
+    m % x1 = data % x1
+
+    call m % init
 
     deallocate( m % f )
 

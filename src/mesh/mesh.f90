@@ -3,74 +3,144 @@ module class_mesh
   use pretty_print
   ! use omp_lib
 
+  character(len=30), public, parameter ::&
+       mesh_boundary_fixed = "fixed",&
+       mesh_boundary_von_neumann = "von_neumann",&
+       mesh_boundary_default = "default"
+
   private
 
   ! general mesh class to be inherited by user-defined meshes
   type, public :: mesh
      ! private
-     ! TODO: add something like
-     character(len=300)    :: name
-     integer               :: nx, nf, maxrk
-     real, contiguous, pointer         :: x(:)
-     real, contiguous, pointer         :: f(:,:)
-     real, contiguous, pointer         :: df(:,:,:)
-     real, contiguous, pointer         :: dx(:)
-     logical, private, contiguous, pointer :: df_calculated(:)
+     ! inittialization parameters
+     character(len=300)                    :: name = ""
+     integer                               :: nx = 0, nf = 1, rk = 0
+     real                                  :: x0 = 0., x1 = 0.
+     integer, pointer                      :: info_file => null()
+     character(len=30), pointer            :: boundary_left(:) => null()
+     character(len=30), pointer            :: boundary_right(:) => null()
+     ! end of initialization parameters
+     character(len=30), pointer            :: &
+          allowable_boundary_left(:) => null()
+     character(len=30), pointer            :: &
+          allowable_boundary_right(:) => null()
+     character(len=30)                     :: boundary_left_default = mesh_boundary_default
+     character(len=30)                     :: boundary_right_default = mesh_boundary_default
+     real, contiguous, pointer             :: x(:) => null()
+     real, contiguous, pointer             :: f(:,:) => null()
+     real, contiguous, pointer             :: df(:,:,:) => null()
+     real, contiguous, pointer             :: dx(:) => null()
+     ! @todo obsolate, delete
+     logical, private, contiguous, pointer :: df_calculated(:) => null()
    contains
      ! obligatory
-     procedure :: derivative
-     procedure :: calculate_derivatives
+     procedure                  :: derivative
+     procedure                  :: calculate_derivatives
 
      ! optional
-     procedure :: init
-     procedure :: free
-     procedure :: info
-     procedure :: integrate
+     procedure                  :: init
+     procedure                  :: free
+     procedure                  :: info
+     procedure                  :: integrate
+     procedure                  :: calculate_spacings
 
      ! use only, not to be overloaded
      procedure, non_overridable :: print_by_index
-     ! generic   :: print => print_by_index
+     ! generic                  :: print => print_by_index
      procedure, non_overridable :: print_preview
      procedure, non_overridable :: check_derivatives
      procedure, non_overridable :: clear_derivatives
 
      ! questionable
-     procedure :: to_vector
-     procedure :: from_vector
-     procedure :: fill_for_debug
-     procedure :: calculate_spacings
+     procedure                  :: fill_for_debug
   end type mesh
 
 contains
 
-  subroutine init(m, nx, nf, maxrk, xmin, xmax)
+  subroutine init(m)
     class(mesh), intent(inout) :: m
-    integer, intent(in) :: nx,nf,maxrk
-    real, intent(in) :: xmin, xmax
     integer :: i
 
+    if( .not. associated(m % info_file) ) then
+       allocate( m % info_file )
+       m % info_file = stdout_file
+    end if
 
-    m % nx = nx
-    m % nf = nf
-    m % maxrk = Maxrk
-    allocate( m % df_calculated( maxrk ) )
-    m % df_calculated = .false.
+    if( m % nx == 0 ) then
+       print *, "ERROR: mesh: init: nx = 0"
+    end if
 
-    ! setup a uniform grid
-    allocate( m % x( nx ) )
-    allocate( m % f( nx, nf ) )
-    allocate( m % df( nx, nf, maxrk ) )
+    if( m % nf == 0 ) then
+       print *, "ERROR: mesh: init: nf = 0"
+    end if
+
+    if( m % x1 <= m % x0 ) then
+       print *, "ERROR: mesh: init: x1 <= x0"
+    end if
+
+    if( trim(m%boundary_left_default) == "" ) then
+       print *, "INFOR: mesh: init: default boundary_left is not set for this mesh"
+       m%boundary_left_default = mesh_boundary_default
+    end if
+
+    if( trim(m%boundary_right_default) == "" ) then
+       print *, "INFOR: mesh: init: default boundary_right is not set for this mesh"
+       m%boundary_right_default = mesh_boundary_default
+    end if
+
+    if( .not. associated( m % boundary_left) ) then
+       print *, "INFOR: mesh: init: boundary_left is not associatred"
+       allocate(m%boundary_left(m%nf))
+       m%boundary_left = m % boundary_left_default
+    end if
+
+    if( .not. associated( m % boundary_right) ) then
+       print *, "INFOR: mesh: init: boundary_right is not associatred"
+       allocate(m%boundary_right(m%nf))
+       m%boundary_right = m % boundary_right_default
+    end if
+
+    do i = 1, m%nf
+       if( associated(m % allowable_boundary_left) .and. &
+            associated(m % allowable_boundary_right) ) then
+          if( .not. any(m % allowable_boundary_left == m % boundary_left(i)) ) then
+             print *, "ERROR: mesh: init: one of the left_boundary conditions does not match the mesh"
+          end if
+          if( .not. any(m % allowable_boundary_right == m % boundary_right(i)) ) then
+             print *, "ERROR: mesh: init: one of the right_boundary conditions does not match the mesh"
+          end if
+       else
+          print *, "INFOR: mesh: init: allowable boundary conditions are not defined for this mesh"
+       end if
+    end do
+
+    ! m % rk does not have to be >0, mesh can be used to
+    ! integration (@todo or to interpolation in later versions). In
+    ! the case rk = 0, the following allocation won't fail
+    allocate( m % df_calculated( m % rk ) )
+
+    allocate( m % x( m % nx ) )
+    allocate( m % f( m % nx, m % nf ) )
+    allocate( m % df( m % nx, m % nf, m % rk ) )
     ! allocate memory for mesh spacing
-    allocate( m % dx(nx) )
+    allocate( m % dx( m % nx ) )
 
   end subroutine init
 
   subroutine info(m)
-  class(mesh), intent(inout) :: m
-  print*,' *** General info ***'
-  print*,'Mesh type: ',m % name
-  print*,'Mesh size: ',m % nx
-  print*,'Number of functions: ', m%nf
+    class(mesh), intent(inout) :: m
+    integer :: f
+    f = m % info_file
+
+    write(f,*)' *** General info ***'
+    write(f,*)'Mesh name: ',m % name
+    write(f,*)'N. of points: ',m % nx
+    write(f,*)'Number of functions: ', m%nf
+    write(f,*)'Rank: ', m % rk
+    write(f,*)'Range: [', m % x0, ", ", m % x1, "]"
+    write(f,*)'Boundary [left], [right]: [ ',&
+         m % boundary_left, "], [", m % boundary_right, ' ]'
   end subroutine info
 
 
@@ -107,7 +177,7 @@ contains
     real :: d
     d = 0.
 
-    stop 'method "derivative" is not overloaded'
+    print *, "INFOR: mesh: derivative: subroutine not overloaded"
 
   end function derivative
 
@@ -117,7 +187,7 @@ contains
     class(mesh), target, intent(inout) :: m
     integer, intent(in) :: i
 
-    stop 'method "calculate_derivatives" not overloaded'
+    print *, "INFOR: mesh: calculate_derivatives: subroutine not overloaded"
 
   end subroutine calculate_derivatives
 
@@ -131,8 +201,8 @@ contains
 
     if( m % df_calculated( i ) ) then
        return
-    else if( i > m % maxrk ) then
-       stop "maxrk exceeded!"
+    else if( i > m % rk ) then
+       stop "rk exceeded!"
        return
     else
        check_derivatives = .true.
@@ -151,32 +221,6 @@ contains
 
   end subroutine clear_derivatives
 
-
-  ! this is not the best way to convert to a vector velue because it
-  ! copies data
-  subroutine to_vector( m, v )
-    class(mesh), target, intent(in) :: m
-    real, pointer, intent(inout) :: v(:)
-
-    v(1 : m%nf * m%nx) => m % f
-
-  end subroutine to_vector
-
-  ! not needed anymore!
-  subroutine from_vector( m, v )
-    class(mesh), intent(inout) :: m
-    real, intent(in) :: v(:)
-
-    m % f = reshape( v, shape( m % f ) )
-    call m % clear_derivatives()
-
-  end subroutine from_vector
-
-
-  ! to be implemented:
-  ! from_function(m, fns)
-  ! from_vector(m, v)
-
   ! used to print a readable output of a mesh, to be improved
   subroutine print_preview( m )
     class(mesh), intent(in) :: m
@@ -184,8 +228,8 @@ contains
 
     ! print parameters
     print *, ""
-    print *, "nx,nf,maxrk = ",&
-         m % nx, m % nf, m % maxrk
+    print *, "nx,nf,rk = ",&
+         m % nx, m % nf, m % rk
 
     ! print mesh points
     print *, "x = ", m % x(1:offset), " (...) ", m % x(m%nx - offset : m%nx)
@@ -201,20 +245,21 @@ contains
   ! removed in future
   subroutine fill_for_debug( m )
     class(mesh), intent(inout) :: m
-    integer :: nx = 10, nf = 3, maxrk = 2
+    integer :: nx = 10, nf = 3, rk = 2
     integer :: i,j
 
-    call m%init(nx, nf, maxrk, 0., 1.)
+    m % nx = nx
+    m % nf = nf
+    m % rk = rk
+    m % x1 = 1.
+    m % name = "mesh debug"
+    call m % init
+
+    call m%init
     forall(i = 1:m%nx, j = 1:m%nf) m%f(i,j) = i*100+j
 
   end subroutine fill_for_debug
 
-
-  ! subroutine print_01( m, i )
-  !   class(mesh), intent(inout) :: m
-  !   integer :: i
-
-  ! end subroutine print_01
 
   ! form is an optional argument
   subroutine print_by_index( m, f_select, file_desc, form )

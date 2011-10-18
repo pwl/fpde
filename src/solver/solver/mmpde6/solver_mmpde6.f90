@@ -191,12 +191,22 @@ contains
     ! s % computational => mesh_new("sfd3pt")
 
     ! physical mesh to hold function values and data points
-    call s % physical % init( nx, nf, rk, xmin, xmax )
+    s % physical % nx = nx
+    s % physical % nf = nf
+    s % physical % rk = rk
+    s % physical % x0 = xmin
+    s % physical % x1 = xmax
+    call s % physical % init
 
     ! physical2 mesh is used to calculate d/dx of d/dt of f used for
     ! the dilation transform described by g(). It is required to
     ! calculate only the first spatial derivative at most
-    call s % physical2 % init( nx, nf, 1, xmin, xmax)
+    s % physical2 % nx = nx
+    s % physical2 % nf = nf
+    s % physical2 % rk = 1
+    s % physical2 % x0 = xmin
+    s % physical2 % x1 = xmax
+    call s % physical2 % init
 
     ! allocate the memory for computational time
     allocate( s % data_scalars(4) )
@@ -297,7 +307,7 @@ contains
     ! call si % info
     call si % add(                                    &
          module_print_data(), &
-         trigger_every_n_iter(dn = 30))
+         trigger_every_n_iter(dn = 1))
 
     ! stop if stationary state reached
     call si % add(                                    &
@@ -316,8 +326,8 @@ contains
     si % f(:,1) = s % x
     call si % sync_dfdt(si % dydt)
     call si % solve
-    call si % free
     s % x = si % f(:,1)
+    call si % free
     ! @bug, see initial_rhs()
     call s % initial( s % x, s % f, null() )
 
@@ -415,7 +425,7 @@ contains
 
        ! we also update the interface poitners to the spatial
        ! derivatives
-       s % dfdx(1:nx,1:nf,1:rk) => s % physical % df
+       s % dfdx => s % physical % df
     end if
 
     if( present( dydt ) ) then

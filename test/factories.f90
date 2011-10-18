@@ -11,7 +11,10 @@ program mesh_factory_test
 
   m => mesh_new("sfd3pt")
   if( associated(m) ) then
-     call m % init(1,1,1,0.,1.)
+     m % nx = 10
+     m % nf = 10
+     m % x1 = 1.
+     call m % init
      call m % info
      call m % free
   end if
