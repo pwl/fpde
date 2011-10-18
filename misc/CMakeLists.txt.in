@@ -5,7 +5,7 @@ set( fpde_mod    "${fpde_prefix}/lib/fortran/Intel/fpde/mod" )
 set( fpde_lib    "${fpde_prefix}/lib" )
 set( fpde_cfg    "${fpde_prefix}/share/fpde" )
 include_directories( ${fpde_mod} )
-link_directories( ${fpde_lib} )
+link_directories( ${fpde_lib} @libs@ )
 
 files(
   GLOB prog_list

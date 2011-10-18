@@ -13,7 +13,7 @@ program test_accuracy_for_stiff_ode
    class(ode_stepper), pointer :: stepper
    class(ode_step_control), pointer :: step_control
    type(ode_system) :: ode
-   
+
    integer, parameter   :: nsteppers=1 ! steppers to test
    integer, parameter   :: nproblems=1 !
 
@@ -24,9 +24,15 @@ program test_accuracy_for_stiff_ode
    character(len=12), dimension(1:nsteppers) :: step_name
    character(len=36), dimension(1:nproblems) :: prob_name
 
+<<<<<<< Updated upstream
    prob_name = (/ "STIFF1" /)
    step_name = (/ "rkimp2" /)
    
+=======
+   prob_name = (/ "STIFF2" /)
+   step_name = (/ "rkimp2" /)
+
+>>>>>>> Stashed changes
    step_control => control_new("standard")
    call step_control % init ( eps_abs = 0.0, &
                               eps_rel = 1.0e-3, &
@@ -38,13 +44,13 @@ program test_accuracy_for_stiff_ode
       oivp => oivp_new(trim(prob_name(j)))
 
       call oivp % init()
-      
+
       print *, '# ODE problem: ', trim(oivp % name)
 
       do i=1,nsteppers
 
          stepper => stepper_new(trim(step_name(i)))
-         
+
          call test_accuracy ( stepper,      &
                               step_control, &
                               oivp % sys,   &
@@ -58,7 +64,7 @@ program test_accuracy_for_stiff_ode
                               err_end,      &
                               nsteps,       &
                               failed_steps )
-         
+
          print *, '# ', err_end, nsteps, failed_steps
 
       end do
