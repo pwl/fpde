@@ -19,17 +19,17 @@ program test_accuracy_for_stiff_ode
 
    integer              :: i, j
    real                 :: t0=0.0
-   real                 :: h=0.10, err_end
+   real                 :: h=0.15, err_end
    integer              :: nsteps, failed_steps
    character(len=12), dimension(1:nsteppers) :: step_name
    character(len=36), dimension(1:nproblems) :: prob_name
 
-   prob_name = (/ "STIFF1" /)
-   step_name = (/ "rkimp2" /)
+   prob_name = (/ "STIFF2" /)
+   step_name = (/ "rkm43" /)
    
    step_control => control_new("standard")
-   call step_control % init ( eps_abs = 0.0, &
-                              eps_rel = 1.0e-3, &
+   call step_control % init ( eps_abs = 1.0e-10, &
+                              eps_rel = 1.0e-7, &
                               a_y     = 1.0, &
                               a_dydt  = 1.0 )
 
@@ -108,7 +108,7 @@ subroutine test_accuracy( stepper, control, sys, dim, y0, t0, hinit, t1, y1, ver
 
    do while ( t < t1 )
       call marcher % apply ( s    = stepper, &
-                             ! c    = control, &
+                             c    = control, &
                              sys  = sys,     &
                              t    = t,       &
                              t1   = t1,      &

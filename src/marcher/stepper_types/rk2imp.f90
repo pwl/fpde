@@ -58,14 +58,15 @@ contains
       ! Y1 = y0 + h/2*f(t+h/2, Y1)
       do nu=1,maxiter
          s % ytmp = s % y0 + 0.5*h*s % y1
-      end do
 
-      ! wyliczamy pochodne
-      call sys % fun( t + 0.5*h, s % ytmp, s % y1, sys % params, sys % status )
-      if ( sys % status /= 1 ) then
-         s % status = sys % status
-         return
-      end if
+         ! wyliczamy pochodne
+         call sys % fun( t + 0.5*h, s % ytmp, s % y1, sys % params, sys % status )
+         if ( sys % status /= 1 ) then
+            s % status = sys % status
+            return
+         end if
+
+      end do
 
       ! przypisanie wynikow
       y = s % y0 + h*s % y1
