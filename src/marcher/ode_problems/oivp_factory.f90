@@ -6,6 +6,7 @@ module oivp_factory
    use class_aren_oivp
    use class_stiff1_oivp
    use class_stiff2_oivp
+   use class_stiff3_oivp
 
    contains
       
@@ -24,6 +25,8 @@ module oivp_factory
             allocate( stiff1_oivp :: oivp )
          case( "STIFF2" )
             allocate( stiff2_oivp :: oivp )
+         case( "STIFF3" )
+            allocate( stiff3_oivp :: oivp )
          case default
             print *, "oivp_new: invalid id"
             nullify(oivp)

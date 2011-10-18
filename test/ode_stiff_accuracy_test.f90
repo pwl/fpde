@@ -24,8 +24,8 @@ program test_accuracy_for_stiff_ode
    character(len=12), dimension(1:nsteppers) :: step_name
    character(len=36), dimension(1:nproblems) :: prob_name
 
-   prob_name = (/ "STIFF2" /)
-   step_name = (/ "rkm43" /)
+   prob_name = (/ "STIFF1" /)
+   step_name = (/ "rkpd54" /)
    
    step_control => control_new("standard")
    call step_control % init ( eps_abs = 1.0e-10, &
@@ -45,6 +45,7 @@ program test_accuracy_for_stiff_ode
 
          stepper => stepper_new(trim(step_name(i)))
          
+
          call test_accuracy ( stepper,      &
                               step_control, &
                               oivp % sys,   &
@@ -54,7 +55,7 @@ program test_accuracy_for_stiff_ode
                               h,            &
                               oivp % tend,  &
                               oivp % sol_end, &
-                              .true.,      &
+                              .false.,      &
                               err_end,      &
                               nsteps,       &
                               failed_steps )
@@ -97,6 +98,7 @@ subroutine test_accuracy( stepper, control, sys, dim, y0, t0, hinit, t1, y1, ver
    allocate(y(dim))
    call stepper % init(dim)
    call marcher % init(dim)
+         stepper % test_for_stiffness = .true.
 
    t = t0
    h = hinit
@@ -114,6 +116,12 @@ subroutine test_accuracy( stepper, control, sys, dim, y0, t0, hinit, t1, y1, ver
                              t1   = t1,      &
                              h    = h,       &
                              y    = y )
+
+      if ( stepper % stiff_status ) then
+         print *, 'this if stiff IVP'
+         exit
+      end if
+
       if ( marcher % status /= 1 ) then
          exit
       end if
