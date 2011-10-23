@@ -58,7 +58,8 @@ contains
             increasing &
             .and. any( f(1:nx-1,i) > f(2:,i) ) ) then
           r = .true.
-          print *, "DEBUG: trigger_non_monotonic: test = .true."
+          print *, "DEBUG: trigger_non_monotonic: test = .true.",&
+               " at n_iter = ", t%solver_data%n_iter
           return
        end if
     end if

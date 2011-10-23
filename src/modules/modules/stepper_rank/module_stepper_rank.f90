@@ -74,10 +74,10 @@ contains
     call test_stepper_order(&
          stepper = this%stepper,&
          ode = this%sys,&
-         dim = ny,&
+         ! dim = ny,&
          y0 = this%y0,&
          t0 = this%solver_data%t,&
-         t_delta = 3.*h,&
+         t_delta = 4.*h,&
          h = h,&
          verbose = .false.,&
          pnorm = pnorm)
@@ -86,9 +86,10 @@ contains
          file    = "rank.dat",  &
          form    = 'formatted', &
          action  = 'write', &
+         position = 'append',&
          ! access = 'direct', &
          recl    = 10000, &
-         status  = 'replace')
+         status  = 'old')
 
     write(this%file_handle,*) &
          this%solver_data%t, pnorm
@@ -111,15 +112,14 @@ contains
   !!
   !! @return
   !!
-  subroutine test_stepper_order(stepper,ode,dim,y0,t0,t_delta,h,verbose,pnorm)
+  subroutine test_stepper_order(stepper,ode,y0,t0,t_delta,h,verbose,pnorm)
 
    use ieee_arithmetic
 
    class(ode_stepper), pointer :: stepper
    type(ode_system) :: ode
-   integer          :: dim
-   real             :: y0(dim)
-   real             :: t0, t_delta, t1, h
+   real, intent(in) :: y0(:)
+   real, intent(in) :: t0, t_delta, h
    logical          :: verbose
    real             :: pnorm
    ! lokalne zmenne
@@ -127,8 +127,11 @@ contains
    type(ode_marcher)           :: marcher
    integer                     :: i, j, nsteps
    real, pointer               :: y1h(:), y2h(:), y4h(:)
-   real                        :: t1h, t2h, t4h, h1, h2, h4, num, den, p
+   real                        :: t1h, t2h, t4h, h1, h2, h4, num, den, p, t1
    real, allocatable           :: ptable(:)
+   integer          :: dim
+
+   dim = size(y0)
 
    nsteps = nint(t_delta/(h*4.0)) ! ilosc iteracji z krokiem 4*h
    t1 = t0 + t_delta
