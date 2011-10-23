@@ -48,6 +48,7 @@ contains
       h_old = h
       rmax = min_real
       
+      !$omp do schedule(static) private(i)
       do i=1,dim
          ! Wywolujemy funkcje estymujaca blad, zwracana wartosc
          ! jest zapisywana do zmiennej d0
@@ -55,7 +56,8 @@ contains
          r = abs(yerr(i))/abs(d0)
          rmax = max(r,rmax)
       end do
-      
+      !$omp end do
+
       if ( rmax > 1.1 ) then
          ! Zmniejszamy krok, nie wiecej niz czynnik 5, lecz sfactor 
          ! wicej niz sugeruje skalowanie

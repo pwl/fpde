@@ -171,6 +171,7 @@ contains
                ! i probujemy znow z nowym krokiem h0
                y = m % y0
                m % failed_steps = m % failed_steps + 1
+               !$omp barrier
                go to 100
             else
                ! W przeciwnym wypadku trzymamy aktualny krok
