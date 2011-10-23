@@ -21,7 +21,7 @@ program ode_system_test
    use control_factory
 
    integer :: dim = 2
-   real :: t=0.0, t1=10.0
+   real :: t=0.0, t1=100.0
    real :: h=0.01
    real, pointer, contiguous :: y(:)
 
@@ -44,7 +44,7 @@ program ode_system_test
    myparams % a = a
    myparams % b = b
 
-   mystepper => stepper_new( "rkpd54" )
+   mystepper => stepper_new( "rkz43" )
    mycontrol => control_new( "standard" )
 
    ! alokowanie wektora poczatkowego
@@ -58,13 +58,14 @@ program ode_system_test
    call mymarcher % init( dim )
 
    ! inicjalizujemy controler
-   call mycontrol % init ( eps_abs=0.0, eps_rel=1.0e-4, a_y=1.0, a_dydt=1.0 )
+   call mycontrol % init ( eps_abs=0.0, eps_rel=1.0e-16, a_y=1.0, a_dydt=1.0 )
 
    ! konstruujemy/inicjalizujemy ode_system
    ! call ode_system_construct( myode, myfun, dim, myparams )
    call ode_system_init( sys=myode, fun=myfun, dim=dim, params=myparams )
 
    do while (t<t1)
+   ! do while ( mymarcher % count < 2 )
       ! Wolamy marcher % apply
       call mymarcher % apply( s=mystepper, c=mycontrol, sys=myode, t=t, t1=t1, h=h, y=y )
 
@@ -76,11 +77,11 @@ program ode_system_test
 
       ! Drukuje roznice pomiedzy rozwiazaniem znalezionym
       ! numerycznie a znanym analitycznnie
-      print '(A,I)', 'step: ', mymarcher % count
-      print 22, 't:     ',t , ', h:       ', h
-      print 22, 'y_err: ',y(1)-(b + a*cos(sqrt(a)*t)- b*cos(sqrt(a)*t))/a, &
-           ', dydt_err: ', y(2)-((-a + b)*sin(sqrt(a)*t))/sqrt(a)
-22    FORMAT(A,E,A,E)
+!       print '(A,I)', 'step: ', mymarcher % count
+!       print 22, 't:     ',t , ', h:       ', h
+!       print 22, 'y_err: ',y(1)-(b + a*cos(sqrt(a)*t)- b*cos(sqrt(a)*t))/a, &
+!            ', dydt_err: ', y(2)-((-a + b)*sin(sqrt(a)*t))/sqrt(a)
+! 22    FORMAT(A,E,A,E)
 
    end do
 
@@ -117,7 +118,7 @@ program ode_system_test
    print *, "a_dydt:  ", mycontrol % a_dydt
 
    ! zwalniamy stepper
-   call mystepper % free ()
+   ! call mystepper % free ()
 
    ! zwalniamy controler
    call mycontrol % free ()

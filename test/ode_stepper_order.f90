@@ -13,7 +13,7 @@ program test_order_all_steppers
    class(ode_stepper), pointer :: stepper
    type(ode_system)            :: ode
    ! number of steppers implemented in fpde
-   integer, parameter          :: nsteppers=5
+   integer, parameter          :: nsteppers=8
    ! number of ode problems implemented in fpde
    integer, parameter          :: nproblems=3
    
@@ -29,7 +29,8 @@ program test_order_all_steppers
 
    prob_name = (/ "BRUSSELATOR", "EULER", "AREN" /)
 
-   step_name = (/ "rk4cs ", "rkpd54", "rkf45 ", "rkm43 ", "rkimp2" /)
+   step_name = (/ "rk4cs ", "rkpd54", "rkf45 ", "rkm43 ", &
+        "rkz43 ",  "rkf78 ", "rkv65 ","rkimp2" /)
 
    write(*, '(A)') '# id   stepper name   order (computed)   order (expected)'
 

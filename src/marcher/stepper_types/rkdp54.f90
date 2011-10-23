@@ -47,8 +47,8 @@ contains
       s % dim = dim
       s % can_use_dydt_in = .true.
       s % gives_exact_dydt_out = .true.
-      s % gives_estimated_yerr = .true. ! @todo
-      s % method_order = 4
+      s % gives_estimated_yerr = .true.
+      s % method_order = 5
       s % name = "rkpd54"
       s % status = 1
 
@@ -209,7 +209,7 @@ contains
 
          s % stiff_t2 = h * norm2( s % k7 - s % k6 )/norm2( s % yerr1 )/s % r0
 
-         ! print '(E13.6,E13.6,E13.6,E13.6)', t, s % stiff_t1, s % stiff_t2
+         print '(E13.6,E13.6,E13.6,E13.6)', t, s % stiff_t1, s % stiff_t2
 
          ! test if stiff_t1 and stiff_t2 are out of the bounds
          if ( s % stiff_t1 .lt. s % t1_tol .and. s % stiff_t2 .gt. s % t2_tol ) then

@@ -24,12 +24,12 @@ program test_accuracy_for_stiff_ode
    character(len=12), dimension(1:nsteppers) :: step_name
    character(len=36), dimension(1:nproblems) :: prob_name
 
-   prob_name = (/ "STIFF1" /)
+   prob_name = (/ "AREN" /)
    step_name = (/ "rkpd54" /)
 
    step_control => control_new("standard")
-   call step_control % init ( eps_abs = 1.0e-10, &
-                              eps_rel = 1.0e-7, &
+   call step_control % init ( eps_abs = 1.0e-4, &
+                              eps_rel = 1.0e-3, &
                               a_y     = 1.0, &
                               a_dydt  = 1.0 )
 
@@ -53,6 +53,7 @@ program test_accuracy_for_stiff_ode
                               t0,           &
                               h,            &
                               oivp % tend,  &
+                              ! 10.0,          &
                               oivp % sol_end, &
                               .false.,      &
                               err_end,      &
@@ -97,7 +98,7 @@ subroutine test_accuracy( stepper, control, sys, dim, y0, t0, hinit, t1, y1, ver
    allocate(y(dim))
    call stepper % init(dim)
    call marcher % init(dim)
-         stepper % test_for_stiffness = .true.
+   stepper % test_for_stiffness = .true.
 
    t = t0
    h = hinit

@@ -1,5 +1,4 @@
 ! Runge-Kutta-Fehlberg 4(5)
-! @todo referencje
 module class_ode_stepper_rkf45
 
    use class_ode_stepper
@@ -44,7 +43,7 @@ contains
       s % can_use_dydt_in = .true.
       s % gives_exact_dydt_out = .true.
       s % gives_estimated_yerr = .true. ! @todo
-      s % method_order = 5 ! @todo do sprawdzenia razem ze wspolczynnikami b czy bbar
+      s % method_order = 4
       s % name = "rkf45"
       s % status = 1
 
