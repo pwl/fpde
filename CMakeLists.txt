@@ -54,6 +54,18 @@ if( ${comp} STREQUAL ${ifort})
   # set(comp_short "ifort")
 endif()
 
+FIND_PROGRAM(XIAR xiar)
+	IF(XIAR)
+	  SET(CMAKE_AR "${XIAR}")
+	ENDIF(XIAR)
+MARK_AS_ADVANCED(XIAR)
+
+FIND_PROGRAM(XILD xild)
+	IF(XILD)
+	  SET(CMAKE_LINKER "${XILD}")
+	ENDIF(XILD)
+MARK_AS_ADVANCED(XILD)
+
 # GFORTRAN COMPILER
 if( ${comp} STREQUAL ${gfortran})
   set(flags "-ggdb -Wall -pedantic -Wno-unused -Wno-unused-dummy-argument  -fdefault-real-8 -fdefault-double-8")
