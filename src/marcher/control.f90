@@ -40,23 +40,35 @@ contains
       integer :: i, dim, order
       real, parameter :: min_real=epsilon(1.0) ! smallest positive number added to 1.0 /= 1.0
       real, parameter :: sfactor=0.9 ! safety factor
-      real :: h_old, rmax, d0, r
+      real :: h_old,  d0, r, rmax_priv
+      real, pointer :: rmax
 
       dim = s % dim
       order = s % method_order
+      rmax_priv=min_real
 
       h_old = h
+
+      !$omp single
+      allocate(rmax)
       rmax = min_real
-      
+      !$omp end single copyprivate(rmax)
+
       !$omp do schedule(static) private(i)
       do i=1,dim
          ! Wywolujemy funkcje estymujaca blad, zwracana wartosc
          ! jest zapisywana do zmiennej d0
          call c % error_fnc( i, y(i), dydt(i), h_old, d0 )
          r = abs(yerr(i))/abs(d0)
-         rmax = max(r,rmax)
+         rmax_priv = max(r,rmax_priv)
       end do
       !$omp end do
+      
+      !$omp critical
+      rmax = max(rmax, rmax_priv)
+      !$omp end critical
+
+      !$omp barrier
 
       if ( rmax > 1.1 ) then
          ! Zmniejszamy krok, nie wiecej niz czynnik 5, lecz sfactor 
@@ -85,6 +97,12 @@ contains
          ! Krok pozostaje bez zmian
          c % status = 0 ! status rowny zero oznacza ze krok nie zostal zmieniony
       end if
+
+      !$omp barrier
+
+      !$omp single
+      deallocate(rmax)
+      !$omp end single
       
    end subroutine apply
 

@@ -77,7 +77,7 @@ contains
       integer :: i, j, l
       real, pointer :: k_ptr(:)
 
-      !$omp parallel default(shared)
+      ! $omp parallel default(shared)
 
       ! Wykonujemy kopie wektora y na wypadek wystapiena bledow
       ! zwracanych przez funkcje sys % fun (prawej strony rownan).
@@ -189,21 +189,28 @@ contains
 
       ! estymowany blad - roznica pomiedzy p-tym a pb-tym rzedem
 
-      !$omp do schedule(static) private(l)
-      do l=1,dim
-         yerr(l) = 0.0
-      end do
-      !$omp end do
+      ! !$omp do schedule(static) private(l)
+      ! do l=1,dim
+      !    yerr(l) = 0.0
+      ! end do
+      ! !$omp end do
 
-      do i=1, s % stages
-         !$omp do schedule(static) private(l)
-         do l=1,dim
-            yerr(l) = yerr(l) + h * s % ec(i) * s % k(i,l)
-         end do
-         !$omp end do
-      end do
-
-      !$omp end parallel
+      ! do i=1, s % stages
+      !    !$omp do schedule(static) private(l)
+      !    do l=1,dim
+      !       yerr(l) = yerr(l) + h * s % ec(i) * s % k(i,l)
+      !    end do
+      !    yerr=h*s%ec(i) sum(
+      !    !$omp end do
+      ! end do
+      
+      !$omp workshare
+      forall(l=1:dim)
+         yerr(l)=h*sum(s%ec * s%k(:,l))
+      end forall
+      !$omp end workshare
+      
+      ! $omp end parallel
 
       ! pomyslnie zakonczono subrutyne
       s % status = 1
