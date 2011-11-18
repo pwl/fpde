@@ -2,6 +2,7 @@ include_directories( . )
 
 # Search for the source files recursively and add them to fpde_src
 file( GLOB_RECURSE fpde_src "[^.]*.${suffix}" )
+file(STRINGS files.txt fpde_src)
 # file( GLOB_RECURSE fpde_src_f77 "[^.]*.${suffix_f77}" )
 
 
